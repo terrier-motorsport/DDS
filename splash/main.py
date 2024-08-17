@@ -6,6 +6,7 @@
 
 import kivy
 from kivy.app import App
+from kivy.uix.image import Image
 from kivy.core.window import Window
 
 # Mike's version as of 08/17/24, we'll probably stay around 2.3
@@ -15,8 +16,8 @@ kivy.require('2.3.0')
 Window.size = (1024, 600)
 
 class DDSApp(App):
-    def build(FloatLayout):
-        pass
+    def build(self):
+        return Image(source = "img\SPLASH screen.png")
 
 if __name__ == '__main__':
     DDSApp().run()
