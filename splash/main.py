@@ -67,7 +67,7 @@ class DDSApp(App):
 
         # Get size of QR code img, display as pop-up
             # Kivy Popup: https://kivy.org/doc/stable/api-kivy.uix.popup.html
-        _QRcode = "splash\\img\\fake_qr.jpg"
+        _QRcode = "splash\\img\\real_qr-min.png"
         _popup_title_text = "Scan to join the mailing list!"
         im = cv2.imread(_QRcode)
         h, w, _ = im.shape
