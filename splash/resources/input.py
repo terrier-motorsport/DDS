@@ -67,9 +67,21 @@ class CANInput(Input):
         # Read CAN data
         msg = self.can_bus.recv()
 
+        # DEBUG
         print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+        # print(self.db.decode_message(32, msg.data))
 
-        print(self.db.decode_message(32, msg.data))
+        # Note: msg.arbitration_id contains the integer value of the hex ID
+        # Thats all good and fun, but for some reason when converted to a hex ID
+        # Which is needed in order to parse the data, there is a 3a appended to every message.
+        # EX: a message that should be coming from 0x21 is recieved as 0x213a
+        # My current solution is to just ignore the first and last two characters then
+        # pass that into the database. This may require more work in the future.
+
+        hex_id = (hex(msg.arbiration_id))
+        real_id = hex_id[2:2]
+
+        print(real_id)
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
