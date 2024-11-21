@@ -69,7 +69,7 @@ class CANInput(Input):
 
         # DEBUG
         print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
-        # print(self.db.decode_message(32, msg.data))
+
 
         # Note: msg.arbitration_id contains the integer value of the hex ID
         # Thats all good and fun, but for some reason when converted to a hex ID
@@ -81,7 +81,11 @@ class CANInput(Input):
         hex_id = (hex(msg.arbitration_id))
         real_id = hex_id[2:4]
 
+        #D  EBUG
         print(real_id)
+
+        # Get the decoded message
+        print(self.db.decode_message(real_id, msg.data))
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
