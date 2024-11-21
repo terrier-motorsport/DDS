@@ -111,4 +111,4 @@ motorspd = CANInput('motor speed', '0x2a', 'splash/candatabase/file.dbc')
 
 while True:
     motorspd.send_can() 
-    time.sleep(1)
+    time.sleep(0.001)
