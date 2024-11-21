@@ -43,9 +43,9 @@ class Input:
 class CANInput(Input):
 
     can_id = ''
-    can_database = ''
+    database_path = 'splash/candatabase/file.dbc'
 
-    def __init__(self, name, id, database_path):
+    def __init__(self, name, id):
         # Init super (Input class)
         super().__init__(name, SensorProtocol.CAN)
 
@@ -53,7 +53,7 @@ class CANInput(Input):
         self.can_id = id
 
         # Init database & print messages
-        # self.can_database = cantools.database.load_file(database_path)
+        self.db = cantools.database.load_file(self.database_path)
         # print(self.can_database.messages)
 
         # Setup CANBus interface
@@ -72,7 +72,7 @@ class CANInput(Input):
         with self.can_bus as bus:
             for msg in bus: 
                 # print(msg)
-                print(self.can_database.decode_message(msg.arbitration_id, msg.data))
+                print(self.db.decode_message(msg.arbitration_id, msg.data))
 
 
 
@@ -106,7 +106,7 @@ class CANInput(Input):
 
 
 
-motorspd = CANInput('motor speed', '0x2a', 'splash/candatabase/file.dbc')
+motorspd = CANInput('motor speed', '0x2a')
 
 mode = input("tx or rx?")
 
