@@ -94,7 +94,7 @@ class CANInput(Input):
 
         try:
             self.can_bus.send(msg)
-            print(f"Message sent on {self.can_bus.channel_info}")
+            print(f"Message sent on {self.can_bus.channel_info}: {msg}")
         except can.CanError:
             print("Message NOT sent")
         
