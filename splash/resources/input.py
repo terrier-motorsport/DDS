@@ -53,8 +53,8 @@ class CANInput(Input):
         self.can_id = id
 
         # Init database & print messages
-        # self.can_database = cantools.database.load_file(database_path)
-        # print(self.can_database.messages)
+        self.can_database = cantools.database.load_file(database_path)
+        print(self.can_database.messages)
 
         # Setup CANBus interface
         self.can_bus = can.interface.Bus(CAN_INTERFACE, interface='socketcan')
@@ -69,13 +69,9 @@ class CANInput(Input):
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
-        # for msg in self.can_bus:
-        #     print(self.can_database.decode_message(msg.arbitration_id, msg.data))
-
         with self.can_bus as bus:
             for msg in bus: 
-                print(msg.data)
-
+                print(self.can_database.decode_message(msg.arbitration_id, msg.data))
 
     
     def send_can(self):
