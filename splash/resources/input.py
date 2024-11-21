@@ -78,7 +78,7 @@ class CANInput(Input):
         # My current solution is to just ignore the first and last two characters then
         # pass that into the database. This may require more work in the future.
 
-        hex_id = (hex(msg.arbiration_id))
+        hex_id = (hex(msg.arbitration_id))
         real_id = hex_id[2:2]
 
         print(real_id)
