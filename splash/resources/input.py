@@ -85,14 +85,14 @@ class CANInput(Input):
         # print(real_id)
 
         # Get the decoded message
-        print(self.db.decode_message(msg.arbitration_id, msg.data))
+        # print(self.db.decode_message(msg.arbitration_id, msg.data))
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
-        # with self.can_bus as bus:
-        #     for msg in bus: 
-        #         print(msg)
-        #         print(self.db.decode_message(msg.arbitration_id, msg.data))
+        with self.can_bus as bus:
+            for msg in bus: 
+                print(msg)
+                print(self.db.decode_message(msg.arbitration_id, msg.data))
 
 
 
