@@ -80,9 +80,9 @@ class CANInput(Input):
 
         # this uses the default configuration (for example from the config file)
         # see https://python-can.readthedocs.io/en/stable/configuration.html
-        with can.Bus() as bus:
+        with self.can_bus as bus:
             # Using specific buses works similar:
-            bus = can.Bus(interface='socketcan', channel='can0', bitrate=1000000)
+            # bus = can.interface.Bus(interface='socketcan', channel='can0', bitrate=1000000)
             # bus = can.Bus(interface='pcan', channel='PCAN_USBBUS1', bitrate=250000)
             # bus = can.Bus(interface='ixxat', channel=0, bitrate=250000)
             # bus = can.Bus(interface='vector', app_name='CANalyzer', channel=0, bitrate=250000)
