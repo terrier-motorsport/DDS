@@ -71,8 +71,8 @@ class CANInput(Input):
     
         with self.can_bus as bus:
             for msg in bus: 
-                print(msg)
-                # print(self.can_database.decode_message(msg.arbitration_id, msg.data))
+                # print(msg)
+                print(self.can_database.decode_message(msg.arbitration_id, msg.data))
 
 
 
