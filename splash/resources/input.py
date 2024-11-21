@@ -94,7 +94,7 @@ class CANInput(Input):
     
         with self.can_bus as bus:
             for msg in bus: 
-                print(msg)
+                print(f"{msg}\n{hex(msg.arbitration_id)}")
         #         print(self.db.decode_message(msg.arbitration_id, msg.data))
 
     
