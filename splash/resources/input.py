@@ -2,7 +2,7 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from enum import Enum
-import can
+import can # type: ignore
 import time
 import cantools
 import cantools.database
@@ -94,7 +94,7 @@ class CANInput(Input):
 
         try:
             self.can_bus.send(msg)
-            print(f"Message sent on {bus.channel_info}")
+            print(f"Message sent on {self.can_bus.channel_info}")
         except can.CanError:
             print("Message NOT sent")
         
@@ -105,7 +105,7 @@ class CANInput(Input):
 
 motorspd = CANInput('motor speed', '0x2a', 'splash/candatabase/file.dbc')
 
-print(motorspd.get_protocol())
+# print(motorspd.get_protocol())
 
 # motorspd.get_data()
 
