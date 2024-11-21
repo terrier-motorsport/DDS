@@ -107,7 +107,7 @@ motorspd = CANInput('motor speed', '0x2a', 'splash/candatabase/file.dbc')
 
 print(motorspd.get_protocol())
 
-motorspd.get_data()
+# motorspd.get_data()
 
 while True:
     motorspd.send_can() 
