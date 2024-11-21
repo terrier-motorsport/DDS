@@ -69,7 +69,7 @@ class CANInput(Input):
 
         print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
-        self.db.decode_message(32, msg.data)
+        print(self.db.decode_message(32, msg.data))
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
