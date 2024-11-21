@@ -105,10 +105,16 @@ class CANInput(Input):
 
 motorspd = CANInput('motor speed', '0x2a', 'splash/candatabase/file.dbc')
 
+mode = input("tx or rx?")
+
+if (mode == 'tx'):
+    while True:
+        motorspd.send_can() 
+        time.sleep(0.001)
+elif mode == 'rx':
+    motorspd.get_data()
+
 # print(motorspd.get_protocol())
 
-# motorspd.get_data()
 
-while True:
-    motorspd.send_can() 
-    time.sleep(0.001)
+
