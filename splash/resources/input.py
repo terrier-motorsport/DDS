@@ -78,14 +78,14 @@ class CANInput(Input):
         # My current solution is to just ignore the first and last two characters then
         # pass that into the database. This may require more work in the future.
 
-        hex_id = (hex(msg.arbitration_id))
-        real_id = hex_id[2:4]
+        # hex_id = (hex(msg.arbitration_id))
+        # real_id = hex_id[2:4]
 
-        #D  EBUG
-        print(real_id)
+        # #D  EBUG
+        # print(real_id)
 
         # Get the decoded message
-        print(self.db.decode_message(real_id, msg.data))
+        print(self.db.decode_message(msg.arbitration_id, msg.data))
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
