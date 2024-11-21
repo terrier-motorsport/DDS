@@ -36,14 +36,14 @@ BS_:
 BU_:
 
 
-BO_ 2147483680 ERPM: 8 Vector__XXX
+BO_ 2147491898 ERPM: 8 Vector__XXX
 	SG_ ERPM : 0|8@0+ (1,0) [-2147483648|2147483647] "ERPM" Vector__XXX
 	SG_ DutyCycle : 32|8@0+ (10,0) [-3276.8|3276.7] "%" Vector__XXX
 	SG_ InputVoltage : 48|8@0+ (1,0) [-32768|32767] "V" Vector__XXX
 
 
 
-CM_ BO_ 2147483680 "ERPM, Duty, Input Voltage";
+CM_ BO_ 2147491898 "ERPM, Duty, Input Voltage";
 CM_ SG_ 2147483680 ERPM "Electrical RPM Equation: ERPM = Motor RPM * number of the motor pole pairs.";
 BA_DEF_ SG_  "SPN" INT 0 524287;
 BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";
