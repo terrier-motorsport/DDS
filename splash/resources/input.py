@@ -84,17 +84,17 @@ class CANInput(Input):
         # This is where the pi would fetch data
 
         # Read CAN data
-        msg = self.can_bus.recv()
+        # msg = self.can_bus.recv()
 
-        print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+        # print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
         # print(msg)
 
         # print(message.arbitration_id, message.data, message.timestamp)
     
-        # with self.can_bus as bus:
-        #     for msg in bus: 
-        #         print(msg)
+        with self.can_bus as bus:
+            for msg in bus: 
+                print(msg)
         #         print(self.db.decode_message(msg.arbitration_id, msg.data))
 
     
@@ -142,6 +142,3 @@ elif mode == 'rx2':
     motorspd.get_data_raw()
 
 # print(motorspd.get_protocol())
-
-
-
