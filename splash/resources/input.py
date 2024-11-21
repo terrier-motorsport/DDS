@@ -79,7 +79,7 @@ class CANInput(Input):
         # pass that into the database. This may require more work in the future.
 
         hex_id = (hex(msg.arbitration_id))
-        real_id = hex_id[2:2]
+        real_id = hex_id[2:4]
 
         print(real_id)
 
