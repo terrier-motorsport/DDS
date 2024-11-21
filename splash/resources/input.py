@@ -67,8 +67,8 @@ class CANInput(Input):
         # Read CAN data
         msg = self.can_bus.recv()
 
-        print(msg)
-        
+        print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+
         self.db.decode_message(msg.arbitration_id, msg.data)
 
         # print(message.arbitration_id, message.data, message.timestamp)
