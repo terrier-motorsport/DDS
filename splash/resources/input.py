@@ -72,7 +72,7 @@ class CANInput(Input):
             print(self.can_database.decode_message(msg.arbitration_id, msg.data))
         
     
-    
+
 
 
 motorspd = CANInput('motor speed', '0x2a', 'splash/candatabase/file.dbc')
