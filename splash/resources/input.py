@@ -65,12 +65,16 @@ class CANInput(Input):
         # This is where the pi would fetch data
 
         # Read CAN data
-        message = self.can_bus.recv()
+        # message = self.can_bus.recv()
 
-        print(message.arbitration_id, message.data, message.timestamp)
+        # print(message.arbitration_id, message.data, message.timestamp)
     
-        for msg in self.can_bus:
-            print(self.can_database.decode_message(msg.arbitration_id, msg.data))
+        # for msg in self.can_bus:
+        #     print(self.can_database.decode_message(msg.arbitration_id, msg.data))
+
+        with self.can_bus as bus:
+            for msg in bus:
+                print(msg.data)
 
 
     
