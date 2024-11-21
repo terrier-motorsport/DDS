@@ -56,7 +56,7 @@ class CANInput(Input):
         print(self.can_database.messages)
 
         # Setup CANBus interface
-        self.can_bus = can.interface.Bus(CAN_INTERFACE, bustype='socketcan')
+        self.can_bus = can.interface.Bus(CAN_INTERFACE, interface='socketcan')
 
 
 
