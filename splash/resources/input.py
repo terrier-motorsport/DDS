@@ -158,8 +158,8 @@ class CANDevice(Input):
 
         # Getting the message from the database using name provided
         msg = self.db.get_message_by_name(messageName)
-        data = msg.encode(signal)
-        msg = can.Message(arbitration_id=msg.frame_id, data=data)
+        data = msg.encode({'DigitalOut1' : 1})
+        new_msg = can.Message(arbitration_id=msg.frame_id, data=data)
         
         
 
@@ -213,15 +213,15 @@ motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_pa
 mode = input("tx or rx1 or rx2?")
 
 if (mode == 'tx'):
-    for i in range(100):
-        motorController.update()
-    print(motorController.get_data('DigitalIn1'))
+    # for i in range(100):
+    #     motorController.update()
+    # print(motorController.get_data('DigitalIn1'))
 
     motorController.send_can('SetDigitalOut', {'DigitialOut1' : 1})
 
-    for i in range(100):
-        motorController.update()
-    print(motorController.get_data('DigitalIn1'))
+    # for i in range(100):
+    #     motorController.update()
+    # print(motorController.get_data('DigitalIn1'))
 
 elif mode == 'rx1':
     while True:
