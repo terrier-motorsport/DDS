@@ -44,7 +44,7 @@ class Input:
     def get_protocol(self):
         return self.sensorProtocol
 
-    def get_data():
+    def _fetch_can_data():
         print("get_data not overriden propertly in child class.")
         
 
@@ -84,7 +84,7 @@ class CANDevice(Input):
         '''
 
         # Get data from the CAN Bus
-        new_values = self.get_data()
+        new_values = self._fetch_can_data()
 
         # Log the data that was read
         super().log_data()
@@ -92,9 +92,13 @@ class CANDevice(Input):
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values:
             self.current_values[key] = value
+
+    def get_data(self, key):
+        return self.current_values.get(key)
+        
         
 
-    def get_data(self):
+    def _fetch_can_data(self):
 
         '''
         # Gets data from the CAN Bus and tries to parse it.
@@ -194,7 +198,9 @@ if (mode == 'tx'):
         time.sleep(0.001)
 elif mode == 'rx1':
     while True:
-        print(motorController.get_data().get("ERPM"))
+        motorController.update()
+        print(motorController.get_data("ERPM"))
+        # print(motorController.get_data().get("ERPM"))
 
 elif mode == 'rx2':
     motorController.get_data_raw()

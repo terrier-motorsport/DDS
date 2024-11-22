@@ -13,7 +13,7 @@ if (mode == 'tx'):
         time.sleep(0.001)
 elif mode == 'rx1':
     while True:
-        print(motorspd.get_data().get("ERPM"))
+        print(motorspd._fetch_can_data().get("ERPM"))
 
 elif mode == 'rx2':
     motorspd.get_data_raw()
