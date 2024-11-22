@@ -6,6 +6,7 @@ import can
 import cantools
 import cantools.database
 from data_logger import File
+import subprocess
 
 """
 The purpose of this class is to handle data interpreting of a single sensor/input
@@ -101,7 +102,13 @@ class CANDevice(Input):
         '''
 
         # Read a single frame of CAN data
-        msg = self.can_bus.recv()
+        # If this throws an error, its most likely because the CAN Bus Network on the OS isn't open.
+        # It will try to open the network and run the command again.
+        try:
+            msg = self.can_bus.recv()
+        except can.exceptions.CanOperationError:
+            self.start_can_bus()
+            msg = self.can_bus.recv()
 
         # DEBUG
         # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
@@ -161,6 +168,11 @@ class CANDevice(Input):
         self.can_bus.shutdown()
         
     
+    def start_can_bus(self):
+        # This is the command to start the can0 network
+        # In a terminal, all these command would be run with spaces inbetween them
+        subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
+        subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
 
 
