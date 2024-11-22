@@ -190,7 +190,7 @@ import time
 
 
 logFile = File('MClog')
-motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc', logFile=logFile)
+motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', logFile=logFile)
 
 
 mode = input("tx or rx1 or rx2?")
