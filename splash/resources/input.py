@@ -199,7 +199,7 @@ motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_pa
 mode = input("tx or rx1 or rx2?")
 
 if (mode == 'tx'):
-    motorController.send_can()
+    motorController.send_can('DriveEnable')
 elif mode == 'rx1':
     while True:
         motorController.update()
