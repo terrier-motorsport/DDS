@@ -36,7 +36,7 @@ class Input:
 
     def log_data(self, param_name: str, value):
         # Takes in a file, parameter name & a value
-        self.log_file.writeData(param_name, value)
+        self.logFile.writeData(param_name, value)
         
 
 
