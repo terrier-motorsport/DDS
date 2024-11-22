@@ -147,10 +147,24 @@ class CANDevice(Input):
         # print(f"{msg}\n{hex(msg.arbitration_id)}")
 
 
-    def send_can(self, messageName):
-        ex_msg = self.db.get_message_by_name(messageName).signals
-        print(ex_msg)
+    def send_can(self, messageName, signal : dict):
+        """
+        Fetches the parameters of the message with the provided name.
+        Then fetches the signal of the message with the provided name.
+        If you are unsure of signal names, use git_avail_signals(msgName)
 
+        Each message in the database contains up to 64 signals. Look at the database for more info.
+        """
+
+        # Getting the message from the database using name provided
+        msg = self.db.get_message_by_name(messageName)
+        data = msg.encode(signal)
+        msg = can.Message(arbitration_id=msg.frame_id, data=data)
+        
+        
+
+    def get_avail_signals(self, messageName):
+        return self.db.get_message_by_name(messageName)
 
     def old_send_can(self, hex_id, data):
 
@@ -199,7 +213,16 @@ motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_pa
 mode = input("tx or rx1 or rx2?")
 
 if (mode == 'tx'):
-    motorController.send_can('DriveEnable')
+    for i in range(100):
+        motorController.update()
+    print(motorController.get_data('DigitalIn1'))
+
+    motorController.send_can('SetDigitalOut', {'DigitialOut1' : 1})
+
+    for i in range(100):
+        motorController.update()
+    print(motorController.get_data('DigitalIn1'))
+
 elif mode == 'rx1':
     while True:
         motorController.update()
