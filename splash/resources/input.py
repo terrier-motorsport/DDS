@@ -5,6 +5,7 @@ from enum import Enum
 import can
 import cantools
 import cantools.database
+from data_logger import File
 
 """
 The purpose of this class is to handle data interpreting of a single sensor/input
@@ -26,10 +27,18 @@ class SensorProtocol(Enum):
 # ===== Parent class for all inputs =====
 class Input:
 
-    def __init__(self, name, sensorProtocol):
+    def __init__(self, name, sensorProtocol, logFile : File):
         self.sensorProtocol = sensorProtocol
         self.name = name
+        self.logFile = logFile
         pass
+
+    def log_data(self, param_name: str, value):
+        # Takes in a file, parameter name & a value
+        self.log_file.writeData(param_name, value)
+        
+
+
 
     def get_protocol(self):
         return self.sensorProtocol
@@ -49,16 +58,16 @@ class CANDevice(Input):
     # Dictionary which contains the most recent values for all the CAN data
     current_values = {}
 
-    def __init__(self, name, can_interface, database_path):
+    def __init__(self, name, can_interface, database_path, logFile : File):
         # Init super (Input class)
-        super().__init__(name, SensorProtocol.CAN)
+        super().__init__(name, SensorProtocol.CAN, logFile=logFile)
 
         # Init database path
         self.database_path = database_path
 
         # Init database & print messages
         self.db = cantools.database.load_file(self.database_path)
-        print(self.can_database.messages)
+        print(self.db.messages)
 
         # Setup CAN Bus 
         # Can_interface is the interface of the device that the code is running on which can is connected to.
@@ -68,14 +77,21 @@ class CANDevice(Input):
     def update(self):
 
         '''
-        This function will first poll the CAN Bus for messages
+        This function will first get data from the input assigned to it.
+        It will then log it and stuff
         Then it will parse the messages, and add any values to the current_values dictionary
         '''
 
+        # Get data from the CAN Bus
         new_values = self.get_data()
 
-        # new_values
-        pass
+        # Log the data that was read
+        super().log_data()
+
+        # Updates / Adds all the read values to the current_values dict
+        for key, value in new_values:
+            self.current_values[key] = value
+        
 
     def get_data(self):
 
@@ -95,7 +111,7 @@ class CANDevice(Input):
             return self.db.decode_message(msg.arbitration_id, msg.data).get
         except KeyError:
             print(f"ERROR: No database entry found for {msg}")
-            return None
+            return {'':''}
         
 
     def get_data_raw(self):
@@ -148,3 +164,29 @@ class CANDevice(Input):
 
 
 
+
+
+
+import time
+
+
+logFile = File('MClog')
+motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc', logFile=logFile)
+
+
+mode = input("tx or rx1 or rx2?")
+
+if (mode == 'tx'):
+    while True:
+        motorController.send_can() 
+        time.sleep(0.001)
+elif mode == 'rx1':
+    while True:
+        print(motorController.get_data().get("ERPM"))
+
+elif mode == 'rx2':
+    motorController.get_data_raw()
+
+# print(motorspd.get_protocol())
+
+motorController.close_connection()

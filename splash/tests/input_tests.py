@@ -1,5 +1,4 @@
-
-from resources.input import CANDevice, Input
+from resources.input import CANDevice
 import time
 
 
