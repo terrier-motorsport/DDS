@@ -154,11 +154,12 @@ class CANDevice(Input):
         If you are unsure of signal names, use git_avail_signals(msgName)
 
         Each message in the database contains up to 64 signals. Look at the database for more info.
+        You must encode every signal in a message to send it successfully.
         """
 
         # Getting the message from the database using name provided
         msg = self.db.get_message_by_name(messageName)
-        data = msg.encode({'DigitalOut1' : 1})
+        data = msg.encode({'DigitalOut1' : 1,'DigitalOut2' : 0,'DigitalOut3' : 1,'DigitalOut4' : 0})
         new_msg = can.Message(arbitration_id=msg.frame_id, data=data)
         
         
