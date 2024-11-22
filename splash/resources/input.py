@@ -39,29 +39,40 @@ class Input:
         print("get_data not overriden propertly in child class.")
         
 
-# CAN Input which inherits the Input class
-class CANInput(Input):
+class CANDevice(Input):
 
-    can_id = ''
-    database_path = 'splash/candatabase/file.dbc'
+    '''
+    # CAN Input which inherits the Input class
+    # Each device can have its own CAN database & physical CAN interface
+    # EX: The MC would be one CAN device and the AMS would be another.
+    '''
 
-    def __init__(self, name, id):
+    # Dictionary which contains the most recent values for all the CAN data
+    current_values = {}
+
+    def __init__(self, name, can_interface, database_path):
         # Init super (Input class)
         super().__init__(name, SensorProtocol.CAN)
 
-        # Assign ID of CAN signal
-        self.can_id = id
+        # Init database path
+        self.database_path = database_path
 
         # Init database & print messages
         self.db = cantools.database.load_file(self.database_path)
-        # print(self.can_database.messages)
+        print(self.can_database.messages)
 
-        # Setup CANBus interface
-        self.can_bus = can.interface.Bus(CAN_INTERFACE, interface='socketcan')
-
+        # Setup CAN Bus 
+        # Can_interface is the interface of the device that the code is running on which can is connected to.
+        # interface refers to the type of CAN Bus that is running on that physical interface.
+        self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
 
 
     def get_data(self):
+
+        '''
+        # Gets data from the CAN Bus and tries to parse it.
+        # Returns a dictionary of parameters and values.
+        '''
 
         # Read a single frame of CAN data
         msg = self.can_bus.recv()
@@ -73,48 +84,45 @@ class CANInput(Input):
         try:
             return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
-            print(f"ERROR: No database entry found for address {msg.arbitration_id}")
+            print(f"ERROR: No database entry found for {msg}")
             return None
         
 
-
-
     def get_data_raw(self):
-        # This is where the pi would fetch data
+
+        '''
+        # This is the same as get_data(), however it doesn't parse the data with a database.
+        # Good for troubleshooting CAN messages.
+        # Resturns a CAN Message object
+        '''
 
         # Read CAN data
-        # msg = self.can_bus.recv()
+        msg = self.can_bus.recv()
 
+        # Return message
+        return msg
+
+        # DEBUG - Ignore. To be removed in future.
         # print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
-
-        # print(msg)
-
-        # print(message.timestamp)
-    
-        with self.can_bus as bus:
-            for msg in bus: 
-                print(f"{msg}\n{hex(msg.arbitration_id)}")
-        #         print(self.db.decode_message(msg.arbitration_id, msg.data))
-
-    
-    def send_can(self):
-        # Code from https://python-can.readthedocs.io/en/stable/
-        """Sends a single message."""
-
-        # this uses the default configuration (for example from the config file)
-        # see https://python-can.readthedocs.io/en/stable/configuration.html
         # with self.can_bus as bus:
-            # Using specific buses works similar:
-            # bus = can.interface.Bus(interface='socketcan', channel='can0', bitrate=1000000)
-            # bus = can.Bus(interface='pcan', channel='PCAN_USBBUS1', bitrate=250000)
-            # bus = can.Bus(interface='ixxat', channel=0, bitrate=250000)
-            # bus = can.Bus(interface='vector', app_name='CANalyzer', channel=0, bitrate=250000)
-            # ...
+        # for msg in bus: 
+        # print(f"{msg}\n{hex(msg.arbitration_id)}")
 
+
+    def send_can(self, hex_id, data):
+
+        '''    
+        # This sends a CAN message with the extended id format
+        # Code from https://python-can.readthedocs.io/en/stable/
+        '''
+
+
+        # Create Message object
         msg = can.Message(
-            arbitration_id=0xC0FFEE, data=[0, 25, 0, 1, 3, 1, 4, 1], is_extended_id=True
+            arbitration_id=hex_id, data=data, is_extended_id=True
         )
 
+        # Attempt to send the message & log it
         try:
             self.can_bus.send(msg)
             print(f"Message sent on {self.can_bus.channel_info}: {msg}")
@@ -122,7 +130,7 @@ class CANInput(Input):
             print("Message NOT sent")
 
     def close_connection(self):
-
+        # This closes the connection to the CAN Bus
         self.can_bus.shutdown()
         
         
@@ -130,7 +138,7 @@ class CANInput(Input):
 
 
 
-motorspd = CANInput('motor speed', '0x2a')
+motorspd = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc')
 
 mode = input("tx or rx1 or rx2?")
 
