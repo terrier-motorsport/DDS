@@ -2,8 +2,7 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from enum import Enum
-import can # type: ignore
-import time
+import can
 import cantools
 import cantools.database
 
@@ -66,6 +65,17 @@ class CANDevice(Input):
         # interface refers to the type of CAN Bus that is running on that physical interface.
         self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
 
+    def update(self):
+
+        '''
+        This function will first poll the CAN Bus for messages
+        Then it will parse the messages, and add any values to the current_values dictionary
+        '''
+
+        new_values = self.get_data()
+
+        # new_values
+        pass
 
     def get_data(self):
 
@@ -82,7 +92,7 @@ class CANDevice(Input):
 
         # Try to parse the data & return it
         try:
-            return self.db.decode_message(msg.arbitration_id, msg.data)
+            return self.db.decode_message(msg.arbitration_id, msg.data).get
         except KeyError:
             print(f"ERROR: No database entry found for {msg}")
             return None
@@ -129,30 +139,12 @@ class CANDevice(Input):
         except can.CanError:
             print("Message NOT sent")
 
+
     def close_connection(self):
         # This closes the connection to the CAN Bus
         self.can_bus.shutdown()
-        
         
     
 
 
 
-motorspd = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc')
-
-mode = input("tx or rx1 or rx2?")
-
-if (mode == 'tx'):
-    while True:
-        motorspd.send_can() 
-        time.sleep(0.001)
-elif mode == 'rx1':
-    while True:
-        print(motorspd.get_data().get("ERPM"))
-
-elif mode == 'rx2':
-    motorspd.get_data_raw()
-
-# print(motorspd.get_protocol())
-
-motorspd.close_connection()

@@ -5,6 +5,7 @@
 from time import strftime,localtime       # Used for creating file names
 from time import time as currentTime      # Used for creating timestamps
 from csv import writer as csvWriter
+from csv import reader as csvReader
 import re          # Used for checking if the file name is valid
 
 class File:
