@@ -89,7 +89,7 @@ class CANDevice(Input):
         print(new_values)
 
         # Log the data that was read
-        for key,value in new_values:
+        for key,value in new_values.items():
             super().log_data(key, value)
 
         # Updates / Adds all the read values to the current_values dict
