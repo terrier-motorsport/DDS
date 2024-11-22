@@ -148,7 +148,7 @@ class CANDevice(Input):
 
 
     def send_can(self, messageName):
-        ex_msg = self.db.get_message_by_name(messageName)
+        ex_msg = self.db.get_message_by_name(messageName).signals
         print(ex_msg)
 
 
