@@ -62,9 +62,6 @@ class CANInput(Input):
 
 
     def get_data(self):
-        # This is where the pi would fetch data
-    
-        # with self.can_bus as bus:
 
         # Read a single frame of CAN data
         msg = self.can_bus.recv()
@@ -72,11 +69,13 @@ class CANInput(Input):
         # DEBUG
         # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
-        # Try to parse the data & print it
+        # Try to parse the data & return it
         try:
-            print(self.db.decode_message(msg.arbitration_id, msg.data))
+            return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
             print(f"ERROR: No database entry found for address {msg.arbitration_id}")
+            return None
+        
 
 
 
@@ -90,7 +89,7 @@ class CANInput(Input):
 
         # print(msg)
 
-        # print(message.arbitration_id, message.data, message.timestamp)
+        # print(message.timestamp)
     
         with self.can_bus as bus:
             for msg in bus: 
@@ -141,7 +140,7 @@ if (mode == 'tx'):
         time.sleep(0.001)
 elif mode == 'rx1':
     while True:
-        motorspd.get_data()
+        motorspd.get_data()[1]
 
 elif mode == 'rx2':
     motorspd.get_data_raw()
