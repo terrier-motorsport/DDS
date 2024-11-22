@@ -36,28 +36,28 @@ BS_:
 BU_:
 
 
-BO_ 2147491898 signals0x20: 8 Vector__XXX
+BO_ 2147491898 signalsone: 8 Vector__XXX
 	SG_ ERPM : 7|32@0+ (1,0) [-2147483648|2147483647] "ERPM" Vector__XXX
 	SG_ DutyCycle : 39|16@0+ (0.1,0) [-3276.8|3276.7] "%" Vector__XXX
 	SG_ InputVoltage : 55|16@0+ (1,0) [-32768|32767] "V" Vector__XXX
 
 
-BO_ 2147492154 signals0x21: 8 Vector__XXX
+BO_ 2147492154 signalstwo: 8 Vector__XXX
 	SG_ AC_Current : 7|16@0+ (0.1,0) [-3276.8|3276.7] "Apk" Vector__XXX
 	SG_ DC_Current : 23|16@0+ (0.1,0) [-3276.8|3276.7] "Adc" Vector__XXX
 	SG_ RESERVEDfour : 39|32@0+ (0,0) [0|0] "" Vector__XXX
 
-BO_ 2147492410 signals0x22: 8 Vector__XXX
+BO_ 2147492410 signalsthree: 8 Vector__XXX
 	SG_ ControllerTemp : 7|16@0+ (0.1,0) [-3276.8|3276.7] "°C" Vector__XXX
 	SG_ MotorTemp : 23|16@0+ (0.1,0) [-3276.8|3276.7] "°C" Vector__XXX
 	SG_ FAULT : 39|8@0+ (1,0) [0|255] "#" Vector__XXX
 	SG_ RESERVEDone : 47|24@0+ (0,0) [0|0] "" Vector__XXX
 
-BO_ 2147492666 signals0x23: 8 Vector__XXX
+BO_ 2147492666 signalsfour: 8 Vector__XXX
 	SG_ FOC_Id : 7|32@0+ (0.01,0) [-2147483.648|2147483.647] "Apk" Vector__XXX
 	SG_ FOC_Iq : 39|32@0+ (0.01,0) [-2147483.648|2147483.647] "Apk" Vector__XXX
 
-BO_ 2147492922 signals0x24: 8 Vector__XXX
+BO_ 2147492922 signalsfive: 8 Vector__XXX
 	SG_ ThrottleSignal : 7|8@0+ (1,0) [-128|127] "%" Vector__XXX
 	SG_ BrakeSignal : 15|8@0+ (1,0) [-128|127] "%" Vector__XXX
 	SG_ DigitalIn1 : 23|1@0+ (1,0) [0|1] "#" Vector__XXX
