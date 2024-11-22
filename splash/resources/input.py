@@ -121,6 +121,10 @@ class CANInput(Input):
             print(f"Message sent on {self.can_bus.channel_info}: {msg}")
         except can.CanError:
             print("Message NOT sent")
+
+    def close_connection(self):
+
+        self.can_bus.shutdown()
         
         
     
@@ -143,3 +147,5 @@ elif mode == 'rx2':
     motorspd.get_data_raw()
 
 # print(motorspd.get_protocol())
+
+motorspd.close_connection()
