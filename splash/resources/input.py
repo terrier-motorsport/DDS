@@ -140,7 +140,7 @@ if (mode == 'tx'):
         motorspd.send_can() 
         time.sleep(0.001)
 elif mode == 'rx1':
-    for i in range(10):
+    while True:
         motorspd.get_data()
 
 elif mode == 'rx2':
