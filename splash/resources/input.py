@@ -66,8 +66,7 @@ class CANInput(Input):
 
 
 
-        # DEBUG
-        print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+
 
 
         # Note: msg.arbitration_id contains the integer value of the hex ID
@@ -92,9 +91,10 @@ class CANInput(Input):
 
             # Read CAN data
             msg = bus.recv()
-            
+
             # for msg in bus: 
-            print(msg)
+            # DEBUG
+            print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
             try:
                 print(self.db.decode_message(msg.arbitration_id, msg.data))
