@@ -115,7 +115,7 @@ class CANDevice(Input):
 
         # Try to parse the data & return it
         try:
-            return self.db.decode_message(msg.arbitration_id, msg.data).get
+            return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
             print(f"ERROR: No database entry found for {msg}")
             return {'':''}
