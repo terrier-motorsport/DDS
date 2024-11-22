@@ -93,7 +93,7 @@ class CANDevice(Input):
             super().log_data(key, value)
 
         # Updates / Adds all the read values to the current_values dict
-        for key, value in new_values:
+        for key, value in new_values.items():
             self.current_values[key] = value
 
     def get_data(self, key):
