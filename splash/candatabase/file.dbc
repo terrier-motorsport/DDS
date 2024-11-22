@@ -80,7 +80,6 @@ BO_ 2147492922 signalsfive: 8 Vector__XXX
 	SG_ RPMMinLimit : 47|1@0+ (1,0) [0|1] "#" Vector__XXX
 	SG_ RPMMaxLimit : 46|1@0+ (1,0) [0|1] "#" Vector__XXX
 	SG_ PowerLimit : 45|1@0+ (1,0) [0|1] "#" Vector__XXX
-	SG_ RESERVED : 44|5@0+ (1,0) [0|0] "#" Vector__XXX
 	SG_ RESERVEDthree : 55|8@0+ (0,0) [0|0] "" Vector__XXX
 	SG_ CANMapVersion : 63|8@0+ (1,0) [0|255] "#" Vector__XXX
 	SG_ RESERVEDtwo : 44|5@0+ (0,0) [0|0] "" Vector__XXX
