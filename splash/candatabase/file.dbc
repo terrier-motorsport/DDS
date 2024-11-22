@@ -36,7 +36,7 @@ BS_:
 BU_:
 
 
-BO_ 2147491898 signals: 8 Vector__XXX
+BO_ 2147491898 signals0x20: 8 Vector__XXX
 	SG_ ERPM : 7|32@0+ (1,0) [-2147483648|2147483647] "ERPM" Vector__XXX
 	SG_ DutyCycle : 39|16@0+ (0.1,0) [-3276.8|3276.7] "%" Vector__XXX
 	SG_ InputVoltage : 55|16@0+ (1,0) [-32768|32767] "V" Vector__XXX
