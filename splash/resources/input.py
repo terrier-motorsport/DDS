@@ -164,7 +164,7 @@ class CANDevice(Input):
         self.can_bus.send(can.Message(arbitration_id=0x0000073a, data=[255,255,255,255,255,255,255,255,]))
         new_msg = can.Message(arbitration_id=msg.frame_id, data=data)
         print(new_msg)
-        self.can_bus.send(new_msg)
+        # self.can_bus.send(new_msg)
         
         
 
