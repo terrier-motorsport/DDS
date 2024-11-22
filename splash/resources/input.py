@@ -87,7 +87,8 @@ class CANDevice(Input):
         new_values = self._fetch_can_data()
 
         # Log the data that was read
-        super().log_data()
+        for key,value in new_values:
+            super().log_data(key, value)
 
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values:
