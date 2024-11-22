@@ -86,6 +86,8 @@ class CANDevice(Input):
         # Get data from the CAN Bus
         new_values = self._fetch_can_data()
 
+        print(new_values)
+
         # Log the data that was read
         for key,value in new_values:
             super().log_data(key, value)
