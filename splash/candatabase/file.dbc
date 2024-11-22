@@ -36,7 +36,7 @@ BS_:
 BU_:
 
 
-BO_ 2147491898 0x20signals: 8 Vector__XXX
+BO_ 825 0x20signals: 8 Vector__XXX
 	SG_ ERPM : 7|32@0+ (1,0) [-2147483648|2147483647] "ERPM" Vector__XXX
 	SG_ DutyCycle : 39|16@0+ (0.1,0) [-3276.8|3276.7] "%" Vector__XXX
 	SG_ InputVoltage : 55|16@0+ (1,0) [-32768|32767] "V" Vector__XXX
@@ -85,7 +85,7 @@ BO_ 2147492922 0x24signals: 8 Vector__XXX
 	SG_ RESERVED : 47|24@0+ (0,0) [0|0] "" Vector__XXX
 
 
-CM_ BO_ 2147491898 "ERPM, Duty, Input Voltage";
+CM_ BO_ 825 "ERPM, Duty, Input Voltage";
 CM_ SG_ 2147491898 ERPM "Electrical RPM Equation: ERPM = Motor RPM * number of the motor pole pairs.";
 CM_ BO_ 2147492154 "AC Current, DC Current, RESERVED";
 CM_ SG_ 2147492154 AC_Current "The motor current. The sign of this value represents whether the motor is running(positive) current or regenerating (negative) current.";
