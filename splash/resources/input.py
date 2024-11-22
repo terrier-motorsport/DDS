@@ -86,8 +86,6 @@ class CANDevice(Input):
         # Get data from the CAN Bus
         new_values = self._fetch_can_data()
 
-        print(new_values)
-
         # Log the data that was read
         for key,value in new_values.items():
             super().log_data(key, value)
@@ -149,7 +147,12 @@ class CANDevice(Input):
         # print(f"{msg}\n{hex(msg.arbitration_id)}")
 
 
-    def send_can(self, hex_id, data):
+    def send_can(self, messageName):
+        ex_msg = self.db.get_message_by_name(messageName)
+        print(ex_msg)
+
+
+    def old_send_can(self, hex_id, data):
 
         '''    
         # This sends a CAN message with the extended id format
@@ -196,9 +199,7 @@ motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_pa
 mode = input("tx or rx1 or rx2?")
 
 if (mode == 'tx'):
-    while True:
-        motorController.send_can() 
-        time.sleep(0.001)
+    motorController.send_can()
 elif mode == 'rx1':
     while True:
         motorController.update()

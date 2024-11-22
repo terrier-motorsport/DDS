@@ -9,7 +9,7 @@ mode = input("tx or rx1 or rx2?")
 
 if (mode == 'tx'):
     while True:
-        motorspd.send_can() 
+        motorspd.old_send_can() 
         time.sleep(0.001)
 elif mode == 'rx1':
     while True:
