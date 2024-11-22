@@ -68,7 +68,7 @@ class CANInput(Input):
         msg = self.can_bus.recv()
 
         # DEBUG
-        print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+        print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
 
         # Note: msg.arbitration_id contains the integer value of the hex ID
