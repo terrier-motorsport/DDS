@@ -45,11 +45,13 @@ BO_ 2147491898 signals0x20: 8 Vector__XXX
 BO_ 2147492154 signals0x21: 8 Vector__XXX
 	SG_ AC_Current : 7|16@0+ (0.1,0) [-3276.8|3276.7] "Apk" Vector__XXX
 	SG_ DC_Current : 23|16@0+ (0.1,0) [-3276.8|3276.7] "Adc" Vector__XXX
-	SG_ RESERVED : 39|32@0+ (0,0) [0|0] "" Vector__XXX
+	SG_ RESERVEDfour : 39|32@0+ (0,0) [0|0] "" Vector__XXX
 
 BO_ 2147492410 signals0x22: 8 Vector__XXX
 	SG_ ControllerTemp : 7|16@0+ (0.1,0) [-3276.8|3276.7] "°C" Vector__XXX
 	SG_ MotorTemp : 23|16@0+ (0.1,0) [-3276.8|3276.7] "°C" Vector__XXX
+	SG_ FAULT : 39|8@0+ (1,0) [0|255] "#" Vector__XXX
+	SG_ RESERVEDone : 47|24@0+ (0,0) [0|0] "" Vector__XXX
 
 BO_ 2147492666 signals0x23: 8 Vector__XXX
 	SG_ FOC_Id : 7|32@0+ (0.01,0) [-2147483.648|2147483.647] "Apk" Vector__XXX
@@ -79,10 +81,9 @@ BO_ 2147492922 signals0x24: 8 Vector__XXX
 	SG_ RPMMaxLimit : 46|1@0+ (1,0) [0|1] "#" Vector__XXX
 	SG_ PowerLimit : 45|1@0+ (1,0) [0|1] "#" Vector__XXX
 	SG_ RESERVED : 44|5@0+ (1,0) [0|0] "#" Vector__XXX
-	SG_ RESERVED2 : 55|8@0+ (0,0) [0|0] "" Vector__XXX
+	SG_ RESERVEDthree : 55|8@0+ (0,0) [0|0] "" Vector__XXX
 	SG_ CANMapVersion : 63|8@0+ (1,0) [0|255] "#" Vector__XXX
-	SG_ FAULT : 39|8@0+ (1,0) [0|255] "#" Vector__XXX
-	SG_ RESERVED : 47|24@0+ (0,0) [0|0] "" Vector__XXX
+	SG_ RESERVEDtwo : 44|5@0+ (0,0) [0|0] "" Vector__XXX
 
 
 CM_ BO_ 2147491898 "ERPM, Duty, Input Voltage";
@@ -90,11 +91,10 @@ CM_ SG_ 2147491898 ERPM "Electrical RPM Equation: ERPM = Motor RPM * number of t
 CM_ BO_ 2147492154 "AC Current, DC Current, RESERVED";
 CM_ SG_ 2147492154 AC_Current "The motor current. The sign of this value represents whether the motor is running(positive) current or regenerating (negative) current.";
 CM_ SG_ 2147492154 DC_Current "DC Current: Current on DC side. The sign of this value represents whether the motor is running(positive) current or regenerating (negative) current.";
-CM_ SG_ 2147492154 RESERVED "Filled with FF’s. For future use. ";
+CM_ SG_ 2147492154 RESERVEDfour "Filled with FF’s. For future use. ";
 CM_ SG_ 2147492410 ControllerTemp "Temperature of the inverter semiconductors.";
 CM_ SG_ 2147492410 MotorTemp "Temperature of the motor measured by the inverter";
 CM_ SG_ 2147492410 FAULT "0x00 : NO FAULTS 0x01 : Overvoltage - The input voltage is higher than the set maximum. 0x02 : Undervoltage - The input voltage is lower than the set minimum. 0x03 : DRV - Transistor or transistor drive error 0x04 : ABS. Overcurrent - The AC current is hi";
-CM_ SG_ 2147492410 RESERVED "Filled with FF’s. For future use.";
 CM_ SG_ 2147492666 FOC_Id "FOC algorithm component Id.";
 CM_ SG_ 2147492666 FOC_Iq "FOC algorithm component Iq.";
 CM_ SG_ 2147492922 ThrottleSignal "Throttle signal derived from analog inputs or CAN2";
@@ -119,9 +119,10 @@ CM_ SG_ 2147492922 MotorTempLimit "1: Motor temperature limit active 0: Motor te
 CM_ SG_ 2147492922 RPMMinLimit "1: RPM min limit active 0: RPM min limit inactive";
 CM_ SG_ 2147492922 RPMMaxLimit "1: RPM max limit active 0: RPM max limit inactive";
 CM_ SG_ 2147492922 PowerLimit "1: Power limit by configuration active 0: Power limit by configuration inactive";
-CM_ SG_ 2147492922 RESERVED "Set to 0.";
-CM_ SG_ 2147492922 RESERVED2 "Filled with FF’s. For future use.";
+CM_ SG_ 2147492922 RESERVEDtwo "Set to 0.";
+CM_ SG_ 2147492922 RESERVEDthree "Filled with FF’s. For future use.";
 CM_ SG_ 2147492922 CANMapVersion "Indicates the CAN map version. For ex: 23 -> 2,3 (V2,3) ";
+CM_ SG_ 2147492410 RESERVEDone "Filled with FF’s. For future use.";
 BA_DEF_ SG_  "SPN" INT 0 524287;
 BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";
 BA_DEF_  "DatabaseVersion" STRING ;
