@@ -53,7 +53,7 @@ class File:
             writer = csvWriter(file)
 
             # Write the data
-            writer.writerow([parameter, time, dataValues])
+            writer.writerow([parameter, time, dataValues[0]])
 
     def readData(self):
 
