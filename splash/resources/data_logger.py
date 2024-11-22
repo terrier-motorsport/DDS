@@ -41,7 +41,7 @@ class File:
     def writeData(self, parameter, *dataValues):
 
         # Ensure the data values are up to 5, otherwise fill with None if fewer than 5 are provided
-        dataValues = list(dataValues) + [None] * (5 - len(dataValues))
+        # dataValues = list(dataValues) + [None] * (5 - len(dataValues))
 
         # Generate a timestamp for the entry
         time = currentTime()
