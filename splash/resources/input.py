@@ -161,6 +161,7 @@ class CANDevice(Input):
         msg = self.db.get_message_by_name(messageName)
         data = msg.encode({'DigitalOut1' : 1,'DigitalOut2' : 0,'DigitalOut3' : 1,'DigitalOut4' : 0})
         new_msg = can.Message(arbitration_id=msg.frame_id, data=data)
+        self.can_bus.send(new_msg)
         
         
 
