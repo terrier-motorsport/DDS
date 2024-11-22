@@ -64,19 +64,19 @@ class CANInput(Input):
     def get_data(self):
         # This is where the pi would fetch data
     
-        with self.can_bus as bus:
+        # with self.can_bus as bus:
 
-            # Read a single frame of CAN data
-            msg = bus.recv()
+        # Read a single frame of CAN data
+        msg = self.can_bus.recv()
 
-            # DEBUG
-            # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+        # DEBUG
+        # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
-            # Try to parse the data & print it
-            try:
-                print(self.db.decode_message(msg.arbitration_id, msg.data))
-            except KeyError:
-                print(f"ERROR: No database entry found for address {msg.arbitration_id}")
+        # Try to parse the data & print it
+        try:
+            print(self.db.decode_message(msg.arbitration_id, msg.data))
+        except KeyError:
+            print(f"ERROR: No database entry found for address {msg.arbitration_id}")
 
 
 
