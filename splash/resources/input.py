@@ -63,39 +63,16 @@ class CANInput(Input):
 
     def get_data(self):
         # This is where the pi would fetch data
-
-
-
-
-
-
-        # Note: msg.arbitration_id contains the integer value of the hex ID
-        # Thats all good and fun, but for some reason when converted to a hex ID
-        # Which is needed in order to parse the data, there is a 3a appended to every message.
-        # EX: a message that should be coming from 0x21 is recieved as 0x213a
-        # My current solution is to just ignore the first and last two characters then
-        # pass that into the database. This may require more work in the future.
-
-        # hex_id = (hex(msg.arbitration_id))
-        # real_id = hex_id[2:4]
-
-        # #D  EBUG
-        # print(real_id)
-
-        # Get the decoded message
-        # print(self.db.decode_message(msg.arbitration_id, msg.data))
-
-        # print(message.arbitration_id, message.data, message.timestamp)
     
         with self.can_bus as bus:
 
-            # Read CAN data
+            # Read a single frame of CAN data
             msg = bus.recv()
 
-            # for msg in bus: 
             # DEBUG
-            print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+            # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
+            # Try to parse the data & print it
             try:
                 print(self.db.decode_message(msg.arbitration_id, msg.data))
             except KeyError:
