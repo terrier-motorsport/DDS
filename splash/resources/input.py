@@ -149,6 +149,8 @@ class CANDevice(Input):
 
     def send_can(self, messageName, signal : dict):
         """
+        NOTE: THIS CURRENTLY DOESN'T WORK. TO BE IMPLEMENTED WHEN NEEDED.
+
         Fetches the parameters of the message with the provided name.
         Then fetches the signal of the message with the provided name.
         If you are unsure of signal names, use git_avail_signals(msgName)
@@ -204,39 +206,36 @@ class CANDevice(Input):
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
 
+# Example / Testing Code
+
+if __name__ == 'main':
+
+    logFile = File('MClog')
+    motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', logFile=logFile)
 
 
+    mode = input("tx or rx1 or rx2?")
 
+    if (mode == 'tx'):
+        for i in range(100):
+            motorController.update()
+        print(motorController.get_data('DigitalIn1'))
 
-import time
+        motorController.send_can('SetDigitalOut', {'DigitialOut1' : 1})
 
+        for i in range(100):
+            motorController.update()
+        print(motorController.get_data('DigitalIn1'))
 
-logFile = File('MClog')
-motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', logFile=logFile)
+    elif mode == 'rx1':
+        while True:
+            motorController.update()
+            print(motorController.get_data("ERPM"))
+            # print(motorController.get_data().get("ERPM"))
 
+    elif mode == 'rx2':
+        motorController.get_data_raw()
 
-mode = input("tx or rx1 or rx2?")
+    # print(motorspd.get_protocol())
 
-if (mode == 'tx'):
-    for i in range(100):
-        motorController.update()
-    print(motorController.get_data('DigitalIn1'))
-
-    motorController.send_can('SetDigitalOut', {'DigitialOut1' : 1})
-
-    for i in range(100):
-        motorController.update()
-    print(motorController.get_data('DigitalIn1'))
-
-elif mode == 'rx1':
-    while True:
-        motorController.update()
-        print(motorController.get_data("ERPM"))
-        # print(motorController.get_data().get("ERPM"))
-
-elif mode == 'rx2':
-    motorController.get_data_raw()
-
-# print(motorspd.get_protocol())
-
-motorController.close_connection()
+    motorController.close_connection()
