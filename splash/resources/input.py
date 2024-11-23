@@ -75,6 +75,7 @@ class CANDevice(Input):
         # interface refers to the type of CAN Bus that is running on that physical interface.
         self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
 
+
     def update(self):
 
         '''
@@ -94,10 +95,10 @@ class CANDevice(Input):
         for key, value in new_values.items():
             self.current_values[key] = value
 
+
     def get_data(self, key):
         return self.current_values.get(key)
-        
-        
+         
 
     def _fetch_can_data(self):
 
@@ -168,10 +169,10 @@ class CANDevice(Input):
         print(new_msg)
         # self.can_bus.send(new_msg)
         
-        
 
     def get_avail_signals(self, messageName):
         return self.db.get_message_by_name(messageName)
+
 
     def old_send_can(self, hex_id, data):
 
