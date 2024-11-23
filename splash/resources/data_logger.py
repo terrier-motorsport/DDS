@@ -5,6 +5,7 @@
 from time import strftime,localtime       # Used for creating file names
 from time import time as currentTime      # Used for creating timestamps
 from csv import writer as csvWriter
+from csv import reader as csvReader
 import re          # Used for checking if the file name is valid
 
 class File:
@@ -40,7 +41,7 @@ class File:
     def writeData(self, parameter, *dataValues):
 
         # Ensure the data values are up to 5, otherwise fill with None if fewer than 5 are provided
-        dataValues = list(dataValues) + [None] * (5 - len(dataValues))
+        # dataValues = list(dataValues) + [None] * (5 - len(dataValues))
 
         # Generate a timestamp for the entry
         time = currentTime()
@@ -52,7 +53,7 @@ class File:
             writer = csvWriter(file)
 
             # Write the data
-            writer.writerow([parameter, time] + dataValues)
+            writer.writerow([parameter, time, dataValues[0]])
 
     def readData(self):
 

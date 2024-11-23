@@ -1,2 +1,4 @@
 
-/splash/logs
+.DS_Store
+*.csv
+/splash/resources/__pycache__
