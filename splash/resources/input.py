@@ -7,6 +7,9 @@ import cantools
 import cantools.database
 from data_logger import File
 import subprocess
+import adafruit_adxl34x
+
+
 
 """
 The purpose of this class is to handle data interpreting of a single sensor/input
@@ -28,7 +31,7 @@ class SensorProtocol(Enum):
 # ===== Parent class for all inputs =====
 class Input:
 
-    def __init__(self, name, sensorProtocol, logFile : File):
+    def __init__(self, name : str, sensorProtocol : SensorProtocol, logFile : File):
         self.sensorProtocol = sensorProtocol
         self.name = name
         self.logFile = logFile
@@ -39,14 +42,50 @@ class Input:
         self.logFile.writeData(param_name, value)
         
 
+    def get_name(self) -> str:
+        return self.name
 
-
-    def get_protocol(self):
+    def get_protocol(self) -> SensorProtocol:
         return self.sensorProtocol
 
-    def _fetch_can_data():
+    def get_data():
         print("get_data not overriden propertly in child class.")
         
+
+
+# This is the i2c library for the pi
+import spidev
+import time
+
+class SPIDevice(Input):
+    
+    """
+    # SPI Input which inherits the Input class
+    # Each device has its own address & commands that it responds too.
+    """
+
+    def __init__(self, name, address, logFile : File):
+        
+        # Init super (Input class)
+        super().__init__(name, SensorProtocol.SPI, logFile=logFile)
+
+        # Initialize SPI
+        self.spi = spidev.SpiDev()
+        self.spi.open(0, 0)  # (bus 0, device 0)
+        self.spi.max_speed_hz = 50000  # Adjust speed as needed
+
+    def _read_sensor(self):
+        # Send and receive data
+        adc_response = self.spi.xfer2([0x00, 0x00])  # Example request
+        return adc_response
+    
+    def update(self):
+        data = self.read_sensor()
+        print("Sensor Data:", data)
+        time.sleep(1)
+
+    def close_connection(self):
+        self.spi.close()
 
 class CANDevice(Input):
 
@@ -59,7 +98,7 @@ class CANDevice(Input):
     # Dictionary which contains the most recent values for all the CAN data
     current_values = {}
 
-    def __init__(self, name, can_interface, database_path, logFile : File):
+    def __init__(self, name : str, can_interface : str, database_path : str, logFile : File):
         # Init super (Input class)
         super().__init__(name, SensorProtocol.CAN, logFile=logFile)
 
@@ -103,8 +142,8 @@ class CANDevice(Input):
     def _fetch_can_data(self):
 
         '''
-        # Gets data from the CAN Bus and tries to parse it.
-        # Returns a dictionary of parameters and values.
+        Gets data from the CAN Bus and tries to parse it.
+        Returns a dictionary of parameters and values.
         '''
 
         # Read a single frame of CAN data
@@ -170,7 +209,8 @@ class CANDevice(Input):
         # self.can_bus.send(new_msg)
         
 
-    def get_avail_signals(self, messageName):
+    def get_avail_signals(self, messageName : str):
+        '''Returns the avalable CAN signals from the database with the specified message name'''
         return self.db.get_message_by_name(messageName)
 
 
@@ -212,7 +252,11 @@ class CANDevice(Input):
 if __name__ == 'main':
 
     logFile = File('MClog')
-    motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', logFile=logFile)
+    motorController = CANDevice('DTI HV 500 (MC)', 
+                                can_interface='can0', 
+                                database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', 
+                                logFile=logFile)
+
 
 
     mode = input("tx or rx1 or rx2?")
