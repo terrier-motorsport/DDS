@@ -127,7 +127,7 @@ class CANInterface(Input):
         '''
 
         # Get data from the CAN Bus
-        new_values = CANInterface.__fetch_can_data()
+        new_values = self.__fetch_can_data()
 
         # Log the data that was read
         for key,value in new_values.items():
