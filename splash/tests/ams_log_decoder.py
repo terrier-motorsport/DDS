@@ -7,7 +7,7 @@ import cantools.database
 import csv
 from datetime import datetime
 
-db = cantools.database.load_file('splash/candatabase/Orion_CANBUSv3.dbc')
+db = cantools.database.load_file('splash/candatabase/Orion_CANBUSv4.dbc')
 
 
 def parse_string(input_str):
