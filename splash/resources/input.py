@@ -8,6 +8,9 @@ import cantools.database
 from data_logger import File
 import subprocess
 
+# For Debugging
+import random
+
 
 
 """
@@ -135,7 +138,7 @@ class CANInterface(Input):
 
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values.items():
-            self.current_values[key] = value
+            self.current_values[key] = value + random.randint(1,100)
 
 
     def get_data(self, key):
