@@ -275,7 +275,7 @@ if DEBUG_ENABLED == True:
                                 can_interface='can0', 
                                 database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', 
                                 logFile=logFile)
-    canInterface.add_database('splash/candatabase/Orion_CANBUSv3.dbc')
+    canInterface.add_database('splash/candatabase/Orion_CANBUSv4.dbc')
 
     # acumulatorManagement = CANInterface('Orion BMS2 (AMS)', 
     #                             can_interface='can0', 
@@ -306,7 +306,7 @@ if DEBUG_ENABLED == True:
     elif mode == 'rx2':
         while True:
             canInterface.update()
-            print(canInterface.get_data("ERPM"))
+            print(canInterface.get_data("Input_Supply_Voltage"))
             # acumulatorManagement.update()
         #     print(acumulatorManagement.get_data(""))
 
