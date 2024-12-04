@@ -96,7 +96,7 @@ class CANInterface(Input):
     '''
 
     # Dictionary which contains the most recent values for all the CAN data
-    current_values : dict
+    current_values : dict = {}
 
     
 
