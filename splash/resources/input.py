@@ -53,7 +53,7 @@ class Input:
 
 
 # This is the i2c library for the pi
-import spidev
+import spidev #type: ignore
 import time
 
 class SPIDevice(Input):
@@ -123,7 +123,7 @@ class CANDevice(Input):
         '''
 
         # Get data from the CAN Bus
-        new_values = self._fetch_can_data()
+        new_values = self.__fetch_can_data()
 
         # Log the data that was read
         for key,value in new_values.items():
@@ -138,31 +138,6 @@ class CANDevice(Input):
         return self.current_values.get(key)
          
 
-    def _fetch_can_data(self):
-
-        '''
-        Gets data from the CAN Bus and tries to parse it.
-        Returns a dictionary of parameters and values.
-        '''
-
-        # Read a single frame of CAN data
-        # If this throws an error, its most likely because the CAN Bus Network on the OS isn't open.
-        # It will try to open the network and run the command again.
-        try:
-            msg = self.can_bus.recv()
-        except can.exceptions.CanOperationError:
-            self.start_can_bus()
-            msg = self.can_bus.recv()
-
-        # DEBUG
-        # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
-
-        # Try to parse the data & return it
-        try:
-            return self.db.decode_message(msg.arbitration_id, msg.data)
-        except KeyError:
-            print(f"ERROR: No database entry found for {msg}")
-            return {'':''}
         
 
     def get_data_raw(self):
@@ -239,16 +214,48 @@ class CANDevice(Input):
         self.can_bus.shutdown()
         
     
-    def start_can_bus(self):
-        # This is the command to start the can0 network
-        # In a terminal, all these command would be run with spaces inbetween them
+    def __fetch_can_data(self):
+
+        '''
+        Gets data from the CAN Bus and tries to parse it.
+        Returns a dictionary of parameters and values.
+        '''
+
+        # Read a single frame of CAN data
+        # If this throws an error, its most likely because the CAN Bus Network on the OS isn't open.
+        # It will try to open the network and run the command again.
+        try:
+            msg = self.can_bus.recv()
+        except can.exceptions.CanOperationError:
+            self.__start_can_bus()
+            msg = self.can_bus.recv()
+
+        # DEBUG
+        # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
+
+        # Try to parse the data & return it
+        try:
+            return self.db.decode_message(msg.arbitration_id, msg.data)
+        except KeyError:
+            print(f"ERROR: No database entry found for {msg}")
+            return {'':''}
+    
+    
+    def __start_can_bus(self):
+        '''
+        This is the command to start the can0 network
+        In a terminal, all these command would be run with spaces inbetween them
+        '''
+        print("CAN Bus not found... Attempting to open one.")
+
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
-
+# Test
 # Example / Testing Code
+DEBUG_ENABLED = True
 
-if __name__ == 'main':
+if DEBUG_ENABLED == True:
 
     logFile = File('MClog')
     motorController = CANDevice('DTI HV 500 (MC)', 
