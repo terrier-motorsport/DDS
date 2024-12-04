@@ -86,16 +86,20 @@ class SPIDevice(Input):
     def close_connection(self):
         self.spi.close()
 
-class CANDevice(Input):
+class CANInterface(Input):
 
     '''
-    CAN Input which inherits the Input class
-    Each device can have its own CAN database & physical CAN interface
-    EX: The MC would be one CAN device and the AMS would be another.
+    CAN Interface which inherits the Input class
+    Each device on the interface can have its own CAN database, which can be added using add_database()
+    EX: The MC & AMS are on one CAN Interface. 
+    The values from the network are constantly updated into the current_values dictionary
     '''
 
     # Dictionary which contains the most recent values for all the CAN data
-    current_values = {}
+    current_values : dict
+
+    
+
 
     def __init__(self, name : str, can_interface : str, database_path : str, logFile : File):
         # Init super (Input class)
@@ -106,14 +110,15 @@ class CANDevice(Input):
 
         # Init database & print messages
         self.db = cantools.database.load_file(self.database_path)
-        print(self.db.messages)
+        print(f"\n\n\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
 
         # Setup CAN Bus 
         # Can_interface is the interface of the device that the code is running on which can is connected to.
         # interface refers to the type of CAN Bus that is running on that physical interface.
-        self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
+        if CANInterface.can_bus == None:
+            CANInterface.can_bus = can.interface.Bus(can_interface, interface='socketcan')
 
-
+    
     def update(self):
 
         '''
@@ -123,7 +128,7 @@ class CANDevice(Input):
         '''
 
         # Get data from the CAN Bus
-        new_values = self.__fetch_can_data()
+        new_values = CANInterface.__fetch_can_data()
 
         # Log the data that was read
         for key,value in new_values.items():
@@ -135,9 +140,12 @@ class CANDevice(Input):
 
 
     def get_data(self, key):
-        return self.current_values.get(key)
-         
-
+        reqData = self.current_values.get(key)
+        
+        if reqData != None:
+            return reqData
+        else:
+            print(f"No current valeus found for parameter: {key}")
         
 
     def get_data_raw(self):
@@ -213,9 +221,14 @@ class CANDevice(Input):
         # This closes the connection to the CAN Bus
         self.can_bus.shutdown()
         
-    
-    def __fetch_can_data(self):
+    def add_database(self, filename : str):
+        # Adds additional database info to the CAN interface.
+        self.db.add_dbc_file(filename)
+        print(f"\n\n\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
+        
 
+    def __fetch_can_data(self):
+        
         '''
         Gets data from the CAN Bus and tries to parse it.
         Returns a dictionary of parameters and values.
@@ -240,8 +253,9 @@ class CANDevice(Input):
             print(f"ERROR: No database entry found for {msg}")
             return {'':''}
     
-    
+
     def __start_can_bus(self):
+
         '''
         This is the command to start the can0 network
         In a terminal, all these command would be run with spaces inbetween them
@@ -251,47 +265,51 @@ class CANDevice(Input):
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
-# Test
 # Example / Testing Code
 DEBUG_ENABLED = True
 
 if DEBUG_ENABLED == True:
 
     logFile = File('MClog')
-    motorController = CANDevice('DTI HV 500 (MC)', 
+    canInterface = CANInterface('MC & AMS', 
                                 can_interface='can0', 
                                 database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', 
                                 logFile=logFile)
+    canInterface.add_database('splash/candatabase/Orion_CANBUSv3.dbc')
 
-    acumulatorManagement = CANDevice('Orion BMS2 (AMS)', 
-                                can_interface='can0', 
-                                database_path='splash/candatabase/Orion_CANBUSv3.dbc', 
-                                logFile=logFile)
+    # acumulatorManagement = CANInterface('Orion BMS2 (AMS)', 
+    #                             can_interface='can0', 
+    #                             database_path='splash/candatabase/Orion_CANBUSv3.dbc', 
+    #                             logFile=logFile)
+    
+    print(type(canInterface.can_bus))
 
     mode = input("tx or rx1 (MC) or rx2? (AMS)")
 
     if (mode == 'tx'):
         for i in range(100):
-            motorController.update()
-        print(motorController.get_data('DigitalIn1'))
+            canInterface.update()
+        print(canInterface.get_data('DigitalIn1'))
 
-        motorController.send_can('SetDigitalOut', {'DigitialOut1' : 1})
+        canInterface.send_can('SetDigitalOut', {'DigitialOut1' : 1})
 
         for i in range(100):
-            motorController.update()
-        print(motorController.get_data('DigitalIn1'))
+            canInterface.update()
+        print(canInterface.get_data('DigitalIn1'))
 
     elif mode == 'rx1':
         while True:
-            motorController.update()
-            print(motorController.get_data("ERPM"))
+            canInterface.update()
+            print(canInterface.get_data("ERPM"))
             # print(motorController.get_data().get("ERPM"))
 
     elif mode == 'rx2':
         while True:
-            acumulatorManagement.update()
-            print(acumulatorManagement.get_data(""))
+            canInterface.update()
+            print(canInterface.get_data("ERPM"))
+            # acumulatorManagement.update()
+        #     print(acumulatorManagement.get_data(""))
 
     # print(motorspd.get_protocol())
 
-    motorController.close_connection()
+    canInterface.close_connection()

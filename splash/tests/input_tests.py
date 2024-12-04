@@ -1,9 +1,9 @@
-from resources.input import CANDevice
+from resources.input import CANInterface
 import time
 
 
 
-motorspd = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc')
+motorspd = CANInterface('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc')
 
 mode = input("tx or rx1 or rx2?")
 

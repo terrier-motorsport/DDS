@@ -1,7 +1,7 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from input import Input, CANDevice, SPIDevice, SensorProtocol
+from input import Input, CANInterface, SPIDevice, SensorProtocol
 from data_logger import File
 
 """
@@ -14,7 +14,7 @@ class DDS_IO:
 
     logFile = File('FullDataLog')
 
-    motorController = CANDevice('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc', logFile=logFile)
+    motorController = CANInterface('DTI HV 500 (MC)', can_interface='can0', database_path='splash/candatabase/CANDatabaseDTI500.dbc', logFile=logFile)
 
     # TODO: Implement 
     # AcumulatorManagementSystem = CANDevice('Orion BMS 2', can_interface='can0', database_path='')
