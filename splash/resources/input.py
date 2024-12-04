@@ -138,7 +138,7 @@ class CANInterface(Input):
 
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values.items():
-            self.current_values[key] = value + random.randint(1,100)
+            self.current_values[key] = f"{value} data id: {random.randint(1,100000)}"
 
 
     def get_data(self, key):
