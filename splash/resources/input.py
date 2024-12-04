@@ -7,7 +7,6 @@ import cantools
 import cantools.database
 from data_logger import File
 import subprocess
-import adafruit_adxl34x
 
 
 
@@ -60,8 +59,8 @@ import time
 class SPIDevice(Input):
     
     """
-    # SPI Input which inherits the Input class
-    # Each device has its own address & commands that it responds too.
+    SPI Input which inherits the Input class
+    Each device has its own address & commands that it responds too.
     """
 
     def __init__(self, name, address, logFile : File):
@@ -90,9 +89,9 @@ class SPIDevice(Input):
 class CANDevice(Input):
 
     '''
-    # CAN Input which inherits the Input class
-    # Each device can have its own CAN database & physical CAN interface
-    # EX: The MC would be one CAN device and the AMS would be another.
+    CAN Input which inherits the Input class
+    Each device can have its own CAN database & physical CAN interface
+    EX: The MC would be one CAN device and the AMS would be another.
     '''
 
     # Dictionary which contains the most recent values for all the CAN data
@@ -257,9 +256,12 @@ if __name__ == 'main':
                                 database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', 
                                 logFile=logFile)
 
+    acumulatorManagement = CANDevice('Orion BMS2 (AMS)', 
+                                can_interface='can0', 
+                                database_path='splash/candatabase/Orion_CANBUSv3.dbc', 
+                                logFile=logFile)
 
-
-    mode = input("tx or rx1 or rx2?")
+    mode = input("tx or rx1 (MC) or rx2? (AMS)")
 
     if (mode == 'tx'):
         for i in range(100):
@@ -279,7 +281,9 @@ if __name__ == 'main':
             # print(motorController.get_data().get("ERPM"))
 
     elif mode == 'rx2':
-        motorController.get_data_raw()
+        while True:
+            acumulatorManagement.update()
+            print(acumulatorManagement.get_data(""))
 
     # print(motorspd.get_protocol())
 

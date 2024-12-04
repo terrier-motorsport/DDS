@@ -1,5 +1,11 @@
+# CANBUS Decoding for the Orion BMS2 (AMS) for Terrier Motorsport's DDS
+    # Code by Jackson Justus (jackjust@bu.edu)
+
+
 import cantools
 import cantools.database
+import csv
+from datetime import datetime
 
 db = cantools.database.load_file('splash/candatabase/Orion_CANBUSv3.dbc')
 
@@ -30,7 +36,6 @@ def parse_string(input_str):
     return result
 
 
-import csv
 def process_csv(file_path, output_file_path):
     with open(file_path, 'r') as csv_file, open(output_file_path, 'w') as output_file:
         csv_reader = csv.reader(csv_file)
@@ -38,18 +43,17 @@ def process_csv(file_path, output_file_path):
             input_str = row[0]
             try:
                 result = parse_string(input_str)
+                decoded = db.decode_message(result[0], result[1])
                 # Write the result to the output file
-                output_file.write(f"{db.decode_message(result[0], result[1])}\n")
+                output_file.write(f"{decoded}\n")
             except ValueError as e:
                 output_file.write(f"Skipping invalid line: {input_str} ({e})\n")
 
 
-from datetime import datetime
-
 # Get current date and time
 now = datetime.now()
 
-# Format it as a string (optional)
+# Format it as a string
 formatted_now = now.strftime("%Y_%m_%d_%H:%M:%S")
 
 # Example usage
