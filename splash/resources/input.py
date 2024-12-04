@@ -309,9 +309,17 @@ if DEBUG_ENABLED == True:
     elif mode == 'rx2':
         while True:
             canInterface.update()
-            print(canInterface.get_data("Input_Supply_Voltage"))
-            # acumulatorManagement.update()
-        #     print(acumulatorManagement.get_data(""))
+
+            dataToPrint = {
+                "Input_Supply_Voltage"
+                "DTC_Flags_1"
+                "DTC_Flags_2"
+                "Current_ADC1"
+                "Current_ADC2"
+            }
+
+            for key in dataToPrint:
+                print(f"{key}: {canInterface.get_data(key)}")
 
     # print(motorspd.get_protocol())
 
