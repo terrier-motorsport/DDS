@@ -310,13 +310,13 @@ if DEBUG_ENABLED == True:
         while True:
             canInterface.update()
 
-            dataToPrint = {
-                "Input_Supply_Voltage"
-                "DTC_Flags_1"
-                "DTC_Flags_2"
-                "Current_ADC1"
+            dataToPrint = [
+                "Input_Supply_Voltage",
+                "DTC_Flags_1",
+                "DTC_Flags_2",
+                "Current_ADC1",
                 "Current_ADC2"
-            }
+            ]
 
             for key in dataToPrint:
                 print(f"{key}: {canInterface.get_data(key)}")
