@@ -115,8 +115,7 @@ class CANInterface(Input):
         # Setup CAN Bus 
         # Can_interface is the interface of the device that the code is running on which can is connected to.
         # interface refers to the type of CAN Bus that is running on that physical interface.
-        if self.can_bus == None:
-            self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
+        self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
 
     
     def update(self):
@@ -221,7 +220,7 @@ class CANInterface(Input):
         # This closes the connection to the CAN Bus
         self.can_bus.shutdown()
         
-        
+
     def add_database(self, filename : str):
         # Adds additional database info to the CAN interface.
         self.db.add_dbc_file(filename)
