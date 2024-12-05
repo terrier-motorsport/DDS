@@ -313,6 +313,8 @@ class CANInterface(Interface):
         # Get current time
         current_time = time.time()
 
+        print(f"Current time: {current_time}\nLast Retrieval: {self.last_retrieval_time}\nCalc Value: {current_time - self.last_retrieval_time}\nCache Threshold: {self.cached_data_timeout_threshold}")
+
         if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
             self.cached_values = {}  # Clear the cache if timeout is exceeded
             print("Cache cleared due to CAN timeout.")

@@ -63,9 +63,7 @@ if DEBUG_ENABLED == True:
 
 
     while True:
-        print("A")
         io.update()
-        print("S")
         print(io.canInterface.get_data("Input_Supply_Voltage"))
 
 
