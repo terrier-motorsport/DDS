@@ -7,9 +7,11 @@ import cantools
 import cantools.database
 from data_logger import File
 import subprocess
+import spidev           # type: ignore # This is the SPI library for the pi
+import time
 
 """
-The purpose of this class is to handle data interpreting of a single sensor/input
+The purpose of these classes is to handle data interpreting of a single interface/device
 Input objects are created by the DDS_IO class.
 """
 
@@ -19,42 +21,49 @@ CAN_INTERFACE = 'can0'
 UART_TX = 2
 #...
 
-class SensorProtocol(Enum):
-    CAN = 1
-    SPI = 2
-    I2C = 3
-    UART = 4
+# Enums for types of protocols
+class InterfaceProtocol(Enum):
+    CAN = 1     # DONE
+    SPI = 2     # TODO
+    I2C = 3     # TODO
+    UART = 4    # Not Needed?
 
-# ===== Parent class for all inputs =====
-class Input:
+# ===== Parent class for all interfaces =====
+class Interface:
 
-    def __init__(self, name : str, sensorProtocol : SensorProtocol, logFile : File):
+    def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logFile : File):
+        '''
+        Parent class for all interfaces.
+        In case you didn't know, this is the initializer.
+        '''
+
         self.sensorProtocol = sensorProtocol
         self.name = name
         self.logFile = logFile
         pass
 
+
     def log_data(self, param_name: str, value):
-        # Takes in a file, parameter name & a value
+        '''Takes in a file, parameter name & a value'''
         self.logFile.writeData(param_name, value)
         
 
     def get_name(self) -> str:
+        '''Gets the name of the interface'''
         return self.name
 
-    def get_protocol(self) -> SensorProtocol:
+
+    def get_protocol(self) -> InterfaceProtocol:
+        '''Gets the protocol of the interface'''
         return self.sensorProtocol
 
-    def get_data():
+
+    def get_data(self, key : str):
+        '''Gets the data from the interface'''
         print("get_data not overriden propertly in child class.")
-        
 
-
-# This is the i2c library for the pi
-import spidev #type: ignore
-import time
-
-class SPIDevice(Input):
+# ===== SPIDevice class for DDS' SPI Backend =====
+class SPIDevice(Interface):
     
     """
     SPI Input which inherits the Input class
@@ -64,7 +73,7 @@ class SPIDevice(Input):
     def __init__(self, name, address, logFile : File):
         
         # Init super (Input class)
-        super().__init__(name, SensorProtocol.SPI, logFile=logFile)
+        super().__init__(name, InterfaceProtocol.SPI, logFile=logFile)
 
         # Initialize SPI
         self.spi = spidev.SpiDev()
@@ -84,13 +93,15 @@ class SPIDevice(Input):
     def close_connection(self):
         self.spi.close()
 
-class CANInterface(Input):
+# ===== CANInterface class for DDS' CAN Backend =====
+class CANInterface(Interface):
 
     '''
     CAN Interface which inherits the Input class.
     Each device on the interface can have its own CAN database, which can be added using add_database().
     EX: The MC & AMS are on one CAN Interface. 
-    The values from the network are constantly updated into the current_values dictionary
+    In order for this to function properly, the update() function must be called as often as possible.
+    /The values from the network are constantly updated into the current_values dictionary
     and can be retrieved by using the .get_data() function
     \nFor UCP, There is only one CAN Interface running on the DDS.
     '''
@@ -99,15 +110,13 @@ class CANInterface(Input):
     current_values : dict = {}
 
     
-
-
     def __init__(self, name : str, can_interface : str, database_path : str, logFile : File):
         '''
         Initializer for a CANInterface
         '''
 
         # Init super (Input class)
-        super().__init__(name, SensorProtocol.CAN, logFile=logFile)
+        super().__init__(name, InterfaceProtocol.CAN, logFile=logFile)
 
         # Init database path
         self.database_path = database_path
@@ -148,7 +157,7 @@ class CANInterface(Input):
             self.current_values[key] = value
 
 
-    def get_data(self, key):
+    def get_data(self, key : str):
         '''
         Returns the most recent piece of CAN data associated with the key passed in.
         '''
@@ -184,7 +193,7 @@ class CANInterface(Input):
         # print(f"{msg}\n{hex(msg.arbitration_id)}")
 
 
-    def send_can(self, messageName, signal : dict):
+    def send_can(self, messageName : str, signal : dict):
         """
         # NOTE: THIS CURRENTLY DOESN'T WORK. TO BE IMPLEMENTED WHEN NEEDED.
 
@@ -281,56 +290,3 @@ class CANInterface(Input):
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
-# Example / Testing Code
-DEBUG_ENABLED = True
-
-if DEBUG_ENABLED == True:
-
-    logFile = File('MClog')
-    canInterface = CANInterface('MC & AMS', 
-                                can_interface='can0', 
-                                database_path='splash/candatabase/CANDatabaseDTI500v2.dbc', 
-                                logFile=logFile)
-    canInterface.add_database('splash/candatabase/Orion_CANBUSv4.dbc')
-
-    print(type(canInterface.can_bus))
-
-    mode = input("tx or rx1 (MC) or rx2? (AMS)")
-
-    if (mode == 'tx'):
-        for i in range(100):
-            canInterface.update()
-        print(canInterface.get_data('DigitalIn1'))
-
-        canInterface.send_can('SetDigitalOut', {'DigitialOut1' : 1})
-
-        for i in range(100):
-            canInterface.update()
-        print(canInterface.get_data('DigitalIn1'))
-
-    elif mode == 'rx1':
-        while True:
-            canInterface.update()
-            print(canInterface.get_data("ERPM"))
-            # print(motorController.get_data().get("ERPM"))
-
-    elif mode == 'rx2':
-        while True:
-            canInterface.update()
-
-            dataToPrint = [
-                "Input_Supply_Voltage",
-                "DTC_Flags_1",
-                "DTC_Flags_2",
-                "Pack_CCL",
-                "Pack_DCL"
-            ]
-
-            for key in dataToPrint:
-                print(f"{key}: {canInterface.get_data(key)}")
-
-            
-
-    # print(motorspd.get_protocol())
-
-    canInterface.close_connection()

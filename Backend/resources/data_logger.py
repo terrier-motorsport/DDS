@@ -10,8 +10,9 @@ import re          # Used for checking if the file name is valid
 
 class File:
 
-    baseFilePath = './splash/logs/'
+    baseFilePath = './backend/logs/'
     filePath = ''     # File path of the file
+
 
     def __init__(self, fileName):
 
@@ -38,6 +39,7 @@ class File:
 
             # The 'with as' block automatically closes the file when it is done
     
+
     def writeData(self, parameter, *dataValues):
 
         # Ensure the data values are up to 5, otherwise fill with None if fewer than 5 are provided
@@ -55,6 +57,7 @@ class File:
             # Write the data
             writer.writerow([parameter, time, dataValues[0]])
 
+
     def readData(self):
 
         # Open the file
@@ -69,7 +72,6 @@ class File:
         return data
 
 
-    
     def validateFileName(self, fileName):
 
         # Check if the fileName contains only valid characters
