@@ -148,11 +148,13 @@ class CANInterface(Interface):
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
         if new_values == None:
+
+            # If no new values are discovered, we check to see if the cache has expired.
+            self.__update_cache_timeout()
             return
         
         # Update the last retrevial time for the timeout threshold
         self.last_retrieval_time = time.time()  # Update retrieval time
-        self.__check_cache_timeout()
 
         # Log the data that was read
         for key,value in new_values.items():
@@ -304,7 +306,7 @@ class CANInterface(Interface):
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
-    def __check_cache_timeout(self):
+    def __update_cache_timeout(self):
         """Checks if cached data should be cleared due to timeout, and clears it if it does"""
 
         # If the cache is already empty, skip this function
