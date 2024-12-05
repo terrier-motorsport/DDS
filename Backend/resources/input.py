@@ -152,6 +152,7 @@ class CANInterface(Interface):
         
         # Update the last retrevial time for the timeout threshold
         self.last_retrieval_time = time.time()  # Update retrieval time
+        self.__check_cache_timeout()
 
         # Log the data that was read
         for key,value in new_values.items():
