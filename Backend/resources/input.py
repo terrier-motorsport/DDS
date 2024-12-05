@@ -273,10 +273,14 @@ class CANInterface(Interface):
         # It will try to open the network and run the command again.
         try:
             # If a message isn't found within 10ms, the function returns None.
-            msg = self.can_bus.recv(timeout=10)
+            msg = self.can_bus.recv(timeout=.01)
         except can.exceptions.CanOperationError:
             self.__start_can_bus()
             msg = self.can_bus.recv()
+
+        # Check to see if the request timed out
+        if msg == None:
+            return None
 
         # Try to parse the data & return it
         try:
