@@ -272,7 +272,8 @@ class CANInterface(Interface):
         # If this throws an error, its most likely because the CAN Bus Network on the OS isn't open.
         # It will try to open the network and run the command again.
         try:
-            msg = self.can_bus.recv()
+            # If a message isn't found within 10ms, the function returns None.
+            msg = self.can_bus.recv(timeout=10)
         except can.exceptions.CanOperationError:
             self.__start_can_bus()
             msg = self.can_bus.recv()
