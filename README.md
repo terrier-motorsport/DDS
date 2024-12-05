@@ -5,10 +5,10 @@ This repo hosts all of the code and files related to Terrier Motorsport's DDS pr
 Info goes here
 
 ## Contents
-Frontend
-Backend
--DDS_IO.py -> Manages all Devices (MC, Accelerometer) and makes them accessible to the front end.
--resources
+Frontend <br>
+Backend <br>
+-DDS_IO.py -> Manages all Devices (MC, Accelerometer) and makes them accessible to the front end. <br>
+-resources <br>
 
 
 
