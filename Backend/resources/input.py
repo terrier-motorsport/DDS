@@ -107,7 +107,10 @@ class CANInterface(Interface):
     '''
 
     # Dictionary which contains the most recent values for all the CAN data
-    current_values : dict = {}
+    cached_values : dict = {}
+
+    # If no CAN data is retrieved within x seconds, the class removes cached data.
+    cached_data_timeout_threshold = 2
 
     
     def __init__(self, name : str, can_interface : str, database_path : str, logFile : File):
@@ -147,19 +150,18 @@ class CANInterface(Interface):
         if new_values == None:
             return
         
+        # Update the last retrevial time for the timeout threshold
+        self.last_retrieval_time = time.time()  # Update retrieval time
+
         # Log the data that was read
         for key,value in new_values.items():
-
-            # Validating that the object returned actually contains data
-            if key == None or value == None:
-                key, value = "Error"
 
             # Write the data to the log file
             super().log_data(key, value)
 
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values.items():
-            self.current_values[key] = value
+            self.cached_values[key] = value
 
 
 
@@ -169,7 +171,7 @@ class CANInterface(Interface):
         '''
 
         # Get the data by querying the current_values dictionary
-        reqData = self.current_values.get(key)
+        reqData = self.cached_values.get(key)
         
         # Validating & returning the data
         if reqData != None:
@@ -301,3 +303,16 @@ class CANInterface(Interface):
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
+    def __check_cache_timeout(self):
+        """Checks if cached data should be cleared due to timeout, and clears it if it does"""
+
+        # If the cache is already empty, skip this function
+        if self.cached_values == {}:
+            return
+        
+        # Get current time
+        current_time = time.time()
+
+        if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
+            self.cached_values = {}  # Clear the cache if timeout is exceeded
+            print("Cache cleared due to CAN timeout.")
