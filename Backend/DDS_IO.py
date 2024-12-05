@@ -50,11 +50,8 @@ class DDS_IO:
         # Update other sensors
 
 
-
-
-
 # Example / Testing Code
-DEBUG_ENABLED = True
+DEBUG_ENABLED = False
 
 if DEBUG_ENABLED == True:
 
