@@ -161,7 +161,6 @@ class CANInterface(Interface):
         for key, value in new_values.items():
             self.current_values[key] = value
 
-        print("4")
 
 
     def get_data(self, key : str):
@@ -176,7 +175,7 @@ class CANInterface(Interface):
         if reqData != None:
             return reqData
         else:
-            print(f"No current valeus found for parameter: {key}")
+            print(f"No current values found for parameter: {key}")
         
 
     def get_data_raw(self):
