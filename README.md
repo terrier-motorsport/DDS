@@ -14,9 +14,9 @@ Backend <br>
 
 ## Credits
 __Project Leads:__ <br>
-Anna LaPrade - Frontend (Kivy, UI Design) <br> -- alaprade@bu.edu
-Jack Justus - Backend (CAN, I2C Decoding) <br> -- jackjust@bu.edu
-Michael Waetzman - THINGS WORKED ON <br>       -- mwae@bu.edu
+Anna LaPrade - Frontend (Kivy, UI Design) -- alaprade@bu.edu <br>
+Jack Justus - Backend (CAN, I2C Decoding) -- jackjust@bu.edu <br>
+Michael Waetzman - THINGS WORKED ON <br>       -- mwae@bu.edu <br>
 
 __Club Leadership:__<br>
 Chief Electrical Engineer: Michael Waetzman (mwae@bu.edu) <br>
