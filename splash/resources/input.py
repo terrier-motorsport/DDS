@@ -314,8 +314,8 @@ if DEBUG_ENABLED == True:
                 "Input_Supply_Voltage",
                 "DTC_Flags_1",
                 "DTC_Flags_2",
-                "Current_ADC1",
-                "Current_ADC2"
+                "Pack_CCL",
+                "Pack_DCL"
             ]
 
             for key in dataToPrint:
