@@ -5,7 +5,7 @@ from enum import Enum
 import can
 import cantools
 import cantools.database
-from data_logger import File
+from .data_logger import File
 import subprocess
 import spidev           # type: ignore # This is the SPI library for the pi
 import time
