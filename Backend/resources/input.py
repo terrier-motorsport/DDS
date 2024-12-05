@@ -306,6 +306,7 @@ class CANInterface(Interface):
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
+
     def __update_cache_timeout(self):
         """Checks if cached data should be cleared due to timeout, and clears it if it does"""
 
@@ -316,7 +317,8 @@ class CANInterface(Interface):
         # Get current time
         current_time = time.time()
 
-        print(f"Current time: {current_time}\nLast Retrieval: {self.last_retrieval_time}\nCalc Value: {current_time - self.last_retrieval_time}\nCache Threshold: {self.cached_data_timeout_threshold}")
+        # DEBUG Print statement
+        # print(f"Current time: {current_time}\nLast Retrieval: {self.last_retrieval_time}\nCalc Value: {current_time - self.last_retrieval_time}\nCache Threshold: {self.cached_data_timeout_threshold}")
 
         if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
             self.cached_values = {}  # Clear the cache if timeout is exceeded
