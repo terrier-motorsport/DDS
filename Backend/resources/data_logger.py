@@ -10,7 +10,7 @@ import re          # Used for checking if the file name is valid
 
 class File:
 
-    baseFilePath = './backend/logs/'
+    baseFilePath = './Backend/logs/'
     filePath = ''     # File path of the file
 
 
