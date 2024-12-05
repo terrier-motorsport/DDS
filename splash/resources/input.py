@@ -8,11 +8,6 @@ import cantools.database
 from data_logger import File
 import subprocess
 
-# For Debugging
-import random
-
-
-
 """
 The purpose of this class is to handle data interpreting of a single sensor/input
 Input objects are created by the DDS_IO class.
@@ -92,10 +87,12 @@ class SPIDevice(Input):
 class CANInterface(Input):
 
     '''
-    CAN Interface which inherits the Input class
-    Each device on the interface can have its own CAN database, which can be added using add_database()
+    CAN Interface which inherits the Input class.
+    Each device on the interface can have its own CAN database, which can be added using add_database().
     EX: The MC & AMS are on one CAN Interface. 
     The values from the network are constantly updated into the current_values dictionary
+    and can be retrieved by using the .get_data() function
+    \nFor UCP, There is only one CAN Interface running on the DDS.
     '''
 
     # Dictionary which contains the most recent values for all the CAN data
@@ -105,6 +102,10 @@ class CANInterface(Input):
 
 
     def __init__(self, name : str, can_interface : str, database_path : str, logFile : File):
+        '''
+        Initializer for a CANInterface
+        '''
+
         # Init super (Input class)
         super().__init__(name, SensorProtocol.CAN, logFile=logFile)
 
@@ -134,16 +135,28 @@ class CANInterface(Input):
 
         # Log the data that was read
         for key,value in new_values.items():
+
+            # Validating that the object returned actually contains data
+            if key == None or value == None:
+                key, value = "Error"
+
+            # Write the data to the log file
             super().log_data(key, value)
 
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values.items():
-            self.current_values[key] = f"{value} data id: {random.randint(1,100000)}"
+            self.current_values[key] = value
 
 
     def get_data(self, key):
+        '''
+        Returns the most recent piece of CAN data associated with the key passed in.
+        '''
+
+        # Get the data by querying the current_values dictionary
         reqData = self.current_values.get(key)
         
+        # Validating & returning the data
         if reqData != None:
             return reqData
         else:
@@ -173,7 +186,7 @@ class CANInterface(Input):
 
     def send_can(self, messageName, signal : dict):
         """
-        NOTE: THIS CURRENTLY DOESN'T WORK. TO BE IMPLEMENTED WHEN NEEDED.
+        # NOTE: THIS CURRENTLY DOESN'T WORK. TO BE IMPLEMENTED WHEN NEEDED.
 
         Fetches the parameters of the message with the provided name.
         Then fetches the signal of the message with the provided name.
@@ -200,9 +213,10 @@ class CANInterface(Input):
 
     def old_send_can(self, hex_id, data):
 
-        '''    
-        # This sends a CAN message with the extended id format
-        # Code from https://python-can.readthedocs.io/en/stable/
+        '''   
+        # DEPRICATED - ONLY USE FOR DEBUGGING 
+        This sends a CAN message with the extended id format
+        Code from https://python-can.readthedocs.io/en/stable/
         '''
 
 
@@ -220,12 +234,14 @@ class CANInterface(Input):
 
 
     def close_connection(self):
-        # This closes the connection to the CAN Bus
+        '''Closes the connection to the CAN Bus'''
         self.can_bus.shutdown()
         
 
     def add_database(self, filename : str):
-        # Adds additional database info to the CAN interface.
+        '''Adds additional database info to the CAN interface from a dbc file'''
+
+        # Add dbc file to database
         self.db.add_dbc_file(filename)
         print(f"\n\n\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
         
@@ -245,9 +261,6 @@ class CANInterface(Input):
         except can.exceptions.CanOperationError:
             self.__start_can_bus()
             msg = self.can_bus.recv()
-
-        # DEBUG
-        # print(f"INCOMING RAW MSG: {msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
 
         # Try to parse the data & return it
         try:
@@ -280,11 +293,6 @@ if DEBUG_ENABLED == True:
                                 logFile=logFile)
     canInterface.add_database('splash/candatabase/Orion_CANBUSv4.dbc')
 
-    # acumulatorManagement = CANInterface('Orion BMS2 (AMS)', 
-    #                             can_interface='can0', 
-    #                             database_path='splash/candatabase/Orion_CANBUSv3.dbc', 
-    #                             logFile=logFile)
-    
     print(type(canInterface.can_bus))
 
     mode = input("tx or rx1 (MC) or rx2? (AMS)")
@@ -320,6 +328,8 @@ if DEBUG_ENABLED == True:
 
             for key in dataToPrint:
                 print(f"{key}: {canInterface.get_data(key)}")
+
+            
 
     # print(motorspd.get_protocol())
 
