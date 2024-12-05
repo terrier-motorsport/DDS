@@ -139,9 +139,12 @@ class CANInterface(Interface):
         Then it will parse the messages, and add any values to the current_values dictionary
         '''
 
+        print("1")
+
         # Get data from the CAN Bus
         new_values = self.__fetch_can_data()
 
+        print("2")
         # Log the data that was read
         for key,value in new_values.items():
 
@@ -152,9 +155,12 @@ class CANInterface(Interface):
             # Write the data to the log file
             super().log_data(key, value)
 
+        print("3")
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values.items():
             self.current_values[key] = value
+
+        print("4")
 
 
     def get_data(self, key : str):
