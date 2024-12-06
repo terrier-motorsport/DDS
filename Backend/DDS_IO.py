@@ -31,12 +31,11 @@ class DDS_IO:
     def __define_sensors(self):
         '''Initializes all sensors for the DDS'''
 
-        # Add the DBC file for the AMS to the CAN interface
-        self.canInterface.add_database('Backend/candatabase/Orion_CANBUSv4.dbc')
-
+        # Init CAN interface
         self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
-        self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc')
+        self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
+        # Init ADS
         self.devices['digitalAnalogConverter'] = ADS1015("Cooling loop", File)
 
     def get_data(self, device : Interface, parameter : str):
