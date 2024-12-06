@@ -10,8 +10,9 @@ import re          # Used for checking if the file name is valid
 
 class File:
 
-    baseFilePath = './splash/logs/'
+    baseFilePath = './Backend/logs/'
     filePath = ''     # File path of the file
+
 
     def __init__(self, fileName):
 
@@ -38,12 +39,8 @@ class File:
 
             # The 'with as' block automatically closes the file when it is done
     
-<<<<<<< Updated upstream:splash/resources/data_logger.py
-    def writeData(self, parameter, *dataValues):
-=======
 
-    def writeData(self, deviceName : str, parameter, *dataValues):
->>>>>>> Stashed changes:Backend/resources/data_logger.py
+    def writeData(self, parameter, *dataValues):
 
         # Ensure the data values are up to 5, otherwise fill with None if fewer than 5 are provided
         # dataValues = list(dataValues) + [None] * (5 - len(dataValues))
@@ -58,7 +55,8 @@ class File:
             writer = csvWriter(file)
 
             # Write the data
-            writer.writerow([deviceName, parameter, time, dataValues[0]])
+            writer.writerow([parameter, time, dataValues[0]])
+
 
     def readData(self):
 
@@ -74,7 +72,7 @@ class File:
         return data
 
 
-    
+
     def validateFileName(self, fileName):
 
         # Check if the fileName contains only valid characters
