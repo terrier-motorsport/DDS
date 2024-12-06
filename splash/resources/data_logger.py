@@ -38,7 +38,12 @@ class File:
 
             # The 'with as' block automatically closes the file when it is done
     
+<<<<<<< Updated upstream:splash/resources/data_logger.py
     def writeData(self, parameter, *dataValues):
+=======
+
+    def writeData(self, deviceName : str, parameter, *dataValues):
+>>>>>>> Stashed changes:Backend/resources/data_logger.py
 
         # Ensure the data values are up to 5, otherwise fill with None if fewer than 5 are provided
         # dataValues = list(dataValues) + [None] * (5 - len(dataValues))
@@ -53,7 +58,7 @@ class File:
             writer = csvWriter(file)
 
             # Write the data
-            writer.writerow([parameter, time, dataValues[0]])
+            writer.writerow([deviceName, parameter, time, dataValues[0]])
 
     def readData(self):
 

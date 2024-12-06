@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream:splash/tests/input_tests.py
 from resources.input import CANDevice
+=======
+from Backend.resources.interface import CANInterface
+>>>>>>> Stashed changes:Backend/tests/input_tests.py
 import time
 
 
