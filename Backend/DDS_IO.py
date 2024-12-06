@@ -4,6 +4,7 @@
 from resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
 from resources.data_logger import File
 from resources.sensors.ADS1015 import ADS1015
+import smbus # type: ignore
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -35,8 +36,10 @@ class DDS_IO:
         self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
         self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
+        # Init i2c bus
+        i2c = smbus.SMBus(1)
         # Init ADS
-        self.devices['digitalAnalogConverter'] = ADS1015("Cooling loop", File)
+        self.devices['digitalAnalogConverter'] = ADS1015("Cooling loop", File, i2c_bus=i2c)
 
     def get_data(self, device : Interface, parameter : str):
         '''Gets a single parameter from a device'''
