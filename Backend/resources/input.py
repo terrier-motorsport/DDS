@@ -323,3 +323,5 @@ class CANInterface(Interface):
         if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
             self.cached_values = {}  # Clear the cache if timeout is exceeded
             print("Cache cleared due to CAN timeout.")
+
+

@@ -3,6 +3,7 @@
 
 from Backend.resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
 from resources.data_logger import File
+from resources.sensors.ADS1015 import ADS1015
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -16,12 +17,11 @@ class DDS_IO:
     logFile = File('FullDataLog')
 
     devices = {
-        "canInterface" : CANInterface
+        "canInterface" : CANInterface,
+        "digitalAnalogConverter" : ADS1015
     }
 
     # ===== Devices that the DDS Talks to =====
-    canInterface : CANInterface
-    # TODO: Implement other sensors, such as accelerometers.
 
     def __init__(self):
         self.__define_sensors()
@@ -32,10 +32,12 @@ class DDS_IO:
         '''Initializes all sensors for the DDS'''
 
         # Add the DBC file for the AMS to the CAN interface
-        self.canInterface = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
         self.canInterface.add_database('Backend/candatabase/Orion_CANBUSv4.dbc')
 
-        self.devices['canInterface'] = self.canInterface
+        self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
+        self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc')
+
+        self.devices['digitalAnalogConverter'] = ADS1015("Cooling loop", File)
 
     def get_data(self, device : Interface, parameter : str):
         '''Gets a single parameter from a device'''
@@ -44,14 +46,13 @@ class DDS_IO:
     def update(self):
         '''Updates all sensors. Should be called as often as possible.'''
 
-        # Update CAN Interface
-        self.canInterface.update()
-
-        # Update other sensors
+        # Update all devices
+        for device in self.devices:
+            device.update()
 
 
 # Example / Testing Code
-DEBUG_ENABLED = False
+DEBUG_ENABLED = True
 
 if DEBUG_ENABLED == True:
 
@@ -61,7 +62,10 @@ if DEBUG_ENABLED == True:
 
     while True:
         io.update()
-        print(io.canInterface.get_data("Input_Supply_Voltage"))
+        print(f"hot pressure: {io.canInterface.get_data("hotPressure")}")
+        print(f"cold pressure: {io.canInterface.get_data("coldPressure")}")
+        print(f"hot temp: {io.canInterface.get_data("hotTemperature")}")
+        print(f"cold temp: {io.canInterface.get_data("coldTemperature")}")
 
 
 
