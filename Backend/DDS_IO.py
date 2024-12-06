@@ -62,10 +62,19 @@ if DEBUG_ENABLED == True:
 
     while True:
         io.update()
-        print(f"hot pressure: {io.canInterface.get_data("hotPressure")}")
-        print(f"cold pressure: {io.canInterface.get_data("coldPressure")}")
-        print(f"hot temp: {io.canInterface.get_data("hotTemperature")}")
-        print(f"cold temp: {io.canInterface.get_data("coldTemperature")}")
+
+        hotpressure = io.canInterface.get_data("hotPressure")
+        print(f"hot pressure: {hotpressure}")
+
+        coldpressure = io.canInterface.get_data("coldPressure")
+        print(f"cold pressure: {coldpressure}")
+
+        hottemp = io.canInterface.get_data("hotTemperature")
+        print(f"hot temp: {hottemp}")
+
+        coldtemp = io.canInterface.get_data("coldTemperature")
+        print(f"cold temp: {coldtemp}")
+
 
 
 
