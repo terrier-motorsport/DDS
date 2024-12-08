@@ -4,7 +4,7 @@
 from resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
 from resources.data_logger import File
 from resources.sensors.ADS1015 import ADS1015
-import smbus # type: ignore
+import smbus2 # type: ignore
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -60,12 +60,20 @@ class DDS_IO:
             'coldPressure',
             'hotTemperature',
             'coldTemperature')
-        self.devices['coolingLoopSensors'].setChannelMinimums(
-            0.5,
-            0.5,
-            0.5,
-            0.5
-        )
+        
+        # TODO: IMPLEMENT
+        # self.devices['coolingLoopSensors'].setChannelMinimums(
+        #     0.5,
+        #     0.5,
+        #     0.5,
+        #     0.5
+        # )
+        # self.devices['coolingLoopSensors'].setChannelMaximums(
+        #     4.5,
+        #     4.5,
+        #     5,
+        #     5
+        # )
 
 
 # Example / Testing Code
