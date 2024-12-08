@@ -380,7 +380,9 @@ class CANInterface(Interface):
 
 
     def __update_cache_timeout(self):
-        """Checks if cached data should be cleared due to timeout, and clears it if it does"""
+        """
+        Checks if cached data should be cleared due to timeout, and clears it if it does
+        """
 
         # If the cache is already empty, skip this function
         if self.cached_values == {}:

@@ -2,7 +2,7 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 from ..interface import I2CDevice, InterfaceProtocol, Interface
 from ..data_logger import File
-import smbus # type: ignore
+import smbus2 # type: ignore
 import time
 import adafruit_ads1x15.ads1015 as ADS # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
@@ -26,7 +26,7 @@ class ADS1015(I2CDevice):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logFile: File, i2c_bus: smbus.SMBus):
+    def __init__(self, name: str, logFile: File, i2c_bus: smbus2.SMBus):
 
         # Initialize super class (I2CDevice)
         super().__init__(name, logFile=logFile, i2c_address=0x00)   # i2c address isn't used, so I put 0
