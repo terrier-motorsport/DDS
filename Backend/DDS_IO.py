@@ -51,7 +51,7 @@ class DDS_IO:
         self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
         # Init i2c bus
-        self.i2c_bus = smbus.SMBus(1)
+        self.i2c_bus = smbus2.SMBus(1)
 
         # Init cooling loop ADS
         self.devices['coolingLoopSensors'] = ADS1015("Cooling loop", File, i2c_bus=self.i2c_bus)
