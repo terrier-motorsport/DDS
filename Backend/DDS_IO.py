@@ -3,7 +3,7 @@
 
 from resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
 from resources.data_logger import File
-from resources.sensors.ads1015i2c import ADS1015
+from resources.sensors.ads1015i2c import ADS1015i2c
 import smbus2 # type: ignore
 
 """
@@ -20,7 +20,7 @@ class DDS_IO:
     # ===== Devices that the DDS Talks to =====
     devices = {
         "canInterface" : CANInterface,
-        "coolingLoopSensors" : ADS1015
+        "coolingLoopSensors" : ADS1015i2c
     }
 
     # ===== Methods =====
@@ -54,7 +54,7 @@ class DDS_IO:
         self.i2c_bus = smbus2.SMBus(1)
 
         # Init cooling loop ADS
-        self.devices['coolingLoopSensors'] = ADS1015("Cooling loop", File, i2c_bus=self.i2c_bus)
+        self.devices['coolingLoopSensors'] = ADS1015i2c("Cooling loop", File, i2c_bus=self.i2c_bus)
         self.devices['coolingLoopSensors'].setChannelNames(
             'hotPressure',
             'coldPressure',

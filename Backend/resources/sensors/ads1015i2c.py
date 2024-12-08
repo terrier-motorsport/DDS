@@ -8,7 +8,7 @@ import time
 from ads1015 import ADS1015 # type: ignore
 
 
-class ADS1015(I2CDevice):
+class ADS1015i2c(I2CDevice):
     """
     Adafruit Analog -> Digital Converter on an I2C interface with caching functionality.
     """
