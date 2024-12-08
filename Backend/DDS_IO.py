@@ -3,7 +3,7 @@
 
 from resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
 from resources.data_logger import File
-from Backend.resources.sensors.ads1015i2c import ADS1015
+from resources.sensors.ads1015i2c import ADS1015
 import smbus2 # type: ignore
 
 """
