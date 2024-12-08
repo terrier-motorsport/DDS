@@ -3,10 +3,9 @@
 from ..interface import I2CDevice, InterfaceProtocol, Interface
 from ..data_logger import File
 import smbus2 # type: ignore
-import time
-import adafruit_ads1x15.ads1015 as ADS # type: ignore
-from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
 from typing import List
+import time
+from ads1015 import ADS1015 # type: ignore
 
 
 class ADS1015(I2CDevice):
@@ -15,14 +14,14 @@ class ADS1015(I2CDevice):
     """
 
     # These are the four channels that correspond to the four on the physical ADC pins
-    hotPressure : AnalogIn            #ADC(A0)
-    hotTemperature : AnalogIn         #ADC(A1)
-    coldPressure : AnalogIn           #ADC(A2)
-    coldTemperature : AnalogIn        #ADC(A3)
+    # hotPressure : AnalogIn            #ADC(A0)
+    # hotTemperature : AnalogIn         #ADC(A1)
+    # coldPressure : AnalogIn           #ADC(A2)
+    # coldTemperature : AnalogIn        #ADC(A3)
 
     # ===== CONSTANTS FOR DATA DECODING =====
 
-
+    CHANNELS = ["in0/ref", "in1/ref", "in2/ref", "in3/ref"]
 
     # ===== METHODS =====
 
@@ -36,14 +35,20 @@ class ADS1015(I2CDevice):
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
         # Init ADC Device
-        self.ads = ADS.ADS1015(self.bus)
+        self.ads = ADS1015()
+        self.chip_type = self.ads.detect_chip_type()
+        print("Found: {}".format(self.chip_type))
+        self.ads.set_mode("single")
+        self.ads.set_programmable_gain(2.048)
+        self.ads.set_sample_rate(1600)
+        self.reference = self.ads.get_reference_voltage()
 
         # Init virtual analog pins
         # These are the four channels that correspond to the four on the physical ADC pins
-        self.hotPressure = AnalogIn(self.bus, ADS.P0)        #ADC(A0)
-        self.hotTemperature = AnalogIn(self.bus, ADS.P1)     #ADC(A1)
-        self.coldPressure = AnalogIn(self.bus, ADS.P2)       #ADC(A2)
-        self.coldTemperature = AnalogIn(self.bus, ADS.P3)    #ADC(A3)
+        # self.hotPressure = AnalogIn(self.bus, 0)        #ADC(A0)
+        # self.hotTemperature = AnalogIn(self.bus, 1)     #ADC(A1)
+        # self.coldPressure = AnalogIn(self.bus, 2)       #ADC(A2)
+        # self.coldTemperature = AnalogIn(self.bus, 3)    #ADC(A3)
 
 
         
@@ -85,6 +90,9 @@ class ADS1015(I2CDevice):
         """
         Retrieve the most recent data associated with the key from the cache.
         """
+
+        
+
         if key in self.cached_values:
             return self.cached_values[key]
         else:
@@ -104,12 +112,19 @@ class ADS1015(I2CDevice):
         Internal method to encapsulate sensor read logic
         """
 
-        v1 = self.hotPressure.voltage
-        v2 = self.hotTemperature.voltage
-        v3 = self.coldPressure.voltage
-        v4 = self.coldTemperature.voltage
+        voltages = []
+
+        for channel in self.CHANNELS:
+
+            voltage = self.ads.get_compensated_voltage(
+                channel=channel, reference_voltage=self.reference
+            )
+
+            voltages.append(voltage)
+
+            print("{}: {:6.3f}v".format(channel, voltage))
         
-        return [v1, v2, v3, v4]
+        return voltages
     
 
     # ===== Super Function Calls =====
