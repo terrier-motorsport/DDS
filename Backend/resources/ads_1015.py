@@ -107,7 +107,7 @@ class ADS_1015(I2CDevice):
         # Iterate through each channel and corresponding input
         for channel, input_obj in zip(self.CHANNELS, self.inputs):
             # Read the voltage for the current channel with compensation
-            voltage = self.ads.get_compensated_voltage(
+            voltage = self.ads.get_voltage(
                 channel=channel,
                 reference_voltage=self.reference
             )
@@ -121,29 +121,6 @@ class ADS_1015(I2CDevice):
             # Print the channel and its corresponding voltage in a readable format
             print(f"{channel}: {voltage:6.3f}v")
 
-        return voltages
-
-        """
-        Internal method to encapsulate sensor read logic
-        """
-
-        voltages = []
-
-        # For every channel on the ADC...
-        for channel, input in zip(self.CHANNELS, self.inputs):
-
-            # Get the voltage input
-            voltage = self.ads.get_compensated_voltage(
-                channel=channel, reference_voltage=self.reference
-            )
-
-            # Set the voltage of the analog_in object
-            input.voltage = voltage
-
-            voltages.append(voltage)
-
-            print("{}: {:6.3f}v".format(channel, voltage))
-        
         return voltages
     
 
