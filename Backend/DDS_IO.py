@@ -43,7 +43,7 @@ class DDS_IO:
 
         # Update all devices
         for device in self.devices:
-            print(device)
+            print(device.__class__)
             if device is not None:
                 device.update()
 
