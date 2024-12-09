@@ -43,10 +43,10 @@ class DDS_IO:
 
         # Update all devices
         print(self.devices)
-        for device in self.devices:
-            print(device.__class__)
-            if device is not None:
-                device.update()
+        for i in range(len(self.devices)):
+            print(self.devices[i].__class__)
+            if self.devices[i] is not None:
+                self.devices[i].update()
 
 
     def get_device(self, deviceKey : str) -> Interface:
