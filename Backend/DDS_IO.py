@@ -43,7 +43,8 @@ class DDS_IO:
 
         # Update all devices
         for device in self.devices:
-            device.update()
+            if device is not None:
+                device.update()
 
 
     def get_device(self, deviceKey : str) -> Interface:
