@@ -60,6 +60,8 @@ class DDS_IO:
         if self.CAN_ENABLED:
             self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
             self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
+        else:
+            self.devices['canInterface'] = None
 
 
         # ===== Init i2c bus ===== 
