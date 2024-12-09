@@ -150,7 +150,7 @@ class ADS_1015(I2CDevice):
 
 
     def log_data(self, param_name, value):
-        return self.logFile.writeData(self.name, param_name, value)
+        return self.logFile.writeData(logger_name=self.name, param_name=param_name, parameter=value)
         return super().log_data(param_name, value)
     
 
