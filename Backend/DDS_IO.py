@@ -3,8 +3,9 @@
 
 from resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
 from resources.data_logger import File
-from resources.sensors.ads1015i2c import ADS1015i2c
-import smbus2 # type: ignore
+from resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
+from Backend.resources.ads_1015 import ADS_1015
+import smbus2
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -20,7 +21,7 @@ class DDS_IO:
     # ===== Devices that the DDS Talks to =====
     devices = {
         "canInterface" : CANInterface,
-        "coolingLoopSensors" : ADS1015i2c
+        "coolingLoopSensors" : ADS_1015
     }
 
     # ===== Methods =====
@@ -46,34 +47,47 @@ class DDS_IO:
 
         '''Initializes all sensors & interfaces for the DDS'''
 
-        # Init CAN interface & CAN Devices
+        # ===== Init CAN interface & CAN Devices =====
         self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
         self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
-        # Init i2c bus
+
+        # ===== Init i2c bus ===== 
         self.i2c_bus = smbus2.SMBus(1)
 
-        # Init cooling loop ADS
-        self.devices['coolingLoopSensors'] = ADS1015i2c("Cooling loop", File, i2c_bus=self.i2c_bus)
-        self.devices['coolingLoopSensors'].setChannelNames(
-            'hotPressure',
-            'coldPressure',
-            'hotTemperature',
-            'coldTemperature')
-        
-        # TODO: IMPLEMENT
-        # self.devices['coolingLoopSensors'].setChannelMinimums(
-        #     0.5,
-        #     0.5,
-        #     0.5,
-        #     0.5
-        # )
-        # self.devices['coolingLoopSensors'].setChannelMaximums(
-        #     4.5,
-        #     4.5,
-        #     5,
-        #     5
-        # )
+
+        # ===== Init cooling loop inputs & ADS ===== 
+        M3200_value_mapper = ValueMapper(voltage_range=[0.5, 4.5], output_range=[0, 17])
+
+        # Define constants for NTC_M12 value mapping
+        resistance_values = [
+            45313, 26114, 15462, 9397, 5896, 3792, 2500,
+            1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
+        ]
+        temperature_values = [
+            -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
+            60, 70, 80, 90, 100, 110, 120, 130
+        ]
+        # Refer to the voltage divider circuit for the NTC_M12s
+        supply_voltage = 5
+        fixed_resistor = 10000
+        NTC_M12_value_mapper = ExponentialValueMapper(
+            resistance_values=resistance_values,
+            output_values=temperature_values,
+            supply_voltage=supply_voltage,
+            fixed_resistor=fixed_resistor
+        )
+
+        self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", File, i2c_bus=self.i2c_bus, inputs = [
+            Analog_In('hotPressure', 'bar', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=M3200_value_mapper),           #ADC1(A0)
+            Analog_In('coldPressure', 'bar', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=M3200_value_mapper),          #ADC1(A1)
+            Analog_In('hotTemperature', '°C', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=NTC_M12_value_mapper),       #ADC1(A2)
+            Analog_In('coldTemperature', '°C', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=NTC_M12_value_mapper)       #ADC1(A3)
+        ])
+        # TODO: Init second ADC w/ other sensors
+
+
+        # ===== TODO: Init Accelerometers ===== 
 
 
 # Example / Testing Code
