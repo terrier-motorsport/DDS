@@ -41,7 +41,6 @@ class Interface:
 
         self.sensorProtocol = sensorProtocol
         self.name = name
-        print(f'created logfie {logFile}')
         self.logFile = logFile
         pass
 

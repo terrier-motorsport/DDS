@@ -30,6 +30,7 @@ class ADS_1015(I2CDevice):
 
         # Initialize super class (I2CDevice)
         super().__init__(name, logFile=logFile, i2c_address=0x00)   # i2c address isn't used, so I put 0
+        self.logFile = logFile
 
         # Init I2C bus
         self.bus = i2c_bus
@@ -149,6 +150,7 @@ class ADS_1015(I2CDevice):
 
 
     def log_data(self, param_name, value):
+        return self.logFile.writeData(self.name, param_name, value)
         return super().log_data(param_name, value)
     
 
