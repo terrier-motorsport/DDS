@@ -6,6 +6,8 @@
 import random
 import time
 
+from resources.data_logger import File
+
 f = File("DDS_Logs")
 
 for i in range(10):
