@@ -47,7 +47,10 @@ class Interface:
 
     def log_data(self, param_name: str, value):
         '''Takes in a file, parameter name & a value'''
-        self.logFile.writeData(self.name, param_name, value)
+        self.logFile.writeData(
+            logger_name=self.name, 
+            param_name=param_name,
+            parameter=value)
         
 
     def get_name(self) -> str:

@@ -40,7 +40,7 @@ class File:
             # The 'with as' block automatically closes the file when it is done
     
 
-    def writeData(self, parameter, *dataValues):
+    def writeData(self,logger_name: str, param_name: str, parameter):
 
         # Ensure the data values are up to 5, otherwise fill with None if fewer than 5 are provided
         # dataValues = list(dataValues) + [None] * (5 - len(dataValues))
@@ -55,7 +55,7 @@ class File:
             writer = csvWriter(file)
 
             # Write the data
-            writer.writerow([parameter, time, dataValues[0]])
+            writer.writerow([time, logger_name, param_name, parameter])
 
 
     def readData(self):
