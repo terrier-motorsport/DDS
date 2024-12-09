@@ -22,7 +22,7 @@ class ADS_1015(I2CDevice):
 
     # ===== CONSTANTS FOR DATA DECODING =====
 
-    CHANNELS = ["in0/ref", "in1/ref", "in2/ref", "in3/ref"]
+    CHANNELS = ["in0/gnd", "in1/gnd", "in2/gnd", "in3/gnd"]
 
     # ===== METHODS =====
 
