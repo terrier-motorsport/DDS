@@ -108,8 +108,7 @@ class ADS_1015(I2CDevice):
         for channel, input_obj in zip(self.CHANNELS, self.inputs):
             # Read the voltage for the current channel with compensation
             voltage = self.ads.get_voltage(
-                channel=channel,
-                reference_voltage=self.reference
+                channel=channel
             )
 
             # Update the voltage of the associated input object
