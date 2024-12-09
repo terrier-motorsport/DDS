@@ -42,8 +42,9 @@ class DDS_IO:
         '''Updates all sensors. Should be called as often as possible.'''
 
         # Update all devices
-        for key,value in self.devices:
-            self.devices[key].update()
+        for key,obj in self.devices.items():
+            obj.update()
+            
 
         # print(self.devices)
         # for i in range(len(self.devices)):
