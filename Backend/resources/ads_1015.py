@@ -99,6 +99,31 @@ class ADS_1015(I2CDevice):
 
     def _fetch_sensor_data(self) -> List[float]:
         """
+        Reads voltages from the ADC for each channel, updates the corresponding inputs, 
+        and returns a list of voltages.
+        """
+        voltages = []  # Initialize a list to store the voltages
+
+        # Iterate through each channel and corresponding input
+        for channel, input_obj in zip(self.CHANNELS, self.inputs):
+            # Read the voltage for the current channel with compensation
+            voltage = self.ads.get_compensated_voltage(
+                channel=channel,
+                reference_voltage=self.reference
+            )
+
+            # Update the voltage of the associated input object
+            input_obj.voltage = voltage
+
+            # Store the voltage in the voltages list
+            voltages.append(voltage)
+
+            # Print the channel and its corresponding voltage in a readable format
+            print(f"{channel}: {voltage:6.3f}v")
+
+        return voltages
+
+        """
         Internal method to encapsulate sensor read logic
         """
 
