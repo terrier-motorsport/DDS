@@ -88,10 +88,10 @@ class DDS_IO:
             )
 
             self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", File, i2c_bus=self.i2c_bus, inputs = [
-                Analog_In('hotPressure', 'bar', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=M3200_value_mapper),           #ADC1(A0)
-                Analog_In('coldPressure', 'bar', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=M3200_value_mapper),          #ADC1(A1)
-                Analog_In('hotTemperature', '°C', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=NTC_M12_value_mapper),       #ADC1(A2)
-                Analog_In('coldTemperature', '°C', voltage_range=[0.5, 4.5], output_range=[0, 17], mapper=NTC_M12_value_mapper)       #ADC1(A3)
+                Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper),           #ADC1(A0)
+                Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper),          #ADC1(A1)
+                Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper),       #ADC1(A2)
+                Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper)       #ADC1(A3)
             ])
             # TODO: Init second ADC w/ other sensors
 
