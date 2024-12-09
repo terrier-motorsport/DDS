@@ -23,7 +23,7 @@ class DDS_IO:
 
 
     
-    logFile = File('FullDataLog')
+    logFile : File
 
     # ===== Devices that the DDS Talks to =====
     devices = {
@@ -34,6 +34,10 @@ class DDS_IO:
     # ===== Methods =====
 
     def __init__(self):
+        
+        self.logFile = File('DDS_Log')
+
+
         self.__define_devices()
         pass
 
