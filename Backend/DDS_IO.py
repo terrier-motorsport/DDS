@@ -42,11 +42,14 @@ class DDS_IO:
         '''Updates all sensors. Should be called as often as possible.'''
 
         # Update all devices
-        print(self.devices)
-        for i in range(len(self.devices)):
-            print(self.devices[i].__class__)
-            if self.devices[i] is not None:
-                self.devices[i].update()
+        for key,value in self.devices:
+            self.devices[key].update()
+
+        # print(self.devices)
+        # for i in range(len(self.devices)):
+        #     print(self.devices[i].__class__)
+        #     if self.devices[i] is not None:
+        #         self.devices[i].update()
 
 
     def get_device(self, deviceKey : str) -> Interface:
