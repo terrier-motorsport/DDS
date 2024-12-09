@@ -42,6 +42,7 @@ class DDS_IO:
         '''Updates all sensors. Should be called as often as possible.'''
 
         # Update all devices
+        print(self.devices)
         for device in self.devices:
             print(device.__class__)
             if device is not None:
