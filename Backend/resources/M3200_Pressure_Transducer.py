@@ -1,7 +1,11 @@
 # M3200 Pressure Transducer class for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
-from ..interface import I2CDevice, InterfaceProtocol, Interface
-from ..data_logger import File
+    # NOTE: This code is for i2c communication with the M3200. 
+        # With the 2024-2025 season, we have no i2c M3200.
+        # (This page was a mistake, but probably still works)
+
+from interface import I2CDevice, InterfaceProtocol, Interface
+from data_logger import File
 import smbus # type: ignore
 import time
 

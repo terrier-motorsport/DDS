@@ -1,23 +1,21 @@
-# Adafruit ADS 1015 class for Terrier Motorsport's DDS
+# ADS 1015 class for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
-from ..interface import I2CDevice, InterfaceProtocol, Interface
-from ..data_logger import File
-import smbus2 # type: ignore
+from interface import I2CDevice, InterfaceProtocol, Interface
+from .data_logger import File
+import smbus2
 from typing import List
 import time
-from ads1015 import ADS1015 # type: ignore
+from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
+from analog_in import Analog_In
 
 
-class ADS1015i2c(I2CDevice):
+class ADS_1015(I2CDevice):
     """
     Adafruit Analog -> Digital Converter on an I2C interface with caching functionality.
     """
 
-    # These are the four channels that correspond to the four on the physical ADC pins
-    # hotPressure : AnalogIn            #ADC(A0)
-    # hotTemperature : AnalogIn         #ADC(A1)
-    # coldPressure : AnalogIn           #ADC(A2)
-    # coldTemperature : AnalogIn        #ADC(A3)
+    # This list represensts the four channels that correspond to the four on the physical ADC pins
+    inputs : List[Analog_In]
 
     # ===== CONSTANTS FOR DATA DECODING =====
 
@@ -25,7 +23,7 @@ class ADS1015i2c(I2CDevice):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logFile: File, i2c_bus: smbus2.SMBus):
+    def __init__(self, name: str, logFile: File, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
 
         # Initialize super class (I2CDevice)
         super().__init__(name, logFile=logFile, i2c_address=0x00)   # i2c address isn't used, so I put 0
@@ -35,23 +33,10 @@ class ADS1015i2c(I2CDevice):
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
         # Init ADC Device
-        self.ads = ADS1015()
-        self.chip_type = self.ads.detect_chip_type()
-        print("Found: {}".format(self.chip_type))
-        self.ads.set_mode("single")
-        self.ads.set_programmable_gain(2.048)
-        self.ads.set_sample_rate(1600)
-        self.reference = self.ads.get_reference_voltage()
-
-        # Init virtual analog pins
-        # These are the four channels that correspond to the four on the physical ADC pins
-        # self.hotPressure = AnalogIn(self.bus, 0)        #ADC(A0)
-        # self.hotTemperature = AnalogIn(self.bus, 1)     #ADC(A1)
-        # self.coldPressure = AnalogIn(self.bus, 2)       #ADC(A2)
-        # self.coldTemperature = AnalogIn(self.bus, 3)    #ADC(A3)
-
-
+        self._init_ads()
         
+        # Init virtual analog inputs
+        self.inputs = inputs
 
 
     def update(self):
@@ -60,38 +45,38 @@ class ADS1015i2c(I2CDevice):
         """
 
         # Fetch the sensor data
-        hotPressure, hotTemp, coldPressure, coldTemp = self._fetch_sensor_data()
+        voltages = self._fetch_sensor_data()
+
+        # Store it in the virtual inputs
+        for input, voltage in zip(self.inputs, voltages):
+            input.voltage = voltage
+
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
-        if any(value is None for value in [hotPressure, hotTemp, coldPressure, coldTemp]):
+        if any(value is None for value in voltages):
 
             # If no new values are discovered, we check to see if the cache has expired.
             self._update_cache_timeout()
             return
+        
 
-        # Update cache with new data
-        self.cached_values["hotPressure"] = hotPressure
-        self.cached_values["hotTemperature"] = hotTemp
-        self.cached_values["coldPressure"] = coldPressure
-        self.cached_values["coldTemperature"] = coldTemp
+        for input in self.inputs: 
+            # Update cache with new data
+            self.cached_values[input.name] = input.voltage
+
+            # Log the data
+            self.log_data(input.name, input.voltage)
 
         # Reset the timeout timer
         self.reset_last_retrival_timer() 
-
-        # Log the data
-        self.log_data("hotPressure", hotPressure)
-        self.log_data("hotTemperature", hotTemp)
-        self.log_data("coldPressure", coldPressure)
-        self.log_data("coldTemperature", coldTemp)
-
+            
 
     def get_data(self, key: str):
         """
         Retrieve the most recent data associated with the key from the cache.
+        To be called by some higher power, not by the class itself.
         """
-
-        
 
         if key in self.cached_values:
             return self.cached_values[key]
@@ -102,9 +87,11 @@ class ADS1015i2c(I2CDevice):
 
     def close_connection(self):
         """
-        Placeholder for closing I2C connection if needed.
+        Closing I2C connection if needed.
         """
-        pass
+
+        # Close the i2c connection.
+        self.bus.close()
 
 
     def _fetch_sensor_data(self) -> List[float]:
@@ -114,17 +101,40 @@ class ADS1015i2c(I2CDevice):
 
         voltages = []
 
-        for channel in self.CHANNELS:
+        # For every channel on the ADC...
+        for channel, input in zip(self.CHANNELS, self.inputs):
 
+            # Get the voltage input
             voltage = self.ads.get_compensated_voltage(
                 channel=channel, reference_voltage=self.reference
             )
+
+            # Set the voltage of the analog_in object
+            input.voltage = voltage
 
             voltages.append(voltage)
 
             print("{}: {:6.3f}v".format(channel, voltage))
         
         return voltages
+    
+
+    def _init_ads(self):
+        # Make ADS object
+        self.ads = ADS1015()
+
+        # Double check chip type (debug)
+        self.chip_type = self.ads.detect_chip_type()
+        print("Found: {}".format(self.chip_type))
+
+        # Configure ADS
+        self.ads.set_mode("single")
+        self.ads.set_programmable_gain(2.048)
+        self.ads.set_sample_rate(1600)
+
+        # Get reference voltage
+        self.reference = self.ads.get_reference_voltage()
+        print(f"Reference: {self.reference}")
     
 
     # ===== Super Function Calls =====
@@ -142,3 +152,9 @@ class ADS1015i2c(I2CDevice):
         return super().reset_last_retrival_timer()
     
 
+# Example usage
+DEBUG_ENABLED = False
+
+if DEBUG_ENABLED:
+    
+    pass
