@@ -1,10 +1,10 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from resources.interface import Interface, CANInterface, I2CDevice, InterfaceProtocol
+from resources.interface import Interface, CANInterface
 from resources.data_logger import File
 from resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
-from Backend.resources.ads_1015 import ADS_1015
+from resources.ads_1015 import ADS_1015
 import smbus2
 
 """
