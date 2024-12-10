@@ -106,7 +106,7 @@ class DDS_IO:
 
 
 # Example / Testing Code
-DEBUG_ENABLED = False
+DEBUG_ENABLED = True
 
 if DEBUG_ENABLED == True:
 
