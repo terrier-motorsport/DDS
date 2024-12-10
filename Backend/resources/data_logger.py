@@ -20,6 +20,8 @@ class DataLogger:
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
 
+    LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
+
     
     class LogSeverity(Enum):
         '''Severity of logs (= to the logging module everity codes)'''
@@ -37,15 +39,15 @@ class DataLogger:
         self.__validateFileName(fileName)
 
         # Create the directory file path (date & time + name)
-        currentTime = strftime("%Y-%m-%d-%H:%M:%S", localtime())
+        currentTime = self.__getFormattedTime()
         self.directoryPath = os.path.join(self.baseFilePath, f"{currentTime}-{fileName}")
 
         # Ensure the base directory exists, create it if not.
         if not os.path.exists(self.directoryPath):
             os.makedirs(self.directoryPath)
-            print(f"Directory created at {self.directoryPath}")
+            self.writeLog(DataLogger.__name__, f"Directory created at {self.directoryPath}")
         else:
-            print(f"Directory already exists at {self.directoryPath}, continuing.")
+            self.writeLog(DataLogger.__name__, f"Directory already exists at {self.directoryPath}, continuing.")
 
         # Create the paths for the files
         self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
@@ -97,15 +99,28 @@ class DataLogger:
         # Write the log
         logger = logging.getLogger(logger_name)
         logger.log(severity.value, msg)
-        pass
+        
+        # Print to the console aswell
+        log_data = {
+            "asctime": self.__getFormattedTime(),
+            "name": logger_name,
+            "levelname": severity.name,
+            "message": msg
+        }
+        formatted_message = self.LOG_FORMAT % log_data
+        print(formatted_message)
 
 
     def __createLogFile(self, path):
         logging.basicConfig(
             filename=path,
             level=logging.INFO,
-            format='%(asctime)s [%(name)s]: %(levelname)s - %(message)s')
+            format=self.LOG_FORMAT)
         
+
+    def __getFormattedTime(self):
+        return strftime("%Y-%m-%d-%H:%M:%S", localtime())
+
 
     def __createCSVFile(self, path):
         '''Create the telemetry file'''
@@ -152,12 +167,6 @@ if DEBUG_ENABLED:
     data_logger.writeTelemetry(device_name="BatteryMonitor", param_name="Voltage", value=12.7, units="v")
     data_logger.writeTelemetry(device_name="TemperatureSensor", param_name="Temp", value=95.3, units="°C")
 
-    # Read and print the data from the log file
-    logged_data = data_logger.getTelemetry()
-
-    print("Logged Data:")
-    print(data_logger.getTelemetry())
-
     # Write a log message
     data_logger.writeLog(
         logger_name="SystemLogger",
@@ -168,3 +177,7 @@ if DEBUG_ENABLED:
         msg="RPM exceeds safe limit!",
         severity=DataLogger.LogSeverity.WARNING
     )
+
+    # Read and print the data from the telemetry file
+    print("Logged Data:")
+    print(data_logger.getTelemetry())
