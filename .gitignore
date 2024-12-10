@@ -3,3 +3,5 @@
 *.csv
 /splash/resources/__pycache__
 *.log
+*.pyc
+*.pyc

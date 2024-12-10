@@ -106,26 +106,35 @@ class DDS_IO:
 
 
 # Example / Testing Code
+
 DEBUG_ENABLED = True
 
-if DEBUG_ENABLED == True:
+import time
 
+if DEBUG_ENABLED:
 
     io = DDS_IO()
-
+    last_print_time = 0  # Tracks the last time the print statements were executed
+    PRINT_INTERVAL = 1   # Time interval in seconds between prints
 
     while True:
         io.update()
 
-        hotpressure = io.get_device('coolingLoopSensors').get_data('hotPressure')
-        print(f"hot pressure: {hotpressure}")
+        # Check if enough time has elapsed since the last print
+        current_time = time.time()
+        if current_time - last_print_time >= PRINT_INTERVAL:
+            # Update the last print time
+            last_print_time = current_time
 
-        coldpressure = io.get_device('coolingLoopSensors').get_data('coldPressure')
-        print(f"cold pressure: {coldpressure}")
+            # Get and print the data
+            hotpressure = io.get_device('coolingLoopSensors').get_data('hotPressure')
+            print(f"hot pressure: {hotpressure}")
 
-        hottemp = io.get_device('coolingLoopSensors').get_data('hotTemperature')
-        print(f"hot temp: {hottemp}")
+            coldpressure = io.get_device('coolingLoopSensors').get_data('coldPressure')
+            print(f"cold pressure: {coldpressure}")
 
-        coldtemp = io.get_device('coolingLoopSensors').get_data('coldTemperature')
-        print(f"cold temp: {coldtemp}")
+            hottemp = io.get_device('coolingLoopSensors').get_data('hotTemperature')
+            print(f"hot temp: {hottemp}")
 
+            coldtemp = io.get_device('coolingLoopSensors').get_data('coldTemperature')
+            print(f"cold temp: {coldtemp}")
