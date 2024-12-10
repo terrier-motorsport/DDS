@@ -50,7 +50,8 @@ class Interface:
         self.log.writeTelemetry(
             device_name=self.name, 
             param_name=param_name,
-            value=value)
+            value=value,
+            units=units)
         
 
     def get_name(self) -> str:
