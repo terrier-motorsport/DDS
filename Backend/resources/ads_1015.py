@@ -150,16 +150,10 @@ class ADS_1015(I2CDevice):
 
 
     def log_data(self, param_name, value):
-
-        if not isinstance(self.logFile, File):
-            raise TypeError("logFile must be an instance of File")
-        
-        print(f'path: {self.logFile.filePath}')
-        # return self.logFile.writeData(logger_name=self.name, param_name=param_name, parameter=value)
         return super().log_data(param_name, value)
     
 
-    def reset_last_retrival_timer():
+    def reset_last_retrival_timer(self):
         return super().reset_last_retrival_timer()
     
 
