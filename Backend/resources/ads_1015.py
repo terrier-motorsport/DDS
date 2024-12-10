@@ -134,7 +134,7 @@ class ADS_1015(I2CDevice):
 
         # Configure ADS
         self.ads.set_mode("single")
-        self.ads.set_programmable_gain(1)
+        self.ads.set_programmable_gain(8.192)
         self.ads.set_sample_rate(1600)
 
         # Get reference voltage
