@@ -2,7 +2,8 @@
     # Code by Jackson Justus (jackjust@bu.edu)
     # NOTE: To be used by the ADS classes.
 
-
+from typing import Union
+from scipy.interpolate import interp1d
 
 class ValueMapper:
     """
@@ -22,8 +23,8 @@ class ValueMapper:
         Returns:
         float: The converted output value, or None if the voltage is out of range.
         """
-        if not (self.min_voltage <= voltage <= self.max_voltage):
-            print(f"Warning: Voltage ({voltage}v) out of range [{self.min_voltage}, {self.max_voltage}].")
+        # if not (self.min_voltage <= voltage <= self.max_voltage):
+        #     raise ValueError("Voltage ({voltage}v) out of range [{self.min_voltage}, {self.max_voltage}].")
 
         # Perform the conversion
         # Normalize the voltage to a 0-1 range
@@ -50,16 +51,15 @@ class ValueMapper:
         Returns:
         float: The calculated resistance of the sensor (in Ohms).
         """
-        if adc_voltage <= 0 or adc_voltage >= supply_voltage:
-            raise ValueError(f"ADC voltage ({adc_voltage}v) must be within the range of the supply voltage ({supply_voltage}v).")
+        # if adc_voltage <= 0 or adc_voltage >= supply_voltage:
+        #     raise ValueError(f"ADC voltage ({adc_voltage}v) must be within the range of the supply voltage ({supply_voltage}v).")
 
         # Use the voltage divider formula to calculate the sensor resistance
         sensor_resistance = (adc_voltage * fixed_resistor) / (supply_voltage - adc_voltage)
         return sensor_resistance
     
 
-from typing import Union
-from scipy.interpolate import interp1d
+
 
 class ExponentialValueMapper:
     """
@@ -150,7 +150,10 @@ class Analog_In:
         Returns:
         float: The output value in the specified units.
         """
+        
         return self.converter.voltage_to_value(voltage)
+        
+        
     
 
 

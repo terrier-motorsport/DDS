@@ -45,10 +45,10 @@ class M3200PressureSensorI2C(I2CDevice):
 
 
 
-    def __init__(self, name: str, logFile: DataLogger, i2c_address: int, i2c_bus: smbus.SMBus):
+    def __init__(self, name: str, logger: DataLogger, i2c_address: int, i2c_bus: smbus.SMBus):
 
         # Initialize super class (I2CDevice)
-        super().__init__(name, logFile=logFile, i2c_address=i2c_address)
+        super().__init__(name, logger=logger, i2c_address=i2c_address)
 
         # Init I2C bus
         self.bus = i2c_bus
@@ -91,7 +91,7 @@ class M3200PressureSensorI2C(I2CDevice):
         if key in self.cached_values:
             return self.cached_values[key]
         else:
-            print(f"No cached data found for key: {key}")
+            self.log.writeLog(__class__.__name__, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
             return None
 
 

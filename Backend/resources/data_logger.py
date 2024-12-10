@@ -45,9 +45,9 @@ class DataLogger:
         # Ensure the base directory exists, create it if not.
         if not os.path.exists(self.directoryPath):
             os.makedirs(self.directoryPath)
-            self.writeLog(DataLogger.__name__, f"Directory created at {self.directoryPath}")
+            self.writeLog(__class__.__name__, f"Directory created at {self.directoryPath}")
         else:
-            self.writeLog(DataLogger.__name__, f"Directory already exists at {self.directoryPath}, continuing.")
+            self.writeLog(__class__.__name__, f"Directory already exists at {self.directoryPath}, continuing.")
 
         # Create the paths for the files
         self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
@@ -58,7 +58,7 @@ class DataLogger:
         self.__createLogFile(self.systemLogPath)
 
         # Log creation of file
-        self.writeLog("DataLogger", "Log & Telemetry file setup complete!")
+        self.writeLog(__class__.__name__, "Log & Telemetry file setup complete!")
         
 
     def writeTelemetry(self, device_name: str, param_name: str, value, units: str):
@@ -155,7 +155,7 @@ class DataLogger:
 
 
 # Example Usage of DataLogger
-DEBUG_ENABLED = False
+DEBUG_ENABLED = True
 
 if DEBUG_ENABLED:
 

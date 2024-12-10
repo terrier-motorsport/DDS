@@ -26,11 +26,10 @@ class ADS_1015(I2CDevice):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logFile: DataLogger, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
+    def __init__(self, name: str, logger: DataLogger, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
 
         # Initialize super class (I2CDevice)
-        super().__init__(name, logFile=logFile, i2c_address=0x00)   # i2c address isn't used, so I put 0
-        self.logFile = logFile
+        super().__init__(name, logger=logger, i2c_address=0x00)   # i2c address isn't used, so put 0
 
         # Init I2C bus
         self.bus = i2c_bus
@@ -99,17 +98,8 @@ class ADS_1015(I2CDevice):
         if key in self.cached_values:
             return self.cached_values[key]
         else:
-            print(f"No cached data found for key: {key}")
+            self.log.writeLog(__class__.__name__, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
             return None
-
-
-    def close_connection(self):
-        """
-        Closing I2C connection if needed.
-        """
-
-        # Close the i2c connection.
-        self.bus.close()
 
 
     def _fetch_sensor_data(self) -> List[float]:
@@ -132,9 +122,6 @@ class ADS_1015(I2CDevice):
             # Store the voltage in the voltages list
             voltages.append(voltage)
 
-            # Print the channel and its corresponding voltage in a readable format
-            print(f"{channel}: {voltage:6.3f}v")
-
         return voltages
     
 
@@ -144,7 +131,7 @@ class ADS_1015(I2CDevice):
 
         # Double check chip type (debug)
         self.chip_type = self.ads.detect_chip_type()
-        print("Found: {}".format(self.chip_type))
+        self.log.writeLog(__class__.__name__, "Found: {}".format(self.chip_type))
 
         # Configure ADS
         self.ads.set_mode("single")
@@ -153,7 +140,7 @@ class ADS_1015(I2CDevice):
 
         # Get reference voltage
         self.reference = self.ads.get_reference_voltage()
-        print(f"Reference: {self.reference}")
+        self.log.writeLog(__class__.__name__, f"Reference: {self.reference}")
     
 
     # ===== Super Function Calls =====

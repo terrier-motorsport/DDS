@@ -60,7 +60,7 @@ class DDS_IO:
 
         # ===== Init CAN interface & CAN Devices =====
         if self.CAN_ENABLED:
-            self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logFile=self.logFile)
+            self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logger=self.logFile)
             self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
         else:
             del self.devices['canInterface']
@@ -93,7 +93,7 @@ class DDS_IO:
                 fixed_resistor=fixed_resistor
             )
 
-            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logFile=self.logFile, i2c_bus=self.i2c_bus, inputs = [
+            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logger=self.logFile, i2c_bus=self.i2c_bus, inputs = [
                 Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper),           #ADC1(A0)
                 Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper),          #ADC1(A1)
                 Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper),       #ADC1(A2)
@@ -106,7 +106,7 @@ class DDS_IO:
 
 
 # Example / Testing Code
-DEBUG_ENABLED = True
+DEBUG_ENABLED = False
 
 if DEBUG_ENABLED == True:
 

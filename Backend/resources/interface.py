@@ -33,7 +33,7 @@ class InterfaceProtocol(Enum):
 # ===== Parent class for all interfaces =====
 class Interface:
 
-    def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logFile : DataLogger):
+    def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logger : DataLogger):
         '''
         Parent class for all interfaces.
         In case you didn't know, this is the initializer.
@@ -41,13 +41,13 @@ class Interface:
 
         self.sensorProtocol = sensorProtocol
         self.name = name
-        self.logFile = logFile
+        self.log = logger
         pass
 
 
     def log_data(self, param_name: str, value):
         '''Takes in a file, parameter name & a value'''
-        self.logFile.writeTelemetry(
+        self.log.writeTelemetry(
             device_name=self.name, 
             param_name=param_name,
             value=value)
@@ -64,8 +64,8 @@ class Interface:
 
 
     def get_data(self, key : str):
-        '''Gets the data from the interface'''
-        print("get_data not overriden propertly in child class.")
+        '''Should be overwritten by child class'''
+        self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
 
     # ===== HELPER METHODS =====
 
@@ -100,10 +100,10 @@ class I2CDevice(Interface):
 
     last_retrieval_time = None
 
-    def __init__(self, name : str, logFile : DataLogger, i2c_address : int):
+    def __init__(self, name : str, logger : DataLogger, i2c_address : int):
         
         # Init super (Input class)
-        super().__init__(name, InterfaceProtocol.I2C, logFile=logFile)
+        super().__init__(name, InterfaceProtocol.I2C, logger=logger)
 
         # Init cache timeout
         self.last_retrieval_time = time.time()
@@ -113,11 +113,18 @@ class I2CDevice(Interface):
 
     
     def update(self):
+        '''Should be overwritten by child class'''
+        self.log.writeLog(__class__.__name__, "update not overriden properly in child class.", self.log.LogSeverity.ERROR)
         pass
 
 
     def close_connection(self):
-        pass
+        """
+        Closing I2C connection if needed.
+        """
+
+        # Close the i2c connection.
+        self.bus.close()
 
     def reset_last_retrival_timer(self):
         self.last_retrieval_time = time.time()
@@ -126,7 +133,7 @@ class I2CDevice(Interface):
         return super().log_data(param_name, value)
 
     def _fetch_sensor_data(self):
-        print("FETCH SENSOR DATA IN I2CDevice IS BEING CALLED. IT SHOULD NOT BE GETTING CALLED.")
+        self.log.writeLog(__class__.__name__, "FETCH SENSOR DATA IN I2CDevice IS BEING CALLED. IT SHOULD NOT BE GETTING CALLED.")
         pass
 
     def _update_cache_timeout(self):
@@ -136,7 +143,7 @@ class I2CDevice(Interface):
         current_time = time.time()
         if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
             self.cached_values = {}
-            print("Cache cleared due to data timeout.")
+            self.log.writeLog(__class__.__name__, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 # ===== SPIDevice class for DDS' SPI Backend =====
 class SPIDevice(Interface):
@@ -149,7 +156,7 @@ class SPIDevice(Interface):
     def __init__(self, name, address, logFile : DataLogger):
         
         # Init super (Input class)
-        super().__init__(name, InterfaceProtocol.SPI, logFile=logFile)
+        super().__init__(name, InterfaceProtocol.SPI, logger=logFile)
 
         # Initialize SPI
         self.spi = spidev.SpiDev()
@@ -163,7 +170,6 @@ class SPIDevice(Interface):
     
     def update(self):
         data = self.read_sensor()
-        print("Sensor Data:", data)
         time.sleep(1)
 
     def close_connection(self):
@@ -189,20 +195,20 @@ class CANInterface(Interface):
     cached_data_timeout_threshold = 2
 
     
-    def __init__(self, name : str, can_interface : str, database_path : str, logFile : DataLogger):
+    def __init__(self, name : str, can_interface : str, database_path : str, logger : DataLogger):
         '''
         Initializer for a CANInterface
         '''
 
         # Init super (Input class)
-        super().__init__(name, InterfaceProtocol.CAN, logFile=logFile)
+        super().__init__(name, InterfaceProtocol.CAN, logger=logger)
 
         # Init database path
         self.database_path = database_path
 
-        # Init database & print messages
+        # Init database & log messages
         self.db = cantools.database.load_file(self.database_path)
-        print(f"\n\n\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
+        self.log.writeLog(__class__.__name__, f"\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
 
         # Setup CAN Bus 
         # Can_interface is the interface of the device that the code is running on which can is connected to.
@@ -255,7 +261,9 @@ class CANInterface(Interface):
         if reqData != None:
             return reqData
         else:
-            print(f"No current values found for parameter: {key}")
+            self.log.writeLog(__class__.__name__, 
+                              f"No current values found for parameter: {key}",
+                              self.log.LogSeverity.WARNING)
         
 
     def get_data_raw(self):
@@ -271,12 +279,6 @@ class CANInterface(Interface):
 
         # Return message
         return msg
-
-        # DEBUG - Ignore. To be removed in future.
-        # print(f"{msg}\n ID: {msg.arbitration_id}\n DATA: {msg.data} ")
-        # with self.can_bus as bus:
-        # for msg in bus: 
-        # print(f"{msg}\n{hex(msg.arbitration_id)}")
 
 
     def send_can(self, messageName : str, signal : dict):
@@ -297,7 +299,6 @@ class CANInterface(Interface):
 
         self.can_bus.send(can.Message(arbitration_id=0x0000073a, data=[255,255,255,255,255,255,255,255,]))
         new_msg = can.Message(arbitration_id=msg.frame_id, data=data)
-        print(new_msg)
         # self.can_bus.send(new_msg)
         
 
@@ -323,9 +324,9 @@ class CANInterface(Interface):
         # Attempt to send the message & log it
         try:
             self.can_bus.send(msg)
-            print(f"Message sent on {self.can_bus.channel_info}: {msg}")
+            self.log.writeLog(__class__.__name__, f"Message sent on {self.can_bus.channel_info}: {msg}")
         except can.CanError:
-            print("Message NOT sent")
+            self.log.writeLog(__class__.__name__, "Message NOT sent")
 
 
     def close_connection(self):
@@ -338,7 +339,7 @@ class CANInterface(Interface):
 
         # Add dbc file to database
         self.db.add_dbc_file(filename)
-        print(f"\n\n\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
+        self.log.writeLog(__class__.__name__, f"\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
         
 
     def __fetch_can_data(self):
@@ -366,7 +367,9 @@ class CANInterface(Interface):
         try:
             return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
-            print(f"ERROR: No database entry found for {msg}")
+            self.log.writeLog(__class__.__name__, 
+                              f"No database entry found for {msg}",
+                              self.log.LogSeverity.WARNING)
             return {'':''}
     
 
@@ -376,7 +379,9 @@ class CANInterface(Interface):
         This is the command to start the can0 network
         In a terminal, all these command would be run with spaces inbetween them
         '''
-        print("CAN Bus not found... Attempting to open one.")
+        self.log.writeLog(__class__.__name__, 
+                          "CAN Bus not found... Attempting to open one.",
+                          self.log.LogSeverity.WARNING)
 
         subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
@@ -394,9 +399,7 @@ class CANInterface(Interface):
         # Get current time
         current_time = time.time()
 
-        # DEBUG Print statement
-        # print(f"Current time: {current_time}\nLast Retrieval: {self.last_retrieval_time}\nCalc Value: {current_time - self.last_retrieval_time}\nCache Threshold: {self.cached_data_timeout_threshold}")
-
         if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
             self.cached_values = {}  # Clear the cache if timeout is exceeded
-            print("Cache cleared due to CAN timeout.")
+            self.log.writeLog(__class__.__name__, "Cache cleared due to CAN timeout.",
+                              self.log.LogSeverity.WARNING)
