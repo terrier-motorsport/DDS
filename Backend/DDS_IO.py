@@ -48,13 +48,6 @@ class DDS_IO:
         # Update all devices
         for key,obj in self.devices.items():
             obj.update()
-            
-
-        # print(self.devices)
-        # for i in range(len(self.devices)):
-        #     print(self.devices[i].__class__)
-        #     if self.devices[i] is not None:
-        #         self.devices[i].update()
 
 
     def get_device(self, deviceKey : str) -> Interface:
