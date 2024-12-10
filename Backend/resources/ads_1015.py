@@ -2,7 +2,7 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from .interface import I2CDevice
-from .data_logger import File
+from .data_logger import DataLogger
 from .analog_in import Analog_In
 
 import smbus2
@@ -26,7 +26,7 @@ class ADS_1015(I2CDevice):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logFile: File, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
+    def __init__(self, name: str, logFile: DataLogger, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
 
         # Initialize super class (I2CDevice)
         super().__init__(name, logFile=logFile, i2c_address=0x00)   # i2c address isn't used, so I put 0

@@ -2,7 +2,7 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from resources.interface import Interface, CANInterface
-from resources.data_logger import File
+from resources.data_logger import DataLogger
 from resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from resources.ads_1015 import ADS_1015
 import smbus2
@@ -23,7 +23,7 @@ class DDS_IO:
 
 
     
-    logFile : File
+    logFile : DataLogger
 
     # ===== Devices that the DDS Talks to =====
     devices = {
@@ -35,7 +35,7 @@ class DDS_IO:
 
     def __init__(self):
         
-        self.logFile = File('DDS_Log')
+        self.logFile = DataLogger('DDS_Log')
 
 
         self.__define_devices()

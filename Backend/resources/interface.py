@@ -5,7 +5,7 @@ from enum import Enum
 import can
 import cantools
 import cantools.database
-from .data_logger import File
+from .data_logger import DataLogger
 import subprocess
 import spidev           # type: ignore # This is the SPI library for the pi
 import time
@@ -33,7 +33,7 @@ class InterfaceProtocol(Enum):
 # ===== Parent class for all interfaces =====
 class Interface:
 
-    def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logFile : File):
+    def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logFile : DataLogger):
         '''
         Parent class for all interfaces.
         In case you didn't know, this is the initializer.
@@ -47,10 +47,10 @@ class Interface:
 
     def log_data(self, param_name: str, value):
         '''Takes in a file, parameter name & a value'''
-        self.logFile.writeData(
-            logger_name=self.name, 
+        self.logFile.writeTelemetry(
+            device_name=self.name, 
             param_name=param_name,
-            parameter=value)
+            value=value)
         
 
     def get_name(self) -> str:
@@ -100,7 +100,7 @@ class I2CDevice(Interface):
 
     last_retrieval_time = None
 
-    def __init__(self, name : str, logFile : File, i2c_address : int):
+    def __init__(self, name : str, logFile : DataLogger, i2c_address : int):
         
         # Init super (Input class)
         super().__init__(name, InterfaceProtocol.I2C, logFile=logFile)
@@ -146,7 +146,7 @@ class SPIDevice(Interface):
     Each device has its own address & commands that it responds too.
     """
 
-    def __init__(self, name, address, logFile : File):
+    def __init__(self, name, address, logFile : DataLogger):
         
         # Init super (Input class)
         super().__init__(name, InterfaceProtocol.SPI, logFile=logFile)
@@ -189,7 +189,7 @@ class CANInterface(Interface):
     cached_data_timeout_threshold = 2
 
     
-    def __init__(self, name : str, can_interface : str, database_path : str, logFile : File):
+    def __init__(self, name : str, can_interface : str, database_path : str, logFile : DataLogger):
         '''
         Initializer for a CANInterface
         '''

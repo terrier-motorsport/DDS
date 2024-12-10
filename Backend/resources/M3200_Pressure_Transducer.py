@@ -5,7 +5,7 @@
         # (This page was a mistake, but probably still works)
 
 from interface import I2CDevice, InterfaceProtocol, Interface
-from data_logger import File
+from data_logger import DataLogger
 import smbus # type: ignore
 import time
 
@@ -45,7 +45,7 @@ class M3200PressureSensorI2C(I2CDevice):
 
 
 
-    def __init__(self, name: str, logFile: File, i2c_address: int, i2c_bus: smbus.SMBus):
+    def __init__(self, name: str, logFile: DataLogger, i2c_address: int, i2c_bus: smbus.SMBus):
 
         # Initialize super class (I2CDevice)
         super().__init__(name, logFile=logFile, i2c_address=i2c_address)
