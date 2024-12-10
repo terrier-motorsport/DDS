@@ -45,7 +45,7 @@ class Interface:
         pass
 
 
-    def log_data(self, param_name: str, value):
+    def log_data(self, param_name: str, value, units: str):
         '''Takes in a file, parameter name & a value'''
         self.log.writeTelemetry(
             device_name=self.name, 
@@ -126,15 +126,19 @@ class I2CDevice(Interface):
         # Close the i2c connection.
         self.bus.close()
 
+
     def reset_last_retrival_timer(self):
         self.last_retrieval_time = time.time()
 
-    def log_data(self, param_name, value):
-        return super().log_data(param_name, value)
+
+    def log_data(self, param_name, value, units):
+        return super().log_data(param_name, value, units)
+
 
     def _fetch_sensor_data(self):
         self.log.writeLog(__class__.__name__, "FETCH SENSOR DATA IN I2CDevice IS BEING CALLED. IT SHOULD NOT BE GETTING CALLED.")
         pass
+
 
     def _update_cache_timeout(self):
         """
@@ -163,14 +167,17 @@ class SPIDevice(Interface):
         self.spi.open(0, 0)  # (bus 0, device 0)
         self.spi.max_speed_hz = 50000  # Adjust speed as needed
 
+
     def _read_sensor(self):
         # Send and receive data
         adc_response = self.spi.xfer2([0x00, 0x00])  # Example request
         return adc_response
     
+
     def update(self):
         data = self.read_sensor()
         time.sleep(1)
+
 
     def close_connection(self):
         self.spi.close()
@@ -225,11 +232,12 @@ class CANInterface(Interface):
         '''
 
         # Get data from the CAN Bus
-        new_values = self.__fetch_can_data()
+        message = self.__fetch_can_message()
+        data = self.__decode_can_msg(message)
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
-        if new_values == None:
+        if data == None:
 
             # If no new values are discovered, we check to see if the cache has expired.
             self.__update_cache_timeout()
@@ -239,14 +247,20 @@ class CANInterface(Interface):
         self.last_retrieval_time = time.time()  # Update retrieval time
 
         # Log the data that was read
-        for key,value in new_values.items():
+        for signal_name,value in data.items():
+            
+            # Get the units for the signal
+            cantools_message = self.db.get_message_by_frame_id(message.arbitration_id)
+            cantools_signal = cantools_message.get_signal_by_name(signal_name)
+            unit = cantools_signal.unit
 
-            # Write the data to the log file
-            super().log_data(key, value)
+            # Write the data to the log file 
+            self.db.get_message_by_name()
+            super().log_data(signal_name, value, units=unit)
 
         # Updates / Adds all the read values to the current_values dict
-        for key, value in new_values.items():
-            self.cached_values[key] = value
+        for signal_name, value in data.items():
+            self.cached_values[signal_name] = value
 
 
     def get_data(self, key : str):
@@ -342,7 +356,7 @@ class CANInterface(Interface):
         self.log.writeLog(__class__.__name__, f"\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
         
 
-    def __fetch_can_data(self):
+    def __fetch_can_message(self):
         
         '''
         Gets data from the CAN Bus and tries to parse it.
@@ -359,10 +373,11 @@ class CANInterface(Interface):
             self.__start_can_bus()
             msg = self.can_bus.recv()
 
-        # Check to see if the request timed out
-        if msg == None:
-            return None
-
+        # Return the message
+        return msg
+        
+    
+    def __decode_can_msg(self, msg: can.Message) -> dict:
         # Try to parse the data & return it
         try:
             return self.db.decode_message(msg.arbitration_id, msg.data)
