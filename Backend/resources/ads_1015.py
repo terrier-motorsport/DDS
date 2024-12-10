@@ -36,7 +36,7 @@ class ADS_1015(I2CDevice):
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
         # Init ADC Device
-        self._init_ads()
+        self.__init_ads()
         
         # Init virtual analog inputs
         self.inputs = inputs
@@ -126,7 +126,7 @@ class ADS_1015(I2CDevice):
         return voltages
     
 
-    def _init_ads(self):
+    def __init_ads(self):
         # Make ADS object
         self.ads = ADS1015()
 
@@ -136,7 +136,7 @@ class ADS_1015(I2CDevice):
 
         # Configure ADS
         self.ads.set_mode("single")
-        self.ads.set_programmable_gain(8.192)
+        self.ads.set_programmable_gain(1.024)
         self.ads.set_sample_rate(1600)
 
         # Get reference voltage
