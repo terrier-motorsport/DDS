@@ -51,11 +51,6 @@ class ADS_1015(I2CDevice):
         # Fetch the sensor data
         voltages = self._fetch_sensor_data()
 
-        # Store it in the virtual inputs
-        for input, voltage in zip(self.inputs, voltages):
-            input.voltage = voltage
-
-
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
         if any(value is None for value in voltages):
@@ -65,12 +60,31 @@ class ADS_1015(I2CDevice):
             return
         
 
-        for input in self.inputs: 
+        # output_value = []
+        # for i in range(4):
+        #     # Assign the fetched voltage to the Analog_In voltage
+        #     self.inputs[i].voltage = voltages[i]
+
+        #     # Assign the analog_in value (has meaning) to the values array
+        #     self.inputs[i]
+
+        # Store the voltage in the virtual inputs
+        for input_obj, voltage in zip(self.inputs, voltages):
+            input_obj.voltage = voltage
+            input_obj.get_output()
+
+
+        # Cache it
+        for input_obj in self.inputs: 
+
+            key = input_obj.name
+            data = input_obj.get_output()
+
             # Update cache with new data
-            self.cached_values[input.name] = input.voltage
+            self.cached_values[key] = data
 
             # Log the data
-            self.log_data(input.name, input.voltage)
+            self.log_data(key, data)
 
         # Reset the timeout timer
         self.reset_last_retrival_timer() 
