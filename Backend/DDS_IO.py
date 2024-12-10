@@ -100,7 +100,7 @@ class DDS_IO:
                 fixed_resistor=fixed_resistor
             )
 
-            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", File, i2c_bus=self.i2c_bus, inputs = [
+            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logFile=self.logFile, i2c_bus=self.i2c_bus, inputs = [
                 Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper),           #ADC1(A0)
                 Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper),          #ADC1(A1)
                 Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper),       #ADC1(A2)

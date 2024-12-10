@@ -155,7 +155,7 @@ class ADS_1015(I2CDevice):
             raise TypeError("logFile must be an instance of File")
         
         print(f'path: {self.logFile.filePath}')
-        return self.logFile.writeData(logger_name=self.name, param_name=param_name, parameter=value)
+        # return self.logFile.writeData(logger_name=self.name, param_name=param_name, parameter=value)
         return super().log_data(param_name, value)
     
 
