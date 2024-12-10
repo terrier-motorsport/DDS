@@ -1,4 +1,4 @@
-from resources.input import CANInterface
+from resources.interface import CANInterface
 import time
 
 
