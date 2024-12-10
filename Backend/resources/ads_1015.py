@@ -78,12 +78,13 @@ class ADS_1015(I2CDevice):
 
             key = input_obj.name
             data = input_obj.get_output()
+            units = input_obj.units
 
             # Update cache with new data
             self.cached_values[key] = data
 
             # Log the data
-            self.log_data(key, data)
+            self.log_data(key, data, units)
 
         # Reset the timeout timer
         self.reset_last_retrival_timer() 
@@ -150,8 +151,8 @@ class ADS_1015(I2CDevice):
         return super()._update_cache_timeout()
 
 
-    def log_data(self, param_name, value):
-        return super().log_data(param_name, value)
+    def log_data(self, param_name, value, units):
+        return super().log_data(param_name, value, units=units)
     
 
     def reset_last_retrival_timer(self):
