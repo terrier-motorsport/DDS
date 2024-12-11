@@ -143,6 +143,7 @@ class ADS_1015(I2CDevice):
             # The value is in the output range, so we clamp & return it.
             # This prevents things like negative pressures when the loop is unpresurized
             clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
+            print(f"{analog_in.voltage}, {clamped_voltage}")
             analog_in.voltage = clamped_voltage
             return analog_in
         
