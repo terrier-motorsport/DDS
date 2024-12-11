@@ -23,7 +23,7 @@ class DDS_IO:
 
 
     
-    logFile : DataLogger
+    log : DataLogger
 
     # ===== Devices that the DDS Talks to =====
     devices = {
@@ -34,10 +34,11 @@ class DDS_IO:
     # ===== Methods =====
 
     def __init__(self):
-        
-        self.logFile = DataLogger('DDS_Log')
+        self.log = DataLogger('DDS_Log')
 
+        self.__log('Starting Dash Display System Backend...')
 
+        self.__log('Initializing IO Devices')
         self.__define_devices()
         pass
 
@@ -60,14 +61,21 @@ class DDS_IO:
 
         # ===== Init CAN interface & CAN Devices =====
         if self.CAN_ENABLED:
-            self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logger=self.logFile)
+            self.__log('Initializing CANBus...')
+
+            self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logger=self.log)
             self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
+
+            self.__log('Successfully Initialized CANBus!')
         else:
+            self.__log('CAN Disabled: Skipping initialization.')
             del self.devices['canInterface']
 
 
         # ===== Init i2c bus ===== 
         if self.I2C_ENABLED:
+            self.__log('Initializing i2c...')
+
             self.i2c_bus = smbus2.SMBus(1)
 
 
@@ -95,7 +103,7 @@ class DDS_IO:
                 fixed_resistor=fixed_resistor
             )
 
-            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logger=self.logFile, i2c_bus=self.i2c_bus, inputs = [
+            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logger=self.log, i2c_bus=self.i2c_bus, inputs = [
                 Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
                 Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
                 Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
@@ -103,9 +111,19 @@ class DDS_IO:
             ])
             # TODO: Init second ADC w/ other sensors
 
+            self.__log('Successfully Initialized i2c!')
+        else:
+            self.__log('i2c Disabled: Skipping initialization.')
+
 
         # ===== TODO: Init Accelerometers ===== 
 
+
+    def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
+        self.log.writeLog(
+            logger_name='DDS_IO',
+            msg=msg,
+            severity=severity)
 
 # Example / Testing Code
 
