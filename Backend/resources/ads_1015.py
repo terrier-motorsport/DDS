@@ -121,7 +121,7 @@ class ADS_1015(I2CDevice):
         Returns the output with clean data.
         '''
 
-        if not analog_in.voltage_in_tolerange_range(self):
+        if not analog_in.voltage_in_tolerange_range():
             # This means the voltage is outside of the tolerable range.
             self.log.writeLog(
                               __class__.__name__,
