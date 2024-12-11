@@ -113,7 +113,7 @@ class ADS_1015(I2CDevice):
 
                 # This will cause the value to be discarded
                 input_obj.voltage = -1
-
+            print(f"VOLTAGE = {input_obj.voltage}")
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
 
