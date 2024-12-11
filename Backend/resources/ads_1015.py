@@ -101,10 +101,18 @@ class ADS_1015(I2CDevice):
 
         # Iterate through each channel and corresponding input
         for channel, input_obj in zip(self.CHANNELS, self.inputs):
+
             # Read the voltage for the current channel with compensation
-            input_obj.voltage = self.ads.get_voltage(
-                channel=channel
-            )
+            try:
+                input_obj.voltage = self.ads.get_voltage(
+                    channel=channel
+                )
+            except OSError:
+                # Occasionally this happens over i2c communication. I'm not sure why.
+                self.log.writeLog(self.name,f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
+
+                # This will cause the value to be discarded
+                input_obj.voltage = -1
 
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
@@ -126,7 +134,7 @@ class ADS_1015(I2CDevice):
             self.log.writeLog(
                               self.name,
                               msg =f"{analog_in.name} out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}",
-                              severity=self.log.LogSeverity.ERROR)
+                              severity=self.log.LogSeverity.WARNING)
             
             # Return an empty value
             return analog_in
