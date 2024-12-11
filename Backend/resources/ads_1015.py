@@ -57,25 +57,14 @@ class ADS_1015(I2CDevice):
             # If no new values are discovered, we check to see if the cache has expired.
             self._update_cache_timeout()
             return
-        
 
-        # output_value = []
-        # for i in range(4):
-        #     # Assign the fetched voltage to the Analog_In voltage
-        #     self.inputs[i].voltage = voltages[i]
-
-        #     # Assign the analog_in value (has meaning) to the values array
-        #     self.inputs[i]
-
-        # Store the voltage in the virtual inputs
+        # For each voltage collected & input object
         for input_obj, voltage in zip(self.inputs, voltages):
+
+            # Set the voltage of the analog_in object to the one measured.
             input_obj.voltage = voltage
-            input_obj.get_output()
 
-
-        # Cache it
-        for input_obj in self.inputs: 
-
+            # Extract data from object
             key = input_obj.name
             data = input_obj.get_output()
             units = input_obj.units
@@ -113,17 +102,43 @@ class ADS_1015(I2CDevice):
         # Iterate through each channel and corresponding input
         for channel, input_obj in zip(self.CHANNELS, self.inputs):
             # Read the voltage for the current channel with compensation
-            voltage = self.ads.get_voltage(
+            input_obj.voltage = self.ads.get_voltage(
                 channel=channel
             )
 
-            # Update the voltage of the associated input object
-            input_obj.voltage = voltage
+            # Validate the voltage of the input
+            self.__validate_voltage(input_obj)
 
             # Store the voltage in the voltages list
-            voltages.append(voltage)
+            voltages.append(input_obj.voltage)
 
         return voltages
+    
+
+    def __validate_voltage(self, analog_in: Analog_In) -> float:
+        '''
+        Validates the voltage is within the analog_in's input range. 
+        Returns the output with clean data.
+        '''
+
+        if not analog_in.voltage_in_tolerange_range(self):
+            # This means the voltage is outside of the tolerable range.
+            self.log.writeLog(
+                              __class__.__name__,
+                              msg =f"Voltage out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}",
+                              severity=self.log.LogSeverity.ERROR)
+            
+            # Return an empty value
+            return None
+
+        else:
+            # The value is in the output range, so we clamp & return it.
+            # This prevents things like negative pressures when the loop is unpresurized
+            clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
+            analog_in.voltage = clamped_voltage
+            return self.clamp()
+        
+
     
 
     def __init_ads(self):
@@ -143,6 +158,9 @@ class ADS_1015(I2CDevice):
         self.reference = self.ads.get_reference_voltage()
         self.log.writeLog(__class__.__name__, f"Reference: {self.reference}")
     
+
+
+
 
     # ===== Super Function Calls =====
 

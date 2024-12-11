@@ -12,6 +12,8 @@ class ValueMapper:
     def __init__(self, voltage_range: tuple, output_range: tuple):
         self.min_voltage, self.max_voltage = voltage_range
         self.min_output, self.max_output = output_range
+        self.voltage_range = self.max_voltage - self.min_voltage
+        self.output_range = self.max_output - self.min_output
 
     def voltage_to_value(self, voltage: float):
         """
@@ -38,6 +40,7 @@ class ValueMapper:
 
         return output
     
+
     @staticmethod
     def voltage_to_resistance(adc_voltage: float, supply_voltage: float, fixed_resistor: float) -> float:
         """
@@ -57,6 +60,8 @@ class ValueMapper:
         # Use the voltage divider formula to calculate the sensor resistance
         sensor_resistance = (adc_voltage * fixed_resistor) / (supply_voltage - adc_voltage)
         return sensor_resistance
+    
+    
     
 
 
@@ -119,6 +124,7 @@ class Analog_In:
     name : str
     voltage : float
     units : str
+    tolerance : float   # % in decimal form (Ex: 0.20 = 20%)
 
     # Decoding properties
     min_voltage : float
@@ -128,14 +134,16 @@ class Analog_In:
     max_output : float
 
 
-    def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper]):
+    def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper], tolerance=0.2):
         '''Initalizer for the Analog_in object'''
         self.name = name
         self.units = units
         self.converter = mapper
+        self.tolerance = tolerance
 
 
     def get_output(self):
+        '''Gets the output of the analog in'''
         # If no params are passed, use the voltage variable
         return self.voltage_to_output(self.voltage)
 
@@ -152,8 +160,22 @@ class Analog_In:
         """
         
         return self.converter.voltage_to_value(voltage)
+    
+
+    def voltage_in_tolerange_range(self) -> bool:
+        '''Returns if the current voltage is inside the tolerance range'''
+        # Tolerable Condition
+        voltage_tolerance = (self.converter.voltage_range * self.tolerance) / 2
+        min = self.converter.min_voltage - voltage_tolerance
+        max = self.converter.max_voltage + voltage_tolerance
+
+        if min < self.voltage < max:
+            return True
+        else:
+            return False
         
         
+
     
 
 
