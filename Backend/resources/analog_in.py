@@ -109,10 +109,10 @@ class ExponentialValueMapper:
         float: The interpolated output value (e.g., temperature in °C).
         """
         # Step 1: Convert ADC voltage to resistance
-        sensor_resistance = ValueMapper.voltage_to_resistance(adc_voltage, self.supply_voltage, self.fixed_resistor)
-
+        self.sensor_resistance = ValueMapper.voltage_to_resistance(adc_voltage, self.supply_voltage, self.fixed_resistor)
+        
         # Step 2: Convert resistance to output value using interpolation
-        return float(self.interpolator(sensor_resistance))
+        return self.resistance_to_value(self.sensor_resistance)
     
 
     def resistance_to_value(self, resistance : float):
