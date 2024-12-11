@@ -54,8 +54,6 @@ class ValueMapper:
         Returns:
         float: The calculated resistance of the sensor (in Ohms).
         """
-        # if adc_voltage <= 0 or adc_voltage >= supply_voltage:
-        #     raise ValueError(f"ADC voltage ({adc_voltage}v) must be within the range of the supply voltage ({supply_voltage}v).")
 
         # Use the voltage divider formula to calculate the sensor resistance
         sensor_resistance = (adc_voltage * fixed_resistor) / (supply_voltage - adc_voltage)
@@ -98,6 +96,7 @@ class ExponentialValueMapper:
 
         # Calc min and max voltage
         self.min_voltage, self.max_voltage = self.__calculate_min_max_voltage()
+        self.voltage_range = self.max_voltage - self.min_voltage
 
     def voltage_to_value(self, adc_voltage: float) -> float:
         """
