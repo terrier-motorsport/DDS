@@ -116,7 +116,10 @@ class ADS_1015(I2CDevice):
                 input_obj.voltage = -1
 
                 # Try to restart sensor
-                self.__init_ads()
+                try:
+                    self.__init_ads()
+                except:
+                    pass
                 
 
             # Validate the voltage of the input
