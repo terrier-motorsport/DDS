@@ -111,8 +111,13 @@ class ADS_1015(I2CDevice):
                 # Occasionally this happens over i2c communication. I'm not sure why.
                 self.log.writeLog(self.name,f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
 
+            except:
                 # This will cause the value to be discarded
                 input_obj.voltage = -1
+
+                # Try to restart sensor
+                self.__init_ads()
+                
 
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
