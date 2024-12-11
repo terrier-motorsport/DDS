@@ -96,6 +96,8 @@ class ExponentialValueMapper:
         # Create the interpolation function for resistance-to-output mapping
         self.interpolator = interp1d(self.resistance_values, self.output_values, fill_value="extrapolate")
 
+        # Calc min and max voltage
+        self.min_voltage, self.max_voltage = self.__calculate_min_max_voltage()
 
     def voltage_to_value(self, adc_voltage: float) -> float:
         """
@@ -113,9 +115,29 @@ class ExponentialValueMapper:
         # Step 2: Convert resistance to output value using interpolation
         return float(self.interpolator(sensor_resistance))
     
+
     def resistance_to_value(self, resistance : float):
         '''Converts a resistance to an interpolated output'''
         return float(self.interpolator(resistance))
+    
+
+    def __calculate_min_max_voltage(self):
+        """
+        Calculate the minimum and maximum output voltages based on resistance values.
+
+        Returns:
+        tuple: (min_voltage, max_voltage)
+        """
+        # Ensure resistance values are sorted
+        min_resistance = min(self.resistance_values)
+        max_resistance = max(self.resistance_values)
+
+        # Voltage divider formula
+        min_voltage = self.supply_voltage * (min_resistance / (min_resistance + self.fixed_resistor))
+        max_voltage = self.supply_voltage * (max_resistance / (max_resistance + self.fixed_resistor))
+
+        return min_voltage, max_voltage
+
 
 
 class Analog_In:
