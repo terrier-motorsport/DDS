@@ -141,6 +141,11 @@ class Analog_In:
         self.converter = mapper
         self.tolerance = tolerance
 
+        self.min_voltage = mapper.min_voltage
+        self.max_voltage = mapper.max_voltage
+        self.min_output = mapper.min_output
+        self.max_output = mapper.max_output
+
 
     def get_output(self):
         '''Gets the output of the analog in'''
