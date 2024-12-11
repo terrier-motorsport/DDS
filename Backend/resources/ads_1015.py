@@ -88,7 +88,7 @@ class ADS_1015(I2CDevice):
         if key in self.cached_values:
             return self.cached_values[key]
         else:
-            self.log.writeLog(__class__.__name__, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
+            self.log.writeLog(self.name, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
             return None
 
 
@@ -129,7 +129,7 @@ class ADS_1015(I2CDevice):
                               severity=self.log.LogSeverity.ERROR)
             
             # Return an empty value
-            return 
+            return analog_in
 
         else:
             # The value is in the output range, so we clamp & return it.
