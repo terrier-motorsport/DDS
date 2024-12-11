@@ -113,7 +113,7 @@ class ADS_1015(I2CDevice):
 
                 # This will cause the value to be discarded
                 input_obj.voltage = -1
-            print(f"VOLTAGE = {input_obj.voltage}")
+
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
 
@@ -143,7 +143,6 @@ class ADS_1015(I2CDevice):
             # The value is in the output range, so we clamp & return it.
             # This prevents things like negative pressures when the loop is unpresurized
             clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
-            print(f"{analog_in.voltage}, {clamped_voltage}")
             analog_in.voltage = clamped_voltage
             return analog_in
         
