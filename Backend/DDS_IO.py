@@ -48,7 +48,10 @@ class DDS_IO:
 
         # Update all devices
         for key,obj in self.devices.items():
-            obj.update()
+            try:
+                obj.update()
+            except:
+                obj.__init__()
 
 
     def get_device(self, deviceKey : str) -> Interface:
