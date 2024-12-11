@@ -155,7 +155,7 @@ class DataLogger:
 
 
 # Example Usage of DataLogger
-DEBUG_ENABLED = True
+DEBUG_ENABLED = False
 
 if DEBUG_ENABLED:
 
