@@ -63,11 +63,14 @@ class DDS_IO:
         if self.CAN_ENABLED:
             self.__log('Initializing CANBus...')
 
+            # Init canInterface
             self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logger=self.log)
             self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
+            # Log completion
             self.__log('Successfully Initialized CANBus!')
         else:
+            # CANBus Disabled
             self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
             del self.devices['canInterface']
 
@@ -113,7 +116,9 @@ class DDS_IO:
 
             self.__log('Successfully Initialized i2c!')
         else:
+            # i2c Disabled
             self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
+            del self.devices['coolingLoopSensors']
 
 
         # ===== TODO: Init Accelerometers ===== 

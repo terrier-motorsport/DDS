@@ -155,7 +155,7 @@ class ADS_1015(I2CDevice):
 
         # Double check chip type (debug)
         self.chip_type = self.ads.detect_chip_type()
-        self.log.writeLog(__class__.__name__, "Found: {}".format(self.chip_type))
+        self.log.writeLog(self.name, "Found: {}".format(self.chip_type))
 
         # Configure ADS
         self.ads.set_mode("single")
@@ -164,7 +164,7 @@ class ADS_1015(I2CDevice):
 
         # Get reference voltage
         self.reference = self.ads.get_reference_voltage()
-        self.log.writeLog(__class__.__name__, f"Reference: {self.reference}")
+        self.log.writeLog(self.name, f"Reference: {self.reference}")
     
 
 
