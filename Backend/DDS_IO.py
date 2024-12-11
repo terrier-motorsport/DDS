@@ -142,11 +142,19 @@ if DEBUG_ENABLED:
     last_print_time = 0  # Tracks the last time the print statements were executed
     PRINT_INTERVAL = 1   # Time interval in seconds between prints
 
+    delta_times = []  # List to store delta times
+    last_loop_time = time.time()  # Tracks the time of the last loop iteration
+
     while True:
         io.update()
 
-        # Check if enough time has elapsed since the last print
+        # Measure the current time and calculate the delta time for this loop iteration
         current_time = time.time()
+        delta_time = current_time - last_loop_time
+        delta_times.append(delta_time)
+        last_loop_time = current_time
+
+        # Calculate and print average delta time every PRINT_INTERVAL
         if current_time - last_print_time >= PRINT_INTERVAL:
             # Update the last print time
             last_print_time = current_time
@@ -163,3 +171,9 @@ if DEBUG_ENABLED:
 
             coldtemp = io.get_device('coolingLoopSensors').get_data('coldTemperature')
             print(f"cold temp: {coldtemp}")
+
+            # Calculate and print the average delta time
+            if delta_times:
+                avg_delta_time = sum(delta_times) / len(delta_times)
+                print(f"Average delta time: {avg_delta_time:.6f} seconds")
+                delta_times.clear()  # Clear the list after printing the average
