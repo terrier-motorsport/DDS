@@ -159,12 +159,11 @@ class ADS_1015(I2CDevice):
 
         # Configure ADS
         self.ads.set_mode("single")
-        self.ads.set_programmable_gain(6.144) # WARNING - this must be higher than the max voltage measured in the system.
-        self.ads.set_sample_rate(1600)
 
-        # Get reference voltage
-        self.reference = self.ads.get_reference_voltage()
-        self.log.writeLog(self.name, f"Reference: {self.reference}")
+        # WARNING - this must be higher than the max voltage measured in the system. 
+        # It is differential, meaning the ADS can measure ±6.144v
+        self.ads.set_programmable_gain(6.144) 
+        self.ads.set_sample_rate(1600)
     
 
 
