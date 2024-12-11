@@ -51,7 +51,7 @@ class DDS_IO:
             try:
                 obj.update()
             except:
-                obj.__init__()
+                obj.__init_ads()
 
 
     def get_device(self, deviceKey : str) -> Interface:
