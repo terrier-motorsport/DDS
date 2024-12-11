@@ -125,7 +125,7 @@ class ADS_1015(I2CDevice):
             # This means the voltage is outside of the tolerable range.
             self.log.writeLog(
                               self.name,
-                              msg =f"Voltage out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}",
+                              msg =f"{analog_in.name} out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}",
                               severity=self.log.LogSeverity.ERROR)
             
             # Return an empty value
