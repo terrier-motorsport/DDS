@@ -107,7 +107,7 @@ class ADS_1015(I2CDevice):
             )
 
             # Validate the voltage of the input
-            self.__validate_voltage(input_obj)
+            input_obj = self.__validate_voltage(input_obj)
 
             # Store the voltage in the voltages list
             voltages.append(input_obj.voltage)
@@ -115,7 +115,7 @@ class ADS_1015(I2CDevice):
         return voltages
     
 
-    def __validate_voltage(self, analog_in: Analog_In) -> float:
+    def __validate_voltage(self, analog_in: Analog_In):
         '''
         Validates the voltage is within the analog_in's input range. 
         Returns the output with clean data.
@@ -129,14 +129,14 @@ class ADS_1015(I2CDevice):
                               severity=self.log.LogSeverity.ERROR)
             
             # Return an empty value
-            return None
+            return 
 
         else:
             # The value is in the output range, so we clamp & return it.
             # This prevents things like negative pressures when the loop is unpresurized
             clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
             analog_in.voltage = clamped_voltage
-            return self.clamp()
+            return analog_in
         
 
     
