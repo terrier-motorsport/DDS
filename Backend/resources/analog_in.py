@@ -152,9 +152,6 @@ class Analog_In:
     min_voltage : float
     max_voltage : float
 
-    min_output : float
-    max_output : float
-
 
     def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper], tolerance=0.2):
         '''Initalizer for the Analog_in object'''
@@ -165,8 +162,6 @@ class Analog_In:
 
         self.min_voltage = mapper.min_voltage
         self.max_voltage = mapper.max_voltage
-        self.min_output = mapper.min_output
-        self.max_output = mapper.max_output
 
 
     def get_output(self):
