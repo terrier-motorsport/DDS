@@ -153,10 +153,6 @@ class ADS_1015(I2CDevice):
         # Make ADS object
         self.ads = ADS1015()
 
-        # Double check chip type (debug)
-        self.chip_type = self.ads.detect_chip_type()
-        self.log.writeLog(self.name, "Found: {}".format(self.chip_type))
-
         # Configure ADS
         self.ads.set_mode("single")
 
@@ -164,6 +160,12 @@ class ADS_1015(I2CDevice):
         # It is differential, meaning the ADS can measure ±6.144v
         self.ads.set_programmable_gain(6.144) 
         self.ads.set_sample_rate(1600)
+
+        # Double check chip type (debug)
+        self.chip_type = self.ads.detect_chip_type()
+        self.log.writeLog(self.name, "Found: {}".format(self.chip_type))
+
+
     
 
 
