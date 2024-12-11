@@ -68,7 +68,7 @@ class DDS_IO:
 
             self.__log('Successfully Initialized CANBus!')
         else:
-            self.__log('CAN Disabled: Skipping initialization.')
+            self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
             del self.devices['canInterface']
 
 
@@ -113,7 +113,7 @@ class DDS_IO:
 
             self.__log('Successfully Initialized i2c!')
         else:
-            self.__log('i2c Disabled: Skipping initialization.')
+            self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
 
         # ===== TODO: Init Accelerometers ===== 
