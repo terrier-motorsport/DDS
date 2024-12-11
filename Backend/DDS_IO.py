@@ -141,4 +141,4 @@ if DEBUG_ENABLED:
             coldtemp = io.get_device('coolingLoopSensors').get_data('coldTemperature')
             print(f"cold temp: {coldtemp}")
             print(io.get_device('coolingLoopSensors').inputs[3].voltage)
-            print(io.get_device('coolingLoopSensors').inputs[3].get_output())
+            print(io.get_device('coolingLoopSensors').inputs[3].get_output().converter.sensor_resistance)
