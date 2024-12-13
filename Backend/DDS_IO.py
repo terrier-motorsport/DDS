@@ -143,7 +143,7 @@ class DDS_IO:
             
             except Exception as e:
                 # Failed to initialize
-                self.__log(f'i2c Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
+                self.__log(f'i2c Initialization Error: {e.with_traceback()}', DataLogger.LogSeverity.CRITICAL)
                 self.__log(f'Continuing Intialization without i2c...', DataLogger.LogSeverity.INFO)
                 del self.devices['coolingLoopSensors']
         else:
