@@ -366,7 +366,7 @@ class CANInterface(Interface):
 
         # Add dbc file to database
         self.db.add_dbc_file(filename)
-        self.log.writeLog(__class__.__name__, f"\nLoaded Messaged from CAN Database: {filename}")
+        self.log.writeLog(__class__.__name__, f"\nLoaded Messages from CAN Database: {filename}")
         
 
     def __fetch_can_message(self) -> can.Message:
