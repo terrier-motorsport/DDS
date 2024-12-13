@@ -103,7 +103,7 @@ class DDS_IO:
 
             try:
                 print(f'starting i2c bus on {self.I2C_BUS}')
-                self.i2c_bus = smbus2.SMBus(self.I2C_BUS)
+                self.i2c_bus = smbus2.SMBus(bus=self.I2C_BUS)
             
 
 
@@ -143,7 +143,7 @@ class DDS_IO:
             
             except Exception as e:
                 # Failed to initialize
-                self.__log(f'i2c Initialization Error: {e.with_traceback()}', DataLogger.LogSeverity.CRITICAL)
+                self.__log(f'i2c Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
                 self.__log(f'Continuing Intialization without i2c...', DataLogger.LogSeverity.INFO)
                 del self.devices['coolingLoopSensors']
         else:
