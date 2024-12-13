@@ -55,7 +55,7 @@ class DDS_IO:
         ''' Gets a device at a specified key'''
         try:
             return self.devices.get(deviceKey)
-        except Exception as e:
+        except AttributeError as e:
             # Usually this throws an error when the device was deleted, ex: failed initialization.
             # When the device doesn't exist, we can just return a dummy device.
             return Interface('dummy',InterfaceProtocol.DUMMY, logger=self.log)
