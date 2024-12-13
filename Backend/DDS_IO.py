@@ -23,7 +23,7 @@ class DDS_IO:
 
 
     # ===== Device Constants=====
-    I2C_BUS = 2
+    I2C_BUS = '/dev/i2c-2'
 
 
     # ===== Devices that the DDS Talks to =====
