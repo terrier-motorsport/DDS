@@ -1,7 +1,7 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from resources.interface import Interface, CANInterface
+from resources.interface import Interface, CANInterface, InterfaceProtocol
 from resources.data_logger import DataLogger
 from resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from resources.ads_1015 import ADS_1015
@@ -52,7 +52,13 @@ class DDS_IO:
 
 
     def get_device(self, deviceKey : str) -> Interface:
-        return self.devices.get(deviceKey)
+        ''' Gets a device at a specified key'''
+        try:
+            return self.devices.get(deviceKey)
+        except Exception as e:
+            # Usually this throws an error when the device was deleted, ex: failed initialization.
+            # When the device doesn't exist, we can just return a dummy device.
+            return Interface('dummy',InterfaceProtocol.DUMMY, logger=self.log)
 
 
     def __define_devices(self):

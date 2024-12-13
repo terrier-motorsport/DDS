@@ -25,6 +25,7 @@ UART_TX = 2
 
 # Enums for types of protocols
 class InterfaceProtocol(Enum):
+    DUMMY = 0   # Don't use
     CAN = 1     # DONE
     SPI = 2     # TODO
     I2C = 3     # TODO
@@ -67,6 +68,7 @@ class Interface:
     def get_data(self, key : str):
         '''Should be overwritten by child class'''
         self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
+        return 'No Sensor Data'
 
     # ===== HELPER METHODS =====
 
