@@ -88,7 +88,7 @@ class DDS_IO:
 
             except Exception as e:
                 # Failed to initialize
-                self.__log(f'CAN Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
+                # self.__log(f'CAN Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
                 self.__log(f'Continuing Intialization without CAN...', DataLogger.LogSeverity.INFO)
                 del self.devices['canInterface']
         else:
