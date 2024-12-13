@@ -36,7 +36,7 @@ class ADS_1015(I2CDevice):
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
         # Init ADC Device
-        self.__init_ads()
+        self.__init_ads(self.bus)
         
         # Init virtual analog inputs
         self.inputs = inputs
@@ -157,9 +157,9 @@ class ADS_1015(I2CDevice):
 
     
 
-    def __init_ads(self):
+    def __init_ads(self, bus: smbus2.SMBus):
         # Make ADS object
-        self.ads = ADS1015()
+        self.ads = ADS1015(bus)
 
         # Configure ADS
         self.ads.set_mode("single")
