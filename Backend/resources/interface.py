@@ -67,7 +67,7 @@ class Interface:
 
     def get_data(self, key : str):
         '''Should be overwritten by child class'''
-        self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
+        # self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
         return 'No Sensor Data'
 
     # ===== HELPER METHODS =====
