@@ -159,7 +159,7 @@ class ADS_1015(I2CDevice):
 
     def __init_ads(self, bus: smbus2.SMBus):
         # Make ADS object
-        self.ads = ADS1015(bus)
+        self.ads = ADS1015(i2c_dev=bus)
 
         # Configure ADS
         self.ads.set_mode("single")
