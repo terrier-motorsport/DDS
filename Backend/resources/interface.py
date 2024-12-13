@@ -253,7 +253,7 @@ class CANInterface(Interface):
             self.__update_cache_timeout()
             return
 
-
+        # Decode the recieved data
         data = self.__decode_can_msg(message)
         
         # Update the last retrevial time for the timeout threshold
@@ -366,7 +366,7 @@ class CANInterface(Interface):
 
         # Add dbc file to database
         self.db.add_dbc_file(filename)
-        self.log.writeLog(__class__.__name__, f"\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
+        self.log.writeLog(__class__.__name__, f"\nLoaded Messaged from CAN Database: {filename}")
         
 
     def __fetch_can_message(self) -> can.Message:
