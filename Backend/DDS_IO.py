@@ -146,10 +146,10 @@ class DDS_IO:
                 self.__log(f'i2c Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
                 self.__log(f'Continuing Intialization without i2c...', DataLogger.LogSeverity.INFO)
                 del self.devices['coolingLoopSensors']
-            else:
-                # i2c Disabled
-                self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
-                del self.devices['coolingLoopSensors']
+        else:
+            # i2c Disabled
+            self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
+            del self.devices['coolingLoopSensors']
 
 
         # ===== TODO: Init Accelerometers ===== 
