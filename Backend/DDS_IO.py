@@ -102,7 +102,7 @@ class DDS_IO:
             self.__log('Initializing i2c...')
 
             try:
-                
+                print(f'starting i2c bus on {self.I2C_BUS}')
                 self.i2c_bus = smbus2.SMBus(self.I2C_BUS)
             
 
