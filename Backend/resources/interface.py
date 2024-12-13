@@ -227,8 +227,6 @@ class CANInterface(Interface):
         # Init database & log messages
         self.db = cantools.database.Database()
         self.add_database(self.database_path)
-        # self.db.add_dbc_file(self.database_path)
-        self.log.writeLog(__class__.__name__, f"\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
 
         # Setup CAN Bus 
         # Can_interface is the interface of the device that the code is running on which can is connected to.
