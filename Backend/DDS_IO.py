@@ -63,12 +63,19 @@ class DDS_IO:
         if self.CAN_ENABLED:
             self.__log('Initializing CANBus...')
 
-            # Init canInterface
-            self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logger=self.log)
-            self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
+            try:
+                # Init canInterface
+                self.devices['canInterface'] = CANInterface('MC & AMS', can_interface='can0', database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', logger=self.log)
+                self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
-            # Log completion
-            self.__log('Successfully Initialized CANBus!')
+                # Log completion
+                self.__log('Successfully Initialized CANBus!')
+
+            except Exception as e:
+                # Failed to initialize
+                self.__log(f'CAN Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
+                self.__log(f'Continuing Intialization without CAN...', DataLogger.LogSeverity.INFO)
+                del self.devices['canInterface']
         else:
             # CANBus Disabled
             self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
@@ -79,42 +86,49 @@ class DDS_IO:
         if self.I2C_ENABLED:
             self.__log('Initializing i2c...')
 
-            self.i2c_bus = smbus2.SMBus(1)
+            try:
+                self.i2c_bus = smbus2.SMBus(1)
 
 
-            # ===== Init cooling loop inputs & ADS ===== 
-            M3200_value_mapper = ValueMapper(
-                voltage_range=[0.5, 4.5], 
-                output_range=[0, 17])
+                # ===== Init cooling loop inputs & ADS ===== 
+                M3200_value_mapper = ValueMapper(
+                    voltage_range=[0.5, 4.5], 
+                    output_range=[0, 17])
 
-            # Define constants for NTC_M12 value mapping
-            resistance_values = [
-                45313, 26114, 15462, 9397, 5896, 3792, 2500,
-                1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
-            ]
-            temperature_values = [
-                -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
-                60, 70, 80, 90, 100, 110, 120, 130
-            ]
-            # Refer to the voltage divider circuit for the NTC_M12s
-            supply_voltage = 5
-            fixed_resistor = 3200
-            NTC_M12_value_mapper = ExponentialValueMapper(
-                resistance_values=resistance_values,
-                output_values=temperature_values,
-                supply_voltage=supply_voltage,
-                fixed_resistor=fixed_resistor
-            )
+                # Define constants for NTC_M12 value mapping
+                resistance_values = [
+                    45313, 26114, 15462, 9397, 5896, 3792, 2500,
+                    1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
+                ]
+                temperature_values = [
+                    -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
+                    60, 70, 80, 90, 100, 110, 120, 130
+                ]
+                # Refer to the voltage divider circuit for the NTC_M12s
+                supply_voltage = 5
+                fixed_resistor = 3200
+                NTC_M12_value_mapper = ExponentialValueMapper(
+                    resistance_values=resistance_values,
+                    output_values=temperature_values,
+                    supply_voltage=supply_voltage,
+                    fixed_resistor=fixed_resistor
+                )
 
-            self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logger=self.log, i2c_bus=self.i2c_bus, inputs = [
-                Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
-                Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
-                Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
-                Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
-            ])
-            # TODO: Init second ADC w/ other sensors
+                self.devices['coolingLoopSensors'] = ADS_1015("Cooling loop", logger=self.log, i2c_bus=self.i2c_bus, inputs = [
+                    Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
+                    Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
+                    Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
+                    Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
+                ])
+                # TODO: Init second ADC w/ other sensors
 
-            self.__log('Successfully Initialized i2c!')
+                self.__log('Successfully Initialized i2c!')
+            
+            except Exception as e:
+                # Failed to initialize
+                self.__log(f'i2c Initialization Error: {e}', DataLogger.LogSeverity.CRITICAL)
+                self.__log(f'Continuing Intialization without i2c...', DataLogger.LogSeverity.INFO)
+                del self.devices['coolingLoopSensors']
         else:
             # i2c Disabled
             self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
