@@ -67,8 +67,13 @@ class Interface:
 
     def get_data(self, key : str):
         '''Should be overwritten by child class'''
+
+        # This log was turning out to be more of a nusance than any help, so it is disabled for now.
         # self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
+
         return 'No Sensor Data'
+
+
 
     # ===== HELPER METHODS =====
 

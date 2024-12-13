@@ -22,14 +22,20 @@ class DDS_IO:
     I2C_ENABLED = True
 
 
-    
-    log : DataLogger
+    # ===== Device Constants=====
+    I2C_BUS = 2
+
 
     # ===== Devices that the DDS Talks to =====
     devices = {
         "canInterface" : CANInterface,
         "coolingLoopSensors" : ADS_1015
     }
+
+
+    # ===== Class Variables =====
+    log : DataLogger
+    
 
     # ===== Methods =====
 
@@ -96,7 +102,9 @@ class DDS_IO:
             self.__log('Initializing i2c...')
 
             try:
-                self.i2c_bus = smbus2.SMBus(1)
+                
+                self.i2c_bus = smbus2.SMBus(self.I2C_BUS)
+            
 
 
                 # ===== Init cooling loop inputs & ADS ===== 
