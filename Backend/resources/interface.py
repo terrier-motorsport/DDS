@@ -244,15 +244,17 @@ class CANInterface(Interface):
 
         # Get data from the CAN Bus
         message = self.__fetch_can_message()
-        data = self.__decode_can_msg(message)
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
-        if data == None:
+        if message == None:
 
             # If no new values are discovered, we check to see if the cache has expired.
             self.__update_cache_timeout()
             return
+
+
+        data = self.__decode_can_msg(message)
         
         # Update the last retrevial time for the timeout threshold
         self.last_retrieval_time = time.time()  # Update retrieval time
@@ -367,7 +369,7 @@ class CANInterface(Interface):
         self.log.writeLog(__class__.__name__, f"\nLOADED THE FOLLOWING CAN MESSAGES: {self.db.messages}")
         
 
-    def __fetch_can_message(self):
+    def __fetch_can_message(self) -> can.Message:
         
         '''
         Gets data from the CAN Bus and tries to parse it.
