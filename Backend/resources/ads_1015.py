@@ -167,7 +167,7 @@ class ADS_1015(I2CDevice):
         # WARNING - this must be higher than the max voltage measured in the system. 
         # It is differential, meaning the ADS can measure ±6.144v
         self.ads.set_programmable_gain(6.144) 
-        self.ads.set_sample_rate(1600)
+        self.ads.set_sample_rate(3300)
 
         # Double check chip type (debug)
         self.chip_type = self.ads.detect_chip_type()
