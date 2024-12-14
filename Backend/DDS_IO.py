@@ -253,17 +253,21 @@ if DEBUG_ENABLED:
             # Update the last print time
             last_print_time = current_time
 
+
+            # New implementation
+            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
+
             # Get and print the data
-            hotpressure = io.__get_device('coolingLoopSensors').get_data('hotPressure')
+            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
             print(f"hot pressure: {hotpressure}")
 
-            coldpressure = io.__get_device('coolingLoopSensors').get_data('coldPressure')
+            coldpressure = io.get_device_data('coolingLoopSensors', 'coldPressure')
             print(f"cold pressure: {coldpressure}")
 
-            hottemp = io.__get_device('coolingLoopSensors').get_data('hotTemperature')
+            hottemp = io.get_device_data('coolingLoopSensors', 'hotTemperature')
             print(f"hot temp: {hottemp}")
 
-            coldtemp = io.__get_device('coolingLoopSensors').get_data('coldTemperature')
+            coldtemp = io.get_device_data('coolingLoopSensors', 'coldTemperature')
             print(f"cold temp: {coldtemp}")
 
             # Calculate and print the average delta time
