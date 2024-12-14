@@ -179,7 +179,7 @@ class DDS_IO:
         
         except Exception as e:
             # Failed to initialize
-            self.__failed_to_init('i2c', exception=e)
+            self.__failed_to_init('i2c', exception=e, device_keys='coolingLoopSensors')
 
             # Disable the i2c devices
             self.devices['coolingLoopSensors'].status = Interface.Status.DISABLED
