@@ -6,9 +6,11 @@ import can
 import cantools
 import cantools.database
 from .data_logger import DataLogger
+
+from typing import Union
 import subprocess
-import spidev           # type: ignore # This is the SPI library for the pi
 import time
+
 
 """
 The purpose of these classes is to serve as an abstract outline 
@@ -25,14 +27,32 @@ UART_TX = 2
 
 # Enums for types of protocols
 class InterfaceProtocol(Enum):
-    DUMMY = 0   # Don't use
     CAN = 1     # DONE
-    SPI = 2     # TODO
-    I2C = 3     # TODO
+    SPI = 2     # Not Needed?
+    I2C = 3     # DONE
     UART = 4    # Not Needed?
 
 # ===== Parent class for all interfaces =====
 class Interface:
+
+    '''
+    This class contains the base functionality for all interfaces. 
+    In order for this to function properly, the update() function must be called as often as possible.
+    The values from the interface are constantly updated into the current_values dictionary
+    and can be retrieved by using the .get_data() function
+    '''
+
+    class Status(Enum):
+        '''
+        This keeps track of the state of the interface.
+        ACTIVE: Data is being polled constantly.
+        DISABLED: The interface is ignored.
+        ERROR: There was an error polling data and the interface will attempt to be re-initialized.
+        '''
+        ACTIVE = 1,
+        DISABLED = 2,
+        ERROR = 3
+
 
     def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logger : DataLogger):
         '''
@@ -43,6 +63,7 @@ class Interface:
         self.sensorProtocol = sensorProtocol
         self.name = name
         self.log = logger
+        self.status = self.Status.ACTIVE
         pass
 
 
@@ -65,7 +86,7 @@ class Interface:
         return self.sensorProtocol
 
 
-    def get_data(self, key : str):
+    def get_data(self, key : str) -> Union[str, float, int]:
         '''Should be overwritten by child class'''
 
         # This log was turning out to be more of a nusance than any help, so it is disabled for now.
@@ -160,38 +181,6 @@ class I2CDevice(Interface):
             self.cached_values = {}
             self.log.writeLog(__class__.__name__, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
-# ===== SPIDevice class for DDS' SPI Backend =====
-class SPIDevice(Interface):
-    
-    """
-    SPI Input which inherits the Input class
-    Each device has its own address & commands that it responds too.
-    """
-
-    def __init__(self, name, address, logFile : DataLogger):
-        
-        # Init super (Input class)
-        super().__init__(name, InterfaceProtocol.SPI, logger=logFile)
-
-        # Initialize SPI
-        self.spi = spidev.SpiDev()
-        self.spi.open(0, 0)  # (bus 0, device 0)
-        self.spi.max_speed_hz = 50000  # Adjust speed as needed
-
-
-    def _read_sensor(self):
-        # Send and receive data
-        adc_response = self.spi.xfer2([0x00, 0x00])  # Example request
-        return adc_response
-    
-
-    def update(self):
-        data = self.read_sensor()
-        time.sleep(1)
-
-
-    def close_connection(self):
-        self.spi.close()
 
 # ===== CANInterface class for DDS' CAN Backend =====
 class CANInterface(Interface):
@@ -200,9 +189,6 @@ class CANInterface(Interface):
     CAN Interface which inherits the Input class.
     Each device on the interface can have its own CAN database, which can be added using add_database().
     EX: The MC & AMS are on one CAN Interface. 
-    In order for this to function properly, the update() function must be called as often as possible.
-    /The values from the network are constantly updated into the current_values dictionary
-    and can be retrieved by using the .get_data() function
     \nFor UCP, There is only one CAN Interface running on the DDS.
     '''
 
@@ -407,12 +393,39 @@ class CANInterface(Interface):
         This is the command to start the can0 network
         In a terminal, all these command would be run with spaces inbetween them
         '''
-        self.log.writeLog(__class__.__name__, 
-                          "CAN Bus not found... Attempting to open one.",
-                          self.log.LogSeverity.WARNING)
+        self.log.writeLog(__class__.__name__, "CAN Bus not found... Attempting to open one.", self.log.LogSeverity.WARNING)
+        
 
-        subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
-        subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
+        try:
+            # Set CAN interface up with a timeout of 3 seconds
+            subprocess.run(
+                ["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"],
+                check=True,
+                timeout=3
+            )
+            # Set txqueuelen with a timeout of 3 seconds
+            subprocess.run(
+                ["sudo", "ifconfig", "can0", "txqueuelen", "65536"],
+                check=True,
+                timeout=3
+            )
+            self.log.writeLog(__class__.__name__, "can0 Successfully started.", self.log.LogSeverity.INFO)
+
+            # Catch common errors
+        except subprocess.TimeoutExpired as e:
+            # Command couldn't be run
+            self.log.writeLog(__class__.__name__, "Timeout: Couldn't start can0. Try rerunning the program with sudo.", self.log.LogSeverity.CRITICAL)
+            raise TimeoutError
+        except subprocess.CalledProcessError as e:
+            # Tbh idk
+            self.log.writeLog(__class__.__name__, f"Error: Couldn't start can0. The command '{e.cmd}' failed with exit code {e.returncode}.", self.log.LogSeverity.CRITICAL)
+        except Exception as e:
+            # I hope this one doesn't happen
+            self.log.writeLog(__class__.__name__, f"Couldn't start can0. Unexpected Error: {e}", self.log.LogSeverity.CRITICAL)
+
+
+        # subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
+        # subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
 
 
     def __update_cache_timeout(self):

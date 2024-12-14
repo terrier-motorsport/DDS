@@ -5,6 +5,7 @@ from resources.interface import Interface, CANInterface, InterfaceProtocol
 from resources.data_logger import DataLogger
 from resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from resources.ads_1015 import ADS_1015
+from typing import Union, List, Dict
 import smbus2
 
 """
@@ -27,10 +28,11 @@ class DDS_IO:
 
 
     # ===== Devices that the DDS Talks to =====
-    devices = {
+    devices: Dict[str, Interface] = {
         "canInterface" : CANInterface,
         "coolingLoopSensors" : ADS_1015
     }
+
 
 
     # ===== Class Variables =====
@@ -52,27 +54,59 @@ class DDS_IO:
     def update(self):
         '''Updates all sensors. Should be called as often as possible.'''
 
-        # Update all devices
-        for key,obj in self.devices.items():
-            obj.update()
+        # Update all enabled devices
+        for key,interface in self.devices.items():
+            if interface.status is not Interface.Status.DISABLED:
+                interface.update()
 
 
-    def get_device(self, deviceKey : str) -> Interface:
-        ''' Gets a device at a specified key'''
+    def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
+        ''' Gets a single parameter from a specified device.'''
 
-        device = self.devices.get(deviceKey)
+        device = self.__get_device(device_key)
 
-        if device is not None:
-            return device
-        else:
-            # Usually this throws an error when the device was deleted, ex: failed initialization.
-            # When the device doesn't exist, we can just return a dummy device.
-            return Interface('dummy',InterfaceProtocol.DUMMY, logger=self.log)
+        # If the device is None, we can return early
+        if device is None:
+            self.__log(f'Device {device_key} not found.', DataLogger.LogSeverity.WARNING)
+            return
+        
+        # If the device is not active, we can return early
+        if device.status is not Interface.Status.ACTIVE:
+
+            # Log the error
+            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {parameter}', DataLogger.LogSeverity.WARNING)
+
+            # Return a value that represents the current stat of the device
+            if device.status is Interface.Status.DISABLED:
+                return 'DIS'
+            elif device.status is Interface.Status.ERROR:
+                return 'ERR'
+        
+        # Fetch data from device
+        data = device.get_data(parameter)
+
+        # If the data is None, we can return early
+        if data is None:
+            self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
+            return
+        
+        # Return the data
+        return data
+
+
+    def __get_device(self, deviceKey : str) -> Interface:
+        ''' Gets a device at a specified key.
+        This may return a None value.'''
+
+        return self.devices.get(deviceKey)
 
 
     def __initialize_devices(self):
 
         '''Initializes all sensors & interfaces for the DDS'''
+
+        self.devices = {}
+
 
         # ===== Init CAN =====
         if self.CAN_ENABLED:
@@ -96,6 +130,7 @@ class DDS_IO:
 
         # ===== TODO: Init Accelerometers ===== 
 
+
     def __initialize_i2c(self):
 
         '''Initializes the i2c Interface'''
@@ -103,11 +138,11 @@ class DDS_IO:
         self.__log('Initializing i2c...')
 
         try:
-            print(f'starting i2c bus on {self.I2C_BUS}')
+            self.log(f'Starting i2c bus on {self.I2C_BUS}')
+
+            # Define i2c bus
             self.i2c_bus = smbus2.SMBus(bus=self.I2C_BUS)
         
-
-
             # ===== Init cooling loop inputs & ADS ===== 
             M3200_value_mapper = ValueMapper(
                 voltage_range=[0.5, 4.5], 
@@ -146,9 +181,10 @@ class DDS_IO:
             # Failed to initialize
             self.__failed_to_init('i2c', exception=e)
 
-            # Delete the i2c devices
-            del self.devices['coolingLoopSensors']
+            # Disable the i2c devices
+            self.devices['coolingLoopSensors'].status = Interface.Status.DISABLED
     
+
     def __initialize_CAN(self):
             
         '''Initializes the CANBus Interface'''
@@ -168,15 +204,18 @@ class DDS_IO:
 
         except Exception as e:
             # Failed to initialize
-            self.__failed_to_init('CAN', exception=e)
-
-            # Delete the CAN Devices
-            del self.devices['canInterface']
+            self.__failed_to_init('CAN', exception=e, device_keys=
+                                  'canInterface')
 
 
-    def __failed_to_init(self, protocol_name: str, exception: Exception):
-        self.__log(f'{protocol_name} Initialization Error: {exception}', DataLogger.LogSeverity.CRITICAL)
-        self.__log(f'Continuing Intialization without {protocol_name}...', DataLogger.LogSeverity.INFO)
+    def __failed_to_init(self, protocol_name: str, exception: Exception, device_keys: List[str]):
+        # Log the error
+        self.__log(f'{protocol_name} Initialization Error: {exception}, continuing', DataLogger.LogSeverity.CRITICAL)
+
+        # Mark the devices as having an error
+        for device_key in device_keys:
+            self.devices[device_key].status = Interface.Status.ERROR
+
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
@@ -215,16 +254,16 @@ if DEBUG_ENABLED:
             last_print_time = current_time
 
             # Get and print the data
-            hotpressure = io.get_device('coolingLoopSensors').get_data('hotPressure')
+            hotpressure = io.__get_device('coolingLoopSensors').get_data('hotPressure')
             print(f"hot pressure: {hotpressure}")
 
-            coldpressure = io.get_device('coolingLoopSensors').get_data('coldPressure')
+            coldpressure = io.__get_device('coolingLoopSensors').get_data('coldPressure')
             print(f"cold pressure: {coldpressure}")
 
-            hottemp = io.get_device('coolingLoopSensors').get_data('hotTemperature')
+            hottemp = io.__get_device('coolingLoopSensors').get_data('hotTemperature')
             print(f"hot temp: {hottemp}")
 
-            coldtemp = io.get_device('coolingLoopSensors').get_data('coldTemperature')
+            coldtemp = io.__get_device('coolingLoopSensors').get_data('coldTemperature')
             print(f"cold temp: {coldtemp}")
 
             # Calculate and print the average delta time
