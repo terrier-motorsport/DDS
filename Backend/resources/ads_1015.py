@@ -162,7 +162,7 @@ class ADS_1015(I2CDevice):
         self.ads = ADS1015(i2c_dev=bus)
 
         # Configure ADS
-        self.ads.set_mode("single")
+        self.ads.set_mode("continuous")
 
         # WARNING - this must be higher than the max voltage measured in the system. 
         # It is differential, meaning the ADS can measure ±6.144v
