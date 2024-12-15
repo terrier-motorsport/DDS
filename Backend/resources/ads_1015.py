@@ -17,6 +17,8 @@ class ADS_1015(I2CDevice):
     """
     # DDS ADS 1015 CLASS
     Analog -> Digital Converter on an I2C interface with caching functionality.
+    This class takes advantage of multithreading to collect data asyncronously, and transfers it to the main thread.
+    This process significantly reduces the amount of time it takes to run the DDS_IO.update() function.
     """
 
     # This list represensts the four channels that correspond to the four on the physical ADC pins
@@ -48,7 +50,7 @@ class ADS_1015(I2CDevice):
         self.thread_running = True  # Flag to control the thread's execution
 
         # Start data collection thread
-        self.start_sensor_data_collection()
+        self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
         time.sleep(0.5)
@@ -60,7 +62,7 @@ class ADS_1015(I2CDevice):
         """
 
         # Fetch the sensor data
-        voltages = self.__get_latest_data()
+        voltages = self.__get_data_from_thread()
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
@@ -91,10 +93,54 @@ class ADS_1015(I2CDevice):
         self.reset_last_cache_update_timer() 
 
 
+    def __init_ads(self, bus: smbus2.SMBus):
+        # Make ADS object
+        self.ads = ADS1015(i2c_dev=bus)
+
+        # Configure ADS
+        self.ads.set_mode("continuous")
+
+        # WARNING - this must be higher than the max voltage measured in the system. 
+        # It is differential, meaning the ADS can measure ±6.144v
+        self.ads.set_programmable_gain(6.144) 
+        self.ads.set_sample_rate(3300)
+
+        # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
+        time.sleep(2)
+
+        # Double check chip type (debug)
+        self.chip_type = self.ads.detect_chip_type()
+        self.log.writeLog(self.name, f"Found: {self.chip_type}")
+
+
+    def __get_data_from_thread(self) -> List[float]:
+        """Main program calls this to fetch the latest data from the queue."""
+        if not self.data_queue.empty():
+            return self.data_queue.get_nowait()  # Non-blocking call
+        else:
+            return None  # No data available yet
+
+
+    # This is the main thread function
+    def __data_collection_worker(self):
+        """
+        # This is the function that the thread runs continously
+        Thread function to continuously fetch sensor data.
+        """
+        while self.thread_running:
+            try:
+                voltages = self.__fetch_sensor_data()
+                self.data_queue.put(voltages)  # Put data in the queue for the main program
+            except Exception as e:
+                print(f"Error in fetching sensor data: {e}")
+            # time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
+    
+
     def __fetch_sensor_data(self) -> List[float]:
         """
         Reads voltages from the ADC for each channel, updates the corresponding inputs, 
         and returns a list of voltages.
+        This is used to run the data collection thread, and should not be called from the main thread.
         """
         voltages = []  # Initialize a list to store the voltages
 
@@ -128,7 +174,7 @@ class ADS_1015(I2CDevice):
             voltages.append(input_obj.voltage)
 
         return voltages
-    
+
 
     def __validate_voltage(self, analog_in: Analog_In):
         '''
@@ -152,51 +198,15 @@ class ADS_1015(I2CDevice):
             clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
             analog_in.voltage = clamped_voltage
             return analog_in
-        
+      
 
-    def __init_ads(self, bus: smbus2.SMBus):
-        # Make ADS object
-        self.ads = ADS1015(i2c_dev=bus)
-
-        # Configure ADS
-        self.ads.set_mode("continuous")
-
-        # WARNING - this must be higher than the max voltage measured in the system. 
-        # It is differential, meaning the ADS can measure ±6.144v
-        self.ads.set_programmable_gain(6.144) 
-        self.ads.set_sample_rate(3300)
-
-        # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
-        time.sleep(2)
-
-        # Double check chip type (debug)
-        self.chip_type = self.ads.detect_chip_type()
-        self.log.writeLog(self.name, f"Found: {self.chip_type}")
-
-
-    def __get_latest_data(self) -> List[float]:
-        """Main program calls this to fetch the latest data from the queue."""
-        if not self.data_queue.empty():
-            return self.data_queue.get_nowait()  # Non-blocking call
-        else:
-            return None  # No data available yet
-
-    def _sensor_data_thread(self):
-        """Thread function to continuously fetch sensor data."""
-        while self.thread_running:
-            try:
-                voltages = self.__fetch_sensor_data()
-                self.data_queue.put(voltages)  # Put data in the queue for the main program
-            except Exception as e:
-                print(f"Error in fetching sensor data: {e}")
-            # time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
-    
-    def start_sensor_data_collection(self):
+    def __start_threaded_data_collection(self):
         """Start the data collection in a separate thread."""
-        sensor_thread = threading.Thread(target=self._sensor_data_thread, daemon=True)
+        sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
         sensor_thread.start()
 
-    def stop_thread(self):
+
+    def __stop_thread(self):
         self.thread_running = False
 
 
