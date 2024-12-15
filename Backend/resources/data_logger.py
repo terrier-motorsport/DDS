@@ -223,7 +223,7 @@ class DataLogger:
 
 
 # Example Usage of DataLogger
-if __name__ == 'main':
+if __name__ == '__main__':
 
     # Initialize the DataLogger with a valid file name
     data_logger = DataLogger("example_log")
