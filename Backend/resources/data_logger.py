@@ -138,7 +138,7 @@ class DataLogger:
         logger.log(severity.value, msg)
 
         # Print to the console
-        print(self.__formatLogData())
+        print(self.__logToString(log))
 
         # Update the list of last logged messages
         self._addLoggedMessage(logger_name, msg, severity, current_time)
@@ -161,7 +161,7 @@ class DataLogger:
         self._last_logged_messages.append(log)
     
 
-    def __formatLogData(self, log: Log) -> str:
+    def __logToString(self, log: Log) -> str:
         '''Formats the log data for printing to the console.'''
         log_data = {
             "asctime": self.__getFormattedTime(log.timestamp),
