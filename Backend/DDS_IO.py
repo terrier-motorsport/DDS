@@ -96,6 +96,12 @@ class DDS_IO:
         This may return a None value.'''
 
         return self.devices.get(deviceKey)
+    
+    def get_device(self, deviceKey : str) -> Interface:
+        ''' Gets a device at a specified key.
+        This may return a None value.'''
+
+        return self.devices.get(deviceKey)
 
 
     def __initialize_devices(self):
@@ -233,7 +239,7 @@ if __name__ == '__main__':
 
     io.update()
 
-    device = io.__get_device('coolingLoopSensors')
+    device = io.get_device('coolingLoopSensors')
 
     device.start_sensor_data_collection()
 
