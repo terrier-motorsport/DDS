@@ -244,7 +244,7 @@ if __name__ == '__main__':
     device.start_sensor_data_collection()
 
     while True:
-        data = io.__get_device('coolingLoopSensors').get_latest_data()
+        data = io.get_device('coolingLoopSensors').get_latest_data()
         if data:
             print(f"Collected Data: {data}")
         else:
