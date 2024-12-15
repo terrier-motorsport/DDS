@@ -58,7 +58,7 @@ class ADS_1015(I2CDevice):
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
-        if any(value is None for value in voltages):
+        if voltages is None or any(value is None for value in voltages):
 
             # If no new values are discovered, we check to see if the cache has expired.
             self._update_cache_timeout()
