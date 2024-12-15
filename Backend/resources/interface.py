@@ -53,6 +53,9 @@ class Interface:
         DISABLED = 2,
         ERROR = 3
 
+    CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
+    cached_values: dict              # Dictionary to store cached values
+    last_cache_update: float         # Time since last cache update
 
     def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logger : DataLogger):
         '''
@@ -60,22 +63,24 @@ class Interface:
         In case you didn't know, this is the initializer.
         '''
 
+        # Class variables
         self.sensorProtocol = sensorProtocol
         self.name = name
         self.log = logger
         self.status = self.Status.ACTIVE
-        pass
+
+        # Init cache
+        self.cached_values = {}
+
+        # Init cache timeout
+        self.last_cache_update = time.time()
 
 
-    def log_data(self, param_name: str, value, units: str):
-        '''Takes in a file, parameter name & a value'''
-        self.log.writeTelemetry(
-            device_name=self.name, 
-            param_name=param_name,
-            value=value,
-            units=units)
+
+
+
         
-
+    # ===== GETTER METHODS =====
     def get_name(self) -> str:
         '''Gets the name of the interface'''
         return self.name
@@ -87,17 +92,37 @@ class Interface:
 
 
     def get_data(self, key : str) -> Union[str, float, int]:
-        '''Should be overwritten by child class'''
+        '''Gets data from the sensor'''
 
-        # This log was turning out to be more of a nusance than any help, so it is disabled for now.
-        # self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
-
-        return 'No Sensor Data'
+        self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
+        return 'ERR'
 
 
+    # ===== CACHING METHODS =====
+    def _update_cache_timeout(self):
+        """
+        Clear the cache if the data has not been updated within the timeout threshold.
+        """
+        current_time = time.time()
+        if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+            self.cached_values = {}
+            self.log.writeLog(__class__.__name__, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
-    # ===== HELPER METHODS =====
 
+    def reset_last_cache_update_timer(self):
+        self.last_cache_update = time.time()
+
+
+    def _log_telemetry(self, param_name: str, value, units: str):
+        '''Takes in a file, parameter name & a value'''
+        self.log.writeTelemetry(
+            device_name=self.name, 
+            param_name=param_name,
+            value=value,
+            units=units)
+        
+
+    # ===== HELPER METHODS ====
     @staticmethod
     def map_to_percentage(value : int, min_value : int, max_value : int) -> float:
         if value < min_value or value > max_value:
@@ -124,24 +149,11 @@ class I2CDevice(Interface):
     It is most likely that each i2c device will have it's own child class with custom decoding function.
     """
 
-    # I2C address of device
-    i2c_address : int
 
-    cached_values: dict = {}  # Dictionary to store cached values
-    cached_data_timeout_threshold = 2  # Cache timeout in seconds
-
-    last_retrieval_time = None
-
-    def __init__(self, name : str, logger : DataLogger, i2c_address : int):
+    def __init__(self, name : str, logger : DataLogger):
         
         # Init super (Input class)
         super().__init__(name, InterfaceProtocol.I2C, logger=logger)
-
-        # Init cache timeout
-        self.last_retrieval_time = time.time()
-
-        # Set I2C address
-        self.i2c_address = i2c_address
 
     
     def update(self):
@@ -159,27 +171,12 @@ class I2CDevice(Interface):
         self.bus.close()
 
 
-    def reset_last_retrival_timer(self):
-        self.last_retrieval_time = time.time()
+    def _log_telemetry(self, param_name, value, units):
+        return super()._log_telemetry(param_name, value, units)
 
 
-    def log_data(self, param_name, value, units):
-        return super().log_data(param_name, value, units)
 
 
-    def _fetch_sensor_data(self):
-        self.log.writeLog(__class__.__name__, "FETCH SENSOR DATA IN I2CDevice IS BEING CALLED. IT SHOULD NOT BE GETTING CALLED.")
-        pass
-
-
-    def _update_cache_timeout(self):
-        """
-        Clear the cache if the data has not been updated within the timeout threshold.
-        """
-        current_time = time.time()
-        if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
-            self.cached_values = {}
-            self.log.writeLog(__class__.__name__, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
 # ===== CANInterface class for DDS' CAN Backend =====
@@ -255,7 +252,7 @@ class CANInterface(Interface):
 
             # Write the data to the log file 
             self.db.get_message_by_name()
-            super().log_data(signal_name, value, units=unit)
+            super()._log_telemetry(signal_name, value, units=unit)
 
         # Updates / Adds all the read values to the current_values dict
         for signal_name, value in data.items():

@@ -48,7 +48,7 @@ class ADS_1015(I2CDevice):
         """
 
         # Fetch the sensor data
-        voltages = self._fetch_sensor_data()
+        voltages = self.__fetch_sensor_data()
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
@@ -73,10 +73,10 @@ class ADS_1015(I2CDevice):
             self.cached_values[key] = data
 
             # Log the data
-            self.log_data(key, data, units)
+            self._log_telemetry(key, data, units)
 
         # Reset the timeout timer
-        self.reset_last_retrival_timer() 
+        self.reset_last_cache_update_timer() 
             
 
     def get_data(self, key: str):
@@ -92,7 +92,7 @@ class ADS_1015(I2CDevice):
             return None
 
 
-    def _fetch_sensor_data(self) -> List[float]:
+    def __fetch_sensor_data(self) -> List[float]:
         """
         Reads voltages from the ADC for each channel, updates the corresponding inputs, 
         and returns a list of voltages.
@@ -174,11 +174,6 @@ class ADS_1015(I2CDevice):
         self.log.writeLog(self.name, "Found: {}".format(self.chip_type))
 
 
-    
-
-
-
-
     # ===== Super Function Calls =====
 
 
@@ -186,12 +181,12 @@ class ADS_1015(I2CDevice):
         return super()._update_cache_timeout()
 
 
-    def log_data(self, param_name, value, units):
-        return super().log_data(param_name, value, units=units)
+    def _log_telemetry(self, param_name, value, units):
+        return super()._log_telemetry(param_name, value, units=units)
     
 
-    def reset_last_retrival_timer(self):
-        return super().reset_last_retrival_timer()
+    def reset_last_cache_update_timer(self):
+        return super().reset_last_cache_update_timer()
     
 
 # Example usage
