@@ -262,10 +262,6 @@ if __name__ == '__main__':
             # Update the last print time
             last_print_time = current_time
 
-
-            # New implementation
-            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
-
             # Get and print the data
             hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
             print(f"hot pressure: {hotpressure}")

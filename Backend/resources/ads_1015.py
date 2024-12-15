@@ -183,7 +183,7 @@ class ADS_1015(I2CDevice):
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
             except Exception as e:
                 print(f"Error in fetching sensor data: {e}")
-            time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
+            # time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
     
     def start_sensor_data_collection(self):
         """Start the data collection in a separate thread."""
