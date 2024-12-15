@@ -106,7 +106,7 @@ class ADS_1015(I2CDevice):
         self.ads.set_sample_rate(3300)
 
         # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
-        time.sleep(2)
+        time.sleep(0.5)
 
         # Double check chip type (debug)
         self.chip_type = self.ads.detect_chip_type()
