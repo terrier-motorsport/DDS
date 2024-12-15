@@ -54,7 +54,7 @@ class ADS_1015(I2CDevice):
         """
 
         # Fetch the sensor data
-        voltages = self.get_latest_data()
+        voltages = self.__get_latest_data()
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
@@ -165,7 +165,7 @@ class ADS_1015(I2CDevice):
         self.log.writeLog(self.name, f"Found: {self.chip_type}")
 
 
-    def get_latest_data(self) -> List[float]:
+    def __get_latest_data(self) -> List[float]:
         """Main program calls this to fetch the latest data from the queue."""
         if not self.data_queue.empty():
             return self.data_queue.get_nowait()  # Non-blocking call
