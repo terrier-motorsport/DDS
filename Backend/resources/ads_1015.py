@@ -47,6 +47,9 @@ class ADS_1015(I2CDevice):
         self.data_queue = queue.Queue()  # Queue to hold sensor data
         self.thread_running = True  # Flag to control the thread's execution
 
+        # Start data collection thread
+        self.start_sensor_data_collection()
+
 
     def update(self):
         """
