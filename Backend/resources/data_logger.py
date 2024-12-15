@@ -138,8 +138,7 @@ class DataLogger:
         logger.log(severity.value, msg)
 
         # Print to the console
-        formatted_message = self._formatLogData(logger_name, severity, msg)
-        print(formatted_message)
+        print(self.__formatLogData())
 
         # Update the list of last logged messages
         self._addLoggedMessage(logger_name, msg, severity, current_time)
@@ -162,13 +161,13 @@ class DataLogger:
         self._last_logged_messages.append(log)
     
 
-    def __formatLogData(self, logger_name: str,  msg: str, severity: LogSeverity) -> str:
+    def __formatLogData(self, log: Log) -> str:
         '''Formats the log data for printing to the console.'''
         log_data = {
-            "asctime": self.__getFormattedTime(),
-            "name": logger_name,
-            "levelname": severity.name,
-            "message": msg
+            "asctime": self.__getFormattedTime(log.timestamp),
+            "name": log.logger_name,
+            "levelname": log.severity.name,
+            "message": log.msg
         }
         return self.LOG_FORMAT % log_data
 
@@ -179,8 +178,15 @@ class DataLogger:
             format=self.LOG_FORMAT)
         
 
-    def __getFormattedTime(self):
-        return strftime("%Y-%m-%d-%H:%M:%S", localtime())
+    def __getFormattedTime(self, timestamp: float = None) -> str:
+        """
+        Returns a formatted time string. If a timestamp is provided, it formats that time.
+        Otherwise, it formats the current local time.
+        """
+        if timestamp is None:
+            timestamp = time.time()  # Use the current time if no timestamp is given
+        return strftime("%Y-%m-%d-%H:%M:%S", localtime(timestamp))
+
 
 
     def __createCSVFile(self, path):
