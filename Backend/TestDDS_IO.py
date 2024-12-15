@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from resources.data_logger import DataLogger
-from resources.interface import Interface
-from resources.ads_1015 import ADS_1015
+from Backend.resources.data_logger import DataLogger
+from Backend.resources.interface import Interface
+from Backend.resources.ads_1015 import ADS_1015
 from Backend.DDS_IO import DDS_IO
 
 # FILE: Backend/test_DDS_IO.py
