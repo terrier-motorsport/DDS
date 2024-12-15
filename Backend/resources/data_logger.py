@@ -223,9 +223,7 @@ class DataLogger:
 
 
 # Example Usage of DataLogger
-DEBUG_ENABLED = True
-
-if DEBUG_ENABLED:
+if __name__ == 'main':
 
     # Initialize the DataLogger with a valid file name
     data_logger = DataLogger("example_log")
