@@ -77,19 +77,6 @@ class ADS_1015(I2CDevice):
 
         # Reset the timeout timer
         self.reset_last_cache_update_timer() 
-            
-
-    def get_data(self, key: str):
-        """
-        Retrieve the most recent data associated with the key from the cache.
-        To be called by some higher power, not by the class itself.
-        """
-
-        if key in self.cached_values:
-            return self.cached_values[key]
-        else:
-            self.log.writeLog(self.name, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
-            return None
 
 
     def __fetch_sensor_data(self) -> List[float]:

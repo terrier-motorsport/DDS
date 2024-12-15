@@ -57,6 +57,7 @@ class Interface:
     cached_values: dict              # Dictionary to store cached values
     last_cache_update: float         # Time since last cache update
 
+
     def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logger : DataLogger):
         '''
         Parent class for all interfaces.
@@ -88,11 +89,17 @@ class Interface:
         return self.sensorProtocol
 
 
-    def get_data(self, key : str) -> Union[str, float, int]:
-        '''Gets data from the sensor'''
+    def get_data(self, key: str) -> Union[str, float, int]:
+        """
+        Retrieve the most recent data associated with the key given from the cache.
+        """
 
-        self.log.writeLog(__class__.__name__, "get_data not overriden properly in child class.", self.log.LogSeverity.ERROR)
-        return 'ERR'
+        if key in self.cached_values:
+            return self.cached_values[key]
+        else:
+            self.log.writeLog(self.name, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
+            return 'ERR'
+
 
 
     # ===== CACHING METHODS =====
@@ -118,6 +125,7 @@ class Interface:
             value=value,
             units=units)
         
+
 
     # ===== HELPER METHODS ====
     @staticmethod
@@ -254,91 +262,6 @@ class CANInterface(Interface):
         # Updates / Adds all the read values to the current_values dict
         for signal_name, value in data.items():
             self.cached_values[signal_name] = value
-
-
-    def get_data(self, key : str):
-        '''
-        Returns the most recent piece of CAN data associated with the key passed in.
-        '''
-
-        # Get the data by querying the current_values dictionary
-        reqData = self.cached_values.get(key)
-        
-        # Validating & returning the data
-        if reqData != None:
-            return reqData
-        else:
-            self.log.writeLog(__class__.__name__, 
-                              f"No current values found for parameter: {key}",
-                              self.log.LogSeverity.WARNING)
-        
-
-    def get_data_raw(self):
-
-        '''
-        # This is the same as get_data(), however it doesn't parse the data with a database.
-        # Good for troubleshooting CAN messages.
-        # Resturns a CAN Message object
-        '''
-
-        # Read CAN data
-        msg = self.can_bus.recv()
-
-        # Return message
-        return msg
-
-
-    def send_can(self, messageName : str, signal : dict):
-        """
-        # NOTE: THIS CURRENTLY DOESN'T WORK. TO BE IMPLEMENTED WHEN NEEDED.
-
-        Fetches the parameters of the message with the provided name.
-        Then fetches the signal of the message with the provided name.
-        If you are unsure of signal names, use git_avail_signals(msgName)
-
-        Each message in the database contains up to 64 signals. Look at the database for more info.
-        You must encode every signal in a message to send it successfully.
-        """
-
-        # Getting the message from the database using name provided
-        msg = self.db.get_message_by_name(messageName)
-        data = msg.encode({'DigitalOut1' : 1,'DigitalOut2' : 1,'DigitalOut3' : 1,'DigitalOut4' : 1})
-
-        self.can_bus.send(can.Message(arbitration_id=0x0000073a, data=[255,255,255,255,255,255,255,255,]))
-        new_msg = can.Message(arbitration_id=msg.frame_id, data=data)
-        # self.can_bus.send(new_msg)
-        
-
-    def get_avail_signals(self, messageName : str):
-        '''Returns the avalable CAN signals from the database with the specified message name'''
-        return self.db.get_message_by_name(messageName)
-
-
-    def old_send_can(self, hex_id, data):
-
-        '''   
-        # DEPRICATED - ONLY USE FOR DEBUGGING 
-        This sends a CAN message with the extended id format
-        Code from https://python-can.readthedocs.io/en/stable/
-        '''
-
-
-        # Create Message object
-        msg = can.Message(
-            arbitration_id=hex_id, data=data, is_extended_id=True
-        )
-
-        # Attempt to send the message & log it
-        try:
-            self.can_bus.send(msg)
-            self.log.writeLog(__class__.__name__, f"Message sent on {self.can_bus.channel_info}: {msg}")
-        except can.CanError:
-            self.log.writeLog(__class__.__name__, "Message NOT sent")
-
-
-    def close_connection(self):
-        '''Closes the connection to the CAN Bus'''
-        self.can_bus.shutdown()
         
 
     def add_database(self, filename : str):
@@ -347,6 +270,16 @@ class CANInterface(Interface):
         # Add dbc file to database
         self.db.add_dbc_file(filename)
         self.log.writeLog(__class__.__name__, f"Loaded Messages from CAN Database: {filename}")
+
+
+    def get_avail_signals(self, messageName : str):
+        '''Returns the avalable CAN signals from the database with the specified message name'''
+        return self.db.get_message_by_name(messageName)
+    
+
+    def close_connection(self):
+        '''Closes the connection to the CAN Bus'''
+        self.can_bus.shutdown()
         
 
     def __fetch_can_message(self) -> can.Message:
@@ -420,21 +353,3 @@ class CANInterface(Interface):
 
         # subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
         # subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])
-
-
-    def __update_cache_timeout(self):
-        """
-        Checks if cached data should be cleared due to timeout, and clears it if it does
-        """
-
-        # If the cache is already empty, skip this function
-        if self.cached_values == {}:
-            return
-        
-        # Get current time
-        current_time = time.time()
-
-        if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
-            self.cached_values = {}  # Clear the cache if timeout is exceeded
-            self.log.writeLog(__class__.__name__, "Cache cleared due to CAN timeout.",
-                              self.log.LogSeverity.WARNING)
