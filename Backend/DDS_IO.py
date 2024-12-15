@@ -122,7 +122,8 @@ class DDS_IO:
             # i2c Disabled
             self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
-        # Update the IO one time to intialize all sensors
+        # Update the IO one time to wake all interface (like ADS 1015)
+        self.update()
 
 
 
