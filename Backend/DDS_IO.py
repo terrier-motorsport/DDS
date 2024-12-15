@@ -97,12 +97,6 @@ class DDS_IO:
 
         return self.devices.get(deviceKey)
     
-    def get_device(self, deviceKey : str) -> Interface:
-        ''' Gets a device at a specified key.
-        This may return a None value.'''
-
-        return self.devices.get(deviceKey)
-
 
     def __initialize_devices(self):
 
@@ -237,20 +231,20 @@ if __name__ == '__main__':
     delta_times = []  # List to store delta times
     last_loop_time = time.time()  # Tracks the time of the last loop iteration
 
-    io.update()
+    # io.update()
 
-    device = io.get_device('coolingLoopSensors')
+    # device = io.get_device('coolingLoopSensors')
 
-    device.start_sensor_data_collection()
+    # device.start_sensor_data_collection()
 
-    while True:
-        data = io.get_device('coolingLoopSensors').get_latest_data()
-        if data:
-            print(f"Collected Data: {data}")
-        else:
-            print("No new data available.")
+    # while True:
+    #     data = io.get_device()'coolingLoopSensors').get_latest_data()
+    #     if data:
+    #         print(f"Collected Data: {data}")
+    #     else:
+    #         print("No new data available.")
         
-        time.sleep(0.5)  # Simulate other work in the main program
+    #     time.sleep(0.5)  # Simulate other work in the main program
 
     # while True:
         # io.update()
