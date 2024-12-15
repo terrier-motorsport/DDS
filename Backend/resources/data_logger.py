@@ -142,7 +142,7 @@ class DataLogger:
         print(formatted_message)
 
         # Update the list of last logged messages
-        self._updateLastLoggedMessages(logger_name, msg, severity, current_time)
+        self._addLoggedMessage(logger_name, msg, severity, current_time)
 
 
     def _shouldLogMessage(self, log: Log) -> bool:
@@ -155,15 +155,11 @@ class DataLogger:
                     return False
         return True
     
-    def _updateLastLoggedMessages(self, logger_name: str, msg: str, severity, timestamp: float):
-        '''Adds or replaces an old message in the list of logged messages.'''
-        # Remove outdated messages (older than 10 seconds)
-        self._last_logged_messages = [
-            message for message in self._last_logged_messages
-            if message.is_recent(timestamp)
-        ]
+    def _addLoggedMessage(self, log: Log):
+        '''Adds a log to the list of logged messages.'''
+
         # Add the new message to the list
-        self._last_logged_messages.append(self.Log(logger_name, msg, severity, timestamp))
+        self._last_logged_messages.append(log)
     
 
     def __formatLogData(self, logger_name: str,  msg: str, severity: LogSeverity) -> str:
