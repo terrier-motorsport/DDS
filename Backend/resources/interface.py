@@ -128,7 +128,6 @@ class Interface:
             param_name=param_name,
             value=value,
             units=units)
-        
 
 
     # ===== HELPER METHODS ====

@@ -8,12 +8,15 @@ from typing import List
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
 import time
 import smbus2
+import threading
+import queue
 
 
 
 class ADS_1015(I2CDevice):
     """
-    Adafruit Analog -> Digital Converter on an I2C interface with caching functionality.
+    # DDS ADS 1015 CLASS
+    Analog -> Digital Converter on an I2C interface with caching functionality.
     """
 
     # This list represensts the four channels that correspond to the four on the physical ADC pins
@@ -39,6 +42,10 @@ class ADS_1015(I2CDevice):
         
         # Init virtual analog inputs
         self.inputs = inputs
+
+        # Init threading things
+        self.data_queue = queue.Queue()  # Queue to hold sensor data
+        self.thread_running = True  # Flag to control the thread's execution
 
 
     def update(self):
@@ -158,12 +165,33 @@ class ADS_1015(I2CDevice):
         self.log.writeLog(self.name, f"Found: {self.chip_type}")
 
 
+    def get_latest_data(self):
+        """Main program calls this to fetch the latest data from the queue."""
+        if not self.data_queue.empty():
+            return self.data_queue.get_nowait()  # Non-blocking call
+        else:
+            return None  # No data available yet
 
+    def _sensor_data_thread(self):
+        """Thread function to continuously fetch sensor data."""
+        while self.thread_running:
+            try:
+                voltages = self.__fetch_sensor_data()
+                self.data_queue.put(voltages)  # Put data in the queue for the main program
+            except Exception as e:
+                print(f"Error in fetching sensor data: {e}")
+            time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
     
+    def start_sensor_data_collection(self):
+        """Start the data collection in a separate thread."""
+        sensor_thread = threading.Thread(target=self._sensor_data_thread, daemon=True)
+        sensor_thread.start()
+
+    def stop_thread(self):
+        self.thread_running = False
+
 
 # Example usage
-DEBUG_ENABLED = False
+if __name__ == '__main__':
 
-if DEBUG_ENABLED:
-    
     pass

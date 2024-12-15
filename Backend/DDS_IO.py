@@ -231,39 +231,56 @@ if __name__ == '__main__':
     delta_times = []  # List to store delta times
     last_loop_time = time.time()  # Tracks the time of the last loop iteration
 
+    io.update()
+
+    device = io.__get_device('coolingLoopSensors')
+
+    device.start_sensor_data_collection()
+
     while True:
-        io.update()
+        data = io.__get_device('coolingLoopSensors').get_latest_data()
+        if data:
+            print(f"Collected Data: {data}")
+        else:
+            print("No new data available.")
+        
+        time.sleep(0.5)  # Simulate other work in the main program
 
-        # Measure the current time and calculate the delta time for this loop iteration
-        current_time = time.time()
-        delta_time = current_time - last_loop_time
-        delta_times.append(delta_time)
-        last_loop_time = current_time
-
-        # Calculate and print average delta time every PRINT_INTERVAL
-        if current_time - last_print_time >= PRINT_INTERVAL:
-            # Update the last print time
-            last_print_time = current_time
+    # while True:
+        # io.update()
 
 
-            # New implementation
-            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
 
-            # Get and print the data
-            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
-            print(f"hot pressure: {hotpressure}")
+        # # Measure the current time and calculate the delta time for this loop iteration
+        # current_time = time.time()
+        # delta_time = current_time - last_loop_time
+        # delta_times.append(delta_time)
+        # last_loop_time = current_time
 
-            coldpressure = io.get_device_data('coolingLoopSensors', 'coldPressure')
-            print(f"cold pressure: {coldpressure}")
+        # # Calculate and print average delta time every PRINT_INTERVAL
+        # if current_time - last_print_time >= PRINT_INTERVAL:
+        #     # Update the last print time
+        #     last_print_time = current_time
 
-            hottemp = io.get_device_data('coolingLoopSensors', 'hotTemperature')
-            print(f"hot temp: {hottemp}")
 
-            coldtemp = io.get_device_data('coolingLoopSensors', 'coldTemperature')
-            print(f"cold temp: {coldtemp}")
+        #     # New implementation
+        #     hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
 
-            # Calculate and print the average delta time
-            if delta_times:
-                avg_delta_time = sum(delta_times) / len(delta_times)
-                print(f"Average delta time: {avg_delta_time:.6f} seconds")
-                delta_times.clear()  # Clear the list after printing the average
+        #     # Get and print the data
+        #     hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
+        #     print(f"hot pressure: {hotpressure}")
+
+        #     coldpressure = io.get_device_data('coolingLoopSensors', 'coldPressure')
+        #     print(f"cold pressure: {coldpressure}")
+
+        #     hottemp = io.get_device_data('coolingLoopSensors', 'hotTemperature')
+        #     print(f"hot temp: {hottemp}")
+
+        #     coldtemp = io.get_device_data('coolingLoopSensors', 'coldTemperature')
+        #     print(f"cold temp: {coldtemp}")
+
+        #     # Calculate and print the average delta time
+        #     if delta_times:
+        #         avg_delta_time = sum(delta_times) / len(delta_times)
+        #         print(f"Average delta time: {avg_delta_time:.6f} seconds")
+        #         delta_times.clear()  # Clear the list after printing the average
