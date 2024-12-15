@@ -7,6 +7,7 @@ from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValue
 from Backend.resources.ads_1015 import ADS_1015
 from typing import Union, List, Dict
 import smbus2
+import can
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -25,6 +26,7 @@ class DDS_IO:
 
     # ===== Device Constants=====
     I2C_BUS = '/dev/i2c-2'
+    CAN_BUS = 'can0'
 
 
     # ===== Devices that the DDS Talks to =====
@@ -188,6 +190,16 @@ class DDS_IO:
         self.__log('Initializing CANBus...')
 
         try:
+            self.can_bus = can.interface.Bus(self.CAN_BUS, interface='socketcan')
+        except OSError as e:
+            # If we cannot start the CAN Bus on initialization, we can not intialize any devices.
+            # As a result, we log the error and disable the CAN Interface
+            self.__log(f'Failed to start CANBus on {self.CAN_BUS}, {e}', DataLogger.LogSeverity.CRITICAL)
+            self.__log(f'Disabling CAN.', DataLogger.LogSeverity.CRITICAL)
+            self.CAN_ENABLED = False
+            return
+
+        try:
             # Init canInterface
             self.devices['canInterface'] = CANInterface('MC & AMS', 
                                                         can_interface='can0', 
@@ -196,7 +208,7 @@ class DDS_IO:
             self.devices['canInterface'].add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
             # Log completion
-            self.__log('Successfully Initialized CANBus!')
+            self.__log('Successfully Initialized CANBus Devices!')
 
         except Exception as e:
             # Failed to initialize

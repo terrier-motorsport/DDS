@@ -205,7 +205,7 @@ class CANInterface(Interface):
     cached_data_timeout_threshold = 2
 
     
-    def __init__(self, name : str, can_interface : str, database_path : str, logger : DataLogger):
+    def __init__(self, name : str, can_bus, database_path : str, logger : DataLogger):
         '''
         Initializer for a CANInterface
         '''
@@ -223,7 +223,8 @@ class CANInterface(Interface):
         # Setup CAN Bus 
         # Can_interface is the interface of the device that the code is running on which can is connected to.
         # interface refers to the type of CAN Bus that is running on that physical interface.
-        self.can_bus = can.interface.Bus(can_interface, interface='socketcan')
+        self.can_bus = can_bus
+
 
     
     def update(self):
