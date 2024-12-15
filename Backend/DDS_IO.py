@@ -45,7 +45,7 @@ class DDS_IO:
 
         self.__log('Initializing IO Devices')
         self.__initialize_devices()
-        pass
+        
 
     
     def update(self):
@@ -122,8 +122,10 @@ class DDS_IO:
             # i2c Disabled
             self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
+        # Update the IO one time to intialize all sensors
 
-        # ===== TODO: Init Accelerometers ===== 
+
+
 
 
     def __initialize_i2c(self):
@@ -169,6 +171,8 @@ class DDS_IO:
                 Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
             ])
             # TODO: Init second ADC w/ other sensors
+
+            # ===== TODO: Init Accelerometers ===== 
 
             self.__log('Successfully Initialized i2c!')
         
