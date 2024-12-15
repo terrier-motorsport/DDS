@@ -211,7 +211,6 @@ class DDS_IO:
         for device_key in device_keys:
             self.devices[device_key].status = Interface.Status.ERROR
 
-
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         self.log.writeLog(
@@ -221,11 +220,9 @@ class DDS_IO:
 
 # Example / Testing Code
 
-DEBUG_ENABLED = True
-
 import time
 
-if DEBUG_ENABLED:
+if __name__ == '__main__':
 
     io = DDS_IO()
     last_print_time = 0  # Tracks the last time the print statements were executed

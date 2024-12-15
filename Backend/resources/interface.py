@@ -113,7 +113,7 @@ class Interface:
         current_time = time.time()
         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
             self.cached_values = {}
-            self.log.writeLog(__class__.__name__, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
+            self.log.writeLog(self.name, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
     def reset_last_cache_update_timer(self):
@@ -169,7 +169,7 @@ class I2CDevice(Interface):
     
     def update(self):
         '''Should be overwritten by child class'''
-        self.log.writeLog(__class__.__name__, "update not overriden properly in child class.", self.log.LogSeverity.ERROR)
+        self.log.writeLog(self.name, "update not overriden properly in child class.", self.log.LogSeverity.ERROR)
         pass
 
 
@@ -273,7 +273,7 @@ class CANInterface(Interface):
 
         # Add dbc file to database
         self.db.add_dbc_file(filename)
-        self.log.writeLog(__class__.__name__, f"Loaded Messages from CAN Database: {filename}")
+        self.log.writeLog(self.name, f"Loaded Messages from CAN Database: {filename}")
 
 
     def get_avail_signals(self, messageName : str):
@@ -312,7 +312,7 @@ class CANInterface(Interface):
         try:
             return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
-            self.log.writeLog(__class__.__name__, 
+            self.log.writeLog(self.name, 
                               f"No database entry found for {msg}",
                               self.log.LogSeverity.WARNING)
             return {'':''}
@@ -324,7 +324,7 @@ class CANInterface(Interface):
         This is the command to start the can0 network
         In a terminal, all these command would be run with spaces inbetween them
         '''
-        self.log.writeLog(__class__.__name__, "CAN Bus not found... Attempting to open one.", self.log.LogSeverity.WARNING)
+        self.log.writeLog(self.name, "CAN Bus not found... Attempting to open one.", self.log.LogSeverity.WARNING)
         
 
         try:
@@ -340,19 +340,19 @@ class CANInterface(Interface):
                 check=True,
                 timeout=3
             )
-            self.log.writeLog(__class__.__name__, "can0 Successfully started.", self.log.LogSeverity.INFO)
+            self.log.writeLog(self.name, "can0 Successfully started.", self.log.LogSeverity.INFO)
 
             # Catch common errors
         except subprocess.TimeoutExpired as e:
             # Command couldn't be run
-            self.log.writeLog(__class__.__name__, "Timeout: Couldn't start can0. Try rerunning the program with sudo.", self.log.LogSeverity.CRITICAL)
+            self.log.writeLog(self.name, "Timeout: Couldn't start can0. Try rerunning the program with sudo.", self.log.LogSeverity.CRITICAL)
             raise TimeoutError
         except subprocess.CalledProcessError as e:
             # Tbh idk
-            self.log.writeLog(__class__.__name__, f"Error: Couldn't start can0. The command '{e.cmd}' failed with exit code {e.returncode}.", self.log.LogSeverity.CRITICAL)
+            self.log.writeLog(self.name, f"Error: Couldn't start can0. The command '{e.cmd}' failed with exit code {e.returncode}.", self.log.LogSeverity.CRITICAL)
         except Exception as e:
             # I hope this one doesn't happen
-            self.log.writeLog(__class__.__name__, f"Couldn't start can0. Unexpected Error: {e}", self.log.LogSeverity.CRITICAL)
+            self.log.writeLog(self.name, f"Couldn't start can0. Unexpected Error: {e}", self.log.LogSeverity.CRITICAL)
 
 
         # subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
