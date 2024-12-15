@@ -171,7 +171,7 @@ class ADS_1015(I2CDevice):
 
         # Double check chip type (debug)
         self.chip_type = self.ads.detect_chip_type()
-        self.log.writeLog(self.name, "Found: {}".format(self.chip_type))
+        self.log.writeLog(self.name, f"Found: {self.chip_type}")
 
 
     # ===== Super Function Calls =====
