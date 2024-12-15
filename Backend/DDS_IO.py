@@ -28,10 +28,7 @@ class DDS_IO:
 
 
     # ===== Devices that the DDS Talks to =====
-    devices: Dict[str, Interface] = {
-        "canInterface" : CANInterface,
-        "coolingLoopSensors" : ADS_1015
-    }
+    devices: Dict[str, Interface]
 
 
 

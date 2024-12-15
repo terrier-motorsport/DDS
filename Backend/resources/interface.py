@@ -77,9 +77,6 @@ class Interface:
 
 
 
-
-
-        
     # ===== GETTER METHODS =====
     def get_name(self) -> str:
         '''Gets the name of the interface'''
