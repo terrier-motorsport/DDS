@@ -61,6 +61,10 @@ class ADS_1015(I2CDevice):
         Retrieve data from the sensor, log it, and cache it.
         """
 
+        # If the device is not active, we can just return.
+        if self.status is not self.Status.ACTIVE:
+            return
+
         # Fetch the sensor data
         voltages = self.__get_data_from_thread()
 

@@ -121,6 +121,7 @@ class Interface:
         self.last_cache_update = time.time()
 
 
+    # ===== OTHER METHODS =====
     def _log_telemetry(self, param_name: str, value, units: str):
         '''Takes in a file, parameter name & a value'''
         self.log.writeTelemetry(

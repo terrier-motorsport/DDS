@@ -47,7 +47,6 @@ class DDS_IO:
         self.__initialize_devices()
         
 
-    
     def update(self):
         '''Updates all sensors. Should be called as often as possible.'''
 
@@ -124,9 +123,6 @@ class DDS_IO:
 
         # Update the IO one time to wake all interface (like ADS 1015)
         self.update()
-
-
-
 
 
     def __initialize_i2c(self):
@@ -236,20 +232,6 @@ if __name__ == '__main__':
     delta_times = []  # List to store delta times
     last_loop_time = time.time()  # Tracks the time of the last loop iteration
 
-    # io.update()
-
-    # device = io.get_device('coolingLoopSensors')
-
-    # device.start_sensor_data_collection()
-
-    # while True:
-    #     data = io.get_device()'coolingLoopSensors').get_latest_data()
-    #     if data:
-    #         print(f"Collected Data: {data}")
-    #     else:
-    #         print("No new data available.")
-        
-    #     time.sleep(0.5)  # Simulate other work in the main program
 
     while True:
         io.update()
