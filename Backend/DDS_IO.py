@@ -1,7 +1,7 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from resources.interface import Interface, CANInterface, InterfaceProtocol
+from resources.interface import Interface, CANInterface
 from resources.data_logger import DataLogger
 from resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from resources.ads_1015 import ADS_1015
@@ -19,7 +19,7 @@ EX. The UI calls functions from here which pulls data from sensor objects.
 class DDS_IO:
 
     # ===== Debugging Variables =====
-    CAN_ENABLED = False
+    CAN_ENABLED = True
     I2C_ENABLED = True
 
 

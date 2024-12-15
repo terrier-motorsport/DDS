@@ -4,11 +4,10 @@
 from .interface import I2CDevice
 from .data_logger import DataLogger
 from .analog_in import Analog_In
-
-import smbus2
 from typing import List
-import time
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
+import time
+import smbus2
 
 
 

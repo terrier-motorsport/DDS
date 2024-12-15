@@ -2,12 +2,12 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from enum import Enum
+from .data_logger import DataLogger
+from typing import Union
+
 import can
 import cantools
 import cantools.database
-from .data_logger import DataLogger
-
-from typing import Union
 import subprocess
 import time
 
@@ -31,6 +31,8 @@ class InterfaceProtocol(Enum):
     SPI = 2     # Not Needed?
     I2C = 3     # DONE
     UART = 4    # Not Needed?
+
+
 
 # ===== Parent class for all interfaces =====
 class Interface:
@@ -145,6 +147,8 @@ class Interface:
         return max(min_value, min(value, max_value))
 
 
+
+
 # ===== I2CDevice class for DDS' I2C Backend =====
 class I2CDevice(Interface):
     
@@ -178,8 +182,6 @@ class I2CDevice(Interface):
 
     def _log_telemetry(self, param_name, value, units):
         return super()._log_telemetry(param_name, value, units)
-
-
 
 
 
