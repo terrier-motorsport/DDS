@@ -68,6 +68,9 @@ class DataLogger:
         currentTime = self.__getFormattedTime()
         self.directoryPath = os.path.join(self.baseDirectoryPath, f"{currentTime}-{fileName}")
 
+        # Create the dictionary of recent log files:
+        self._last_logged_messages: List[self.Log] = []
+
         # Ensure the base directory exists, create it if not.
         if not os.path.exists(self.directoryPath):
             os.makedirs(self.directoryPath)
@@ -82,9 +85,6 @@ class DataLogger:
         # Create the files
         self.__createCSVFile(self.telemetryPath)
         self.__createLogFile(self.systemLogPath)
-
-        # Create the dictionary of recent log files:
-        self._last_logged_messages: List[self.Log] = []
 
         # Log creation of file
         self.writeLog(__class__.__name__, "Log & Telemetry file setup complete!")
