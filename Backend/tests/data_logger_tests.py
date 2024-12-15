@@ -6,11 +6,11 @@
 import random
 import time
 
-from resources.data_logger import File
+from resources.data_logger import DataLogger
 
-f = File("DDS_Logs")
+f = DataLogger("DDS_Logs")
 
 for i in range(10):
-    f.writeData("Speed", random.randint(0, 100), random.randint(0, 100), random.randint(0, 100), random.randint(0, 100), random.randint(0, 100))
-    f.writeData("wheel temp", random.uniform(0, 1),random.uniform(0, 1),random.uniform(0, 1),random.uniform(0, 1))
+    f.writeTelemetry("Speed", random.randint(0, 100), random.randint(0, 100), random.randint(0, 100), random.randint(0, 100), random.randint(0, 100))
+    f.writeTelemetry("wheel temp", random.uniform(0, 1),random.uniform(0, 1),random.uniform(0, 1),random.uniform(0, 1))
     time.sleep(0.1)

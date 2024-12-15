@@ -2,19 +2,23 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from .interface import I2CDevice
-from .data_logger import File
+from .data_logger import DataLogger
 from .analog_in import Analog_In
-
-import smbus2
 from typing import List
-import time
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
+import time
+import smbus2
+import threading
+import queue
 
 
 
 class ADS_1015(I2CDevice):
     """
-    Adafruit Analog -> Digital Converter on an I2C interface with caching functionality.
+    # DDS ADS 1015 CLASS
+    Analog -> Digital Converter on an I2C interface with caching functionality.
+    This class takes advantage of multithreading to collect data asyncronously, and transfers it to the main thread.
+    This process significantly reduces the amount of time it takes to run the DDS_IO.update() function.
     """
 
     # This list represensts the four channels that correspond to the four on the physical ADC pins
@@ -26,21 +30,30 @@ class ADS_1015(I2CDevice):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logFile: File, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
+    def __init__(self, name: str, logger: DataLogger, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
 
         # Initialize super class (I2CDevice)
-        super().__init__(name, logFile=logFile, i2c_address=0x00)   # i2c address isn't used, so I put 0
-        self.logFile = logFile
+        super().__init__(name, logger=logger)
 
         # Init I2C bus
         self.bus = i2c_bus
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
         # Init ADC Device
-        self._init_ads()
+        self.__init_ads(self.bus)
         
         # Init virtual analog inputs
         self.inputs = inputs
+
+        # Init threading things
+        self.data_queue = queue.Queue()  # Queue to hold sensor data
+        self.thread_running = True  # Flag to control the thread's execution
+
+        # Start data collection thread
+        self.__start_threaded_data_collection()
+
+        # Wait for thread to collect data
+        time.sleep(0.5)
 
 
     def update(self):
@@ -48,132 +61,160 @@ class ADS_1015(I2CDevice):
         Retrieve data from the sensor, log it, and cache it.
         """
 
+        # If the device is not active, we can just return.
+        if self.status is not self.Status.ACTIVE:
+            return
+
         # Fetch the sensor data
-        voltages = self._fetch_sensor_data()
+        voltages = self.__get_data_from_thread()
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
-        if any(value is None for value in voltages):
+        if voltages is None or any(value is None for value in voltages):
 
             # If no new values are discovered, we check to see if the cache has expired.
             self._update_cache_timeout()
             return
-        
 
-        # output_value = []
-        # for i in range(4):
-        #     # Assign the fetched voltage to the Analog_In voltage
-        #     self.inputs[i].voltage = voltages[i]
-
-        #     # Assign the analog_in value (has meaning) to the values array
-        #     self.inputs[i]
-
-        # Store the voltage in the virtual inputs
+        # For each voltage collected & input object
         for input_obj, voltage in zip(self.inputs, voltages):
+
+            # Set the voltage of the analog_in object to the one measured.
             input_obj.voltage = voltage
-            input_obj.get_output()
 
-
-        # Cache it
-        for input_obj in self.inputs: 
-
+            # Extract data from object
             key = input_obj.name
             data = input_obj.get_output()
+            units = input_obj.units
 
             # Update cache with new data
             self.cached_values[key] = data
 
             # Log the data
-            self.log_data(key, data)
+            self._log_telemetry(key, data, units)
 
         # Reset the timeout timer
-        self.reset_last_retrival_timer() 
-            
+        self.reset_last_cache_update_timer() 
 
-    def get_data(self, key: str):
-        """
-        Retrieve the most recent data associated with the key from the cache.
-        To be called by some higher power, not by the class itself.
-        """
 
-        if key in self.cached_values:
-            return self.cached_values[key]
+    def __init_ads(self, bus: smbus2.SMBus):
+        # Make ADS object
+        self.ads = ADS1015(i2c_dev=bus)
+
+        # Configure ADS
+        self.ads.set_mode("continuous")
+
+        # WARNING - this must be higher than the max voltage measured in the system. 
+        # It is differential, meaning the ADS can measure ±6.144v
+        self.ads.set_programmable_gain(6.144) 
+        self.ads.set_sample_rate(3300)
+
+        # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
+        time.sleep(0.5)
+
+        # Double check chip type (debug)
+        self.chip_type = self.ads.detect_chip_type()
+        self.log.writeLog(self.name, f"Found: {self.chip_type}")
+
+
+    def __get_data_from_thread(self) -> List[float]:
+        """Main program calls this to fetch the latest data from the queue."""
+        if not self.data_queue.empty():
+            return self.data_queue.get_nowait()  # Non-blocking call
         else:
-            print(f"No cached data found for key: {key}")
-            return None
+            return None  # No data available yet
 
 
-    def close_connection(self):
+    # This is the main thread function
+    def __data_collection_worker(self):
         """
-        Closing I2C connection if needed.
+        # This is the function that the thread runs continously
+        Thread function to continuously fetch sensor data.
         """
+        while self.thread_running:
+            try:
+                voltages = self.__fetch_sensor_data()
+                self.data_queue.put(voltages)  # Put data in the queue for the main program
+            except Exception as e:
+                print(f"Error in fetching sensor data: {e}")
+            # time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
+    
 
-        # Close the i2c connection.
-        self.bus.close()
-
-
-    def _fetch_sensor_data(self) -> List[float]:
+    def __fetch_sensor_data(self) -> List[float]:
         """
         Reads voltages from the ADC for each channel, updates the corresponding inputs, 
         and returns a list of voltages.
+        This is used to run the data collection thread, and should not be called from the main thread.
         """
         voltages = []  # Initialize a list to store the voltages
 
         # Iterate through each channel and corresponding input
         for channel, input_obj in zip(self.CHANNELS, self.inputs):
-            # Read the voltage for the current channel with compensation
-            voltage = self.ads.get_voltage(
-                channel=channel
-            )
 
-            # Update the voltage of the associated input object
-            input_obj.voltage = voltage
+            # Read the voltage for the current channel with compensation
+            try:
+                input_obj.voltage = self.ads.get_voltage(
+                    channel=channel
+                )
+            except OSError:
+                # Occasionally this happens over i2c communication. I'm not sure why.
+                self.log.writeLog(self.name,f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
+
+            except:
+                # This will cause the value to be discarded
+                input_obj.voltage = -1
+
+                # Try to restart sensor
+                try:
+                    self.__init_ads()
+                except:
+                    pass
+                
+
+            # Validate the voltage of the input
+            input_obj = self.__validate_voltage(input_obj)
 
             # Store the voltage in the voltages list
-            voltages.append(voltage)
-
-            # Print the channel and its corresponding voltage in a readable format
-            print(f"{channel}: {voltage:6.3f}v")
+            voltages.append(input_obj.voltage)
 
         return voltages
-    
-
-    def _init_ads(self):
-        # Make ADS object
-        self.ads = ADS1015()
-
-        # Double check chip type (debug)
-        self.chip_type = self.ads.detect_chip_type()
-        print("Found: {}".format(self.chip_type))
-
-        # Configure ADS
-        self.ads.set_mode("single")
-        self.ads.set_programmable_gain(8.192)
-        self.ads.set_sample_rate(1600)
-
-        # Get reference voltage
-        self.reference = self.ads.get_reference_voltage()
-        print(f"Reference: {self.reference}")
-    
-
-    # ===== Super Function Calls =====
 
 
-    def _update_cache_timeout(self):
-        return super()._update_cache_timeout()
+    def __validate_voltage(self, analog_in: Analog_In):
+        '''
+        Validates the voltage is within the analog_in's input range. 
+        Returns the output with clean data.
+        '''
+
+        if not analog_in.voltage_in_tolerange_range():
+            # This means the voltage is outside of the tolerable range.
+            self.log.writeLog(
+                              self.name,
+                              msg =f"{analog_in.name} out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}",
+                              severity=self.log.LogSeverity.WARNING)
+            
+            # Return an empty value
+            return analog_in
+
+        else:
+            # The value is in the output range, so we clamp & return it.
+            # This prevents things like negative pressures when the loop is unpresurized
+            clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
+            analog_in.voltage = clamped_voltage
+            return analog_in
+      
+
+    def __start_threaded_data_collection(self):
+        """Start the data collection in a separate thread."""
+        sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
+        sensor_thread.start()
 
 
-    def log_data(self, param_name, value):
-        return super().log_data(param_name, value)
-    
+    def __stop_thread(self):
+        self.thread_running = False
 
-    def reset_last_retrival_timer(self):
-        return super().reset_last_retrival_timer()
-    
 
 # Example usage
-DEBUG_ENABLED = False
+if __name__ == '__main__':
 
-if DEBUG_ENABLED:
-    
     pass

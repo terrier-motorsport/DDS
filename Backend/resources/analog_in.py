@@ -2,7 +2,8 @@
     # Code by Jackson Justus (jackjust@bu.edu)
     # NOTE: To be used by the ADS classes.
 
-
+from typing import Union
+from scipy.interpolate import interp1d
 
 class ValueMapper:
     """
@@ -11,6 +12,8 @@ class ValueMapper:
     def __init__(self, voltage_range: tuple, output_range: tuple):
         self.min_voltage, self.max_voltage = voltage_range
         self.min_output, self.max_output = output_range
+        self.voltage_range = self.max_voltage - self.min_voltage
+        self.output_range = self.max_output - self.min_output
 
     def voltage_to_value(self, voltage: float):
         """
@@ -22,8 +25,8 @@ class ValueMapper:
         Returns:
         float: The converted output value, or None if the voltage is out of range.
         """
-        if not (self.min_voltage <= voltage <= self.max_voltage):
-            print(f"Warning: Voltage ({voltage}v) out of range [{self.min_voltage}, {self.max_voltage}].")
+        # if not (self.min_voltage <= voltage <= self.max_voltage):
+        #     raise ValueError("Voltage ({voltage}v) out of range [{self.min_voltage}, {self.max_voltage}].")
 
         # Perform the conversion
         # Normalize the voltage to a 0-1 range
@@ -37,6 +40,7 @@ class ValueMapper:
 
         return output
     
+
     @staticmethod
     def voltage_to_resistance(adc_voltage: float, supply_voltage: float, fixed_resistor: float) -> float:
         """
@@ -50,16 +54,15 @@ class ValueMapper:
         Returns:
         float: The calculated resistance of the sensor (in Ohms).
         """
-        if adc_voltage <= 0 or adc_voltage >= supply_voltage:
-            raise ValueError(f"ADC voltage ({adc_voltage}v) must be within the range of the supply voltage ({supply_voltage}v).")
 
         # Use the voltage divider formula to calculate the sensor resistance
         sensor_resistance = (adc_voltage * fixed_resistor) / (supply_voltage - adc_voltage)
         return sensor_resistance
     
+    
+    
 
-from typing import Union
-from scipy.interpolate import interp1d
+
 
 class ExponentialValueMapper:
     """
@@ -91,6 +94,9 @@ class ExponentialValueMapper:
         # Create the interpolation function for resistance-to-output mapping
         self.interpolator = interp1d(self.resistance_values, self.output_values, fill_value="extrapolate")
 
+        # Calc min and max voltage
+        self.min_voltage, self.max_voltage = self.__calculate_min_max_voltage()
+        self.voltage_range = self.max_voltage - self.min_voltage
 
     def voltage_to_value(self, adc_voltage: float) -> float:
         """
@@ -103,14 +109,34 @@ class ExponentialValueMapper:
         float: The interpolated output value (e.g., temperature in °C).
         """
         # Step 1: Convert ADC voltage to resistance
-        sensor_resistance = ValueMapper.voltage_to_resistance(adc_voltage, self.supply_voltage, self.fixed_resistor)
-
+        self.sensor_resistance = ValueMapper.voltage_to_resistance(adc_voltage, self.supply_voltage, self.fixed_resistor)
+        
         # Step 2: Convert resistance to output value using interpolation
-        return float(self.interpolator(sensor_resistance))
+        return self.resistance_to_value(self.sensor_resistance)
     
+
     def resistance_to_value(self, resistance : float):
         '''Converts a resistance to an interpolated output'''
         return float(self.interpolator(resistance))
+    
+
+    def __calculate_min_max_voltage(self):
+        """
+        Calculate the minimum and maximum output voltages based on resistance values.
+
+        Returns:
+        tuple: (min_voltage, max_voltage)
+        """
+        # Ensure resistance values are sorted
+        min_resistance = min(self.resistance_values)
+        max_resistance = max(self.resistance_values)
+
+        # Voltage divider formula
+        min_voltage = self.supply_voltage * (min_resistance / (min_resistance + self.fixed_resistor))
+        max_voltage = self.supply_voltage * (max_resistance / (max_resistance + self.fixed_resistor))
+
+        return min_voltage, max_voltage
+
 
 
 class Analog_In:
@@ -119,23 +145,26 @@ class Analog_In:
     name : str
     voltage : float
     units : str
+    tolerance : float   # % in decimal form (Ex: 0.20 = 20%)
 
     # Decoding properties
     min_voltage : float
     max_voltage : float
 
-    min_output : float
-    max_output : float
 
-
-    def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper]):
+    def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper], tolerance=0.2):
         '''Initalizer for the Analog_in object'''
         self.name = name
         self.units = units
         self.converter = mapper
+        self.tolerance = tolerance
+
+        self.min_voltage = mapper.min_voltage
+        self.max_voltage = mapper.max_voltage
 
 
     def get_output(self):
+        '''Gets the output of the analog in'''
         # If no params are passed, use the voltage variable
         return self.voltage_to_output(self.voltage)
 
@@ -150,7 +179,24 @@ class Analog_In:
         Returns:
         float: The output value in the specified units.
         """
+        
         return self.converter.voltage_to_value(voltage)
+    
+
+    def voltage_in_tolerange_range(self) -> bool:
+        '''Returns if the current voltage is inside the tolerance range'''
+        # Tolerable Condition
+        voltage_tolerance = (self.converter.voltage_range * self.tolerance) / 2
+        min = self.converter.min_voltage - voltage_tolerance
+        max = self.converter.max_voltage + voltage_tolerance
+
+        if min < self.voltage < max:
+            return True
+        else:
+            return False
+        
+        
+
     
 
 

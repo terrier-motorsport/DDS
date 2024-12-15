@@ -5,7 +5,7 @@
         # (This page was a mistake, but probably still works)
 
 from interface import I2CDevice, InterfaceProtocol, Interface
-from data_logger import File
+from data_logger import DataLogger
 import smbus # type: ignore
 import time
 
@@ -45,10 +45,10 @@ class M3200PressureSensorI2C(I2CDevice):
 
 
 
-    def __init__(self, name: str, logFile: File, i2c_address: int, i2c_bus: smbus.SMBus):
+    def __init__(self, name: str, logger: DataLogger, i2c_address: int, i2c_bus: smbus.SMBus):
 
         # Initialize super class (I2CDevice)
-        super().__init__(name, logFile=logFile, i2c_address=i2c_address)
+        super().__init__(name, logger=logger, i2c_address=i2c_address)
 
         # Init I2C bus
         self.bus = i2c_bus
@@ -61,7 +61,7 @@ class M3200PressureSensorI2C(I2CDevice):
         """
         
         # Fetch the sensor data
-        status, pressure, temperature = self._fetch_sensor_data()
+        status, pressure, temperature = self.__fetch_sensor_data()
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
@@ -76,12 +76,12 @@ class M3200PressureSensorI2C(I2CDevice):
         self.cached_values["status"] = status
         self.cached_values["pressure"] = pressure
         self.cached_values["temperature"] = temperature
-        self.reset_last_retrival_timer() # Reset the timeout timer
+        self.reset_last_cache_update_timer() # Reset the timeout timer
 
         # Log the data
-        self.log_data("status", status)
-        self.log_data("pressure", pressure)
-        self.log_data("temperature", temperature)
+        self._log_telemetry("status", status)
+        self._log_telemetry("pressure", pressure)
+        self._log_telemetry("temperature", temperature)
 
 
     def get_data(self, key: str):
@@ -91,7 +91,7 @@ class M3200PressureSensorI2C(I2CDevice):
         if key in self.cached_values:
             return self.cached_values[key]
         else:
-            print(f"No cached data found for key: {key}")
+            self.log.writeLog(__class__.__name__, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
             return None
 
 
@@ -102,7 +102,7 @@ class M3200PressureSensorI2C(I2CDevice):
         pass
 
 
-    def _fetch_sensor_data(self) -> tuple[str, float, float]:
+    def __fetch_sensor_data(self) -> tuple[str, float, float]:
         """
         Internal method to encapsulate sensor read logic
         """
@@ -172,11 +172,11 @@ class M3200PressureSensorI2C(I2CDevice):
         return super()._update_cache_timeout()
 
 
-    def log_data(self, param_name, value):
-        return super().log_data(param_name, value)
+    def _log_telemetry(self, param_name, value):
+        return super()._log_telemetry(param_name, value)
     
 
-    def reset_last_retrival_timer():
-        return super().reset_last_retrival_timer()
+    def reset_last_cache_update_timer():
+        return super().reset_last_cache_update_timer()
     
 
