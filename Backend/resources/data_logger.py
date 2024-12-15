@@ -23,7 +23,6 @@ class DataLogger:
     systemLogPath: str        # Path of the system logs
 
     LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
-    LOG_TIMEOUT = 10          # Time before duplicate messages are logged again (seconds)
 
     
     class LogSeverity(Enum):
@@ -37,6 +36,9 @@ class DataLogger:
 
     class Log:
         '''Helper class to encapuslate message equatablilty'''
+
+        LOG_TIMEOUT = 10          # Time before duplicate messages are logged again (seconds)
+        
         def __init__(self, logger_name: str, message: str, severity, timestamp: float):
             self.logger_name = logger_name
             self.message = message
