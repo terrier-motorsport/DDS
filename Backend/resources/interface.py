@@ -107,7 +107,8 @@ class Interface:
     # ===== CACHING METHODS =====
     def _update_cache_timeout(self):
         """
-        Clear the cache if the data has not been updated within the timeout threshold.
+        To be called when no new data is found.
+        This checks to see if the cache has expired. If it has, the cache is cleared.
         """
         current_time = time.time()
         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
@@ -116,6 +117,7 @@ class Interface:
 
 
     def reset_last_cache_update_timer(self):
+        '''Resets the timer which keeps track of the last time the cache was updated.'''
         self.last_cache_update = time.time()
 
 
@@ -240,7 +242,7 @@ class CANInterface(Interface):
         if message == None:
 
             # If no new values are discovered, we check to see if the cache has expired.
-            self.__update_cache_timeout()
+            self._update_cache_timeout()
             return
 
         # Decode the recieved data
