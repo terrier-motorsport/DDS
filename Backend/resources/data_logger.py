@@ -258,7 +258,14 @@ if DEBUG_ENABLED:
         print(row)
 
     # Log an error message after a delay (to avoid duplicate filtering)
-    time.sleep(11)
+    time.sleep(6)
+    data_logger.writeLog(
+        logger_name="BatteryMonitor",
+        msg="Battery voltage dropped below threshold!",
+        severity=DataLogger.LogSeverity.ERROR
+    )
+    
+    time.sleep(5)
     data_logger.writeLog(
         logger_name="BatteryMonitor",
         msg="Battery voltage dropped below threshold!",
