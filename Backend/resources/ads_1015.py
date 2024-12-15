@@ -50,6 +50,9 @@ class ADS_1015(I2CDevice):
         # Start data collection thread
         self.start_sensor_data_collection()
 
+        # Wait for thread to collect data
+        time.sleep(0.5)
+
 
     def update(self):
         """
