@@ -5,7 +5,7 @@ from Backend.resources.interface import Interface, CANInterface
 from Backend.resources.data_logger import DataLogger
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
-from typing import Union, List, Dict
+from typing import Optional, Type, Union, List, Dict
 import smbus2
 import can
 
@@ -126,61 +126,63 @@ class DDS_IO:
         # Update the IO one time to wake all interface (like ADS 1015)
         self.update()
 
+        # Log that initialization has finished
+        self.__log('All devices have been initialized. Listing devices.')
+        
+        for device_name, device_object in self.devices.items():
+            self.__log(f'{device_name}: {device_object.status.name}')
+
 
     def __initialize_i2c(self):
 
-        '''Initializes the i2c Interface'''
+        '''Initializes the i2c Bus & all the devices on it.'''
 
-        self.__log('Initializing i2c...')
+        self.__log(f'Starting i2c bus on {self.I2C_BUS}')
 
+        # ===== Initalize i2c Bus ===== 
         try:
-            self.__log(f'Starting i2c bus on {self.I2C_BUS}')
-
-            # Define i2c bus
             self.i2c_bus = smbus2.SMBus(bus=self.I2C_BUS)
-        
-            # ===== Init cooling loop inputs & ADS ===== 
-            M3200_value_mapper = ValueMapper(
-                voltage_range=[0.5, 4.5], 
-                output_range=[0, 17])
-
-            # Define constants for NTC_M12 value mapping
-            resistance_values = [
-                45313, 26114, 15462, 9397, 5896, 3792, 2500,
-                1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
-            ]
-            temperature_values = [
-                -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
-                60, 70, 80, 90, 100, 110, 120, 130
-            ]
-            # Refer to the voltage divider circuit for the NTC_M12s
-            supply_voltage = 5
-            fixed_resistor = 3200
-            NTC_M12_value_mapper = ExponentialValueMapper(
-                resistance_values=resistance_values,
-                output_values=temperature_values,
-                supply_voltage=supply_voltage,
-                fixed_resistor=fixed_resistor
-            )
-
-            self.devices['coolingLoopSensors'] = ADS_1015("coolingLoopSensors", logger=self.log, i2c_bus=self.i2c_bus, inputs = [
-                Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
-                Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
-                Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
-                Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
-            ])
-            # TODO: Init second ADC w/ other sensors
-
-            # ===== TODO: Init Accelerometers ===== 
-
-            self.__log('Successfully Initialized i2c!')
-        
         except Exception as e:
-            # Failed to initialize
-            self.__failed_to_init('i2c', exception=e, device_keys='coolingLoopSensors')
+            self.__failed_to_init_protocol('i2c', e)
+            return
 
-            # Disable the i2c devices
-            self.devices['coolingLoopSensors'].status = Interface.Status.DISABLED
+
+        # ===== Init cooling loop inputs & ADS ===== 
+        M3200_value_mapper = ValueMapper(
+            voltage_range=[0.5, 4.5], 
+            output_range=[0, 17])
+
+        # Define constants for NTC_M12 value mapping
+        resistance_values = [
+            45313, 26114, 15462, 9397, 5896, 3792, 2500,
+            1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
+        ]
+        temperature_values = [
+            -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
+            60, 70, 80, 90, 100, 110, 120, 130
+        ]
+        # Refer to the voltage divider circuit for the NTC_M12s
+        supply_voltage = 5
+        fixed_resistor = 3200
+        NTC_M12_value_mapper = ExponentialValueMapper(
+            resistance_values=resistance_values,
+            output_values=temperature_values,
+            supply_voltage=supply_voltage,
+            fixed_resistor=fixed_resistor
+        )
+
+        coolingLoopDeviceName = 'coolingLoopSensors'
+
+        coolingLoopDevice = ADS_1015(coolingLoopDeviceName, logger=self.log, i2c_bus=self.i2c_bus, inputs = [
+            Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
+            Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
+            Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
+            Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
+        ])
+
+        self.__safe_initialize_device(coolingLoopDevice)
+
+        self.__log('Finished initializing all i2c devices!')
     
 
     def __initialize_CAN(self):
@@ -212,17 +214,63 @@ class DDS_IO:
 
         except Exception as e:
             # Failed to initialize
-            self.__failed_to_init('CAN', exception=e, device_keys=
+            self.__failed_to_init_device('CAN', exception=e, device_key=
                                   'canInterface')
+    
+    
+    def __safe_initialize_device(self, device: Interface) -> bool:
+        """
+        Safely initialize an instance of a Interface child class, and add it to the devices dict.
+        
+        Args:
+            cls (Type[Interface]): The child class to instantiate.
+            *args: Positional arguments for the child class constructor.
+            **kwargs: Keyword arguments for the child class constructor.
+        
+        Returns:
+            bool: The result of the device being successfully initialized
+        """
+
+        # Add the device to the devices dict:
+        self.devices[device.name] = device
+
+        try:
+            # Attempt to initalize the device
+            device.initalize()              
+        except Exception as e:
+            self.__failed_to_init_device(device=device, exception=e)
+            return False
+        
+        # If we get here, the device was sucessfully initialized
+        # We can add it to the devices array
+        self.devices[device.name] = device
+
+        return True
+        
 
 
-    def __failed_to_init(self, protocol_name: str, exception: Exception, device_keys: List[str]):
+    def __failed_to_init_device(self, device: Interface, exception: Exception):
+        '''
+        This logs an error when a device (ex. MC) is unable to be intialized.
+        This is usually caused by hardware being configured incorrectly.
+        The device is set to the ERROR state and the DDS_IO will continously attempt to inialize the device.
+        '''
+
         # Log the error
-        self.__log(f'{protocol_name} Initialization Error: {exception}, continuing', DataLogger.LogSeverity.CRITICAL)
+        self.__log(f'{device.get_protocol().name} Initialization Error: {exception}, continuing', DataLogger.LogSeverity.CRITICAL)
 
-        # Mark the devices as having an error
-        for device_key in device_keys:
-            self.devices[device_key].status = Interface.Status.ERROR
+        # Mark the device as having an error
+        self.devices[device.name].status = Interface.Status.ERROR
+
+    def __failed_to_init_protocol(self, protocol_name: str, exception: Exception):
+        '''
+        This logs an error when a protocol (ex. i2c) is unable to be intialized.
+        This is usually caused by hardware being configured incorrectly, or running the program on an OS which doesn't support the protocol.
+        If a protocol can't start, it is impossible to restart the devices on the protocol.
+        '''
+
+        # Log the error
+        self.__log(f'Was unable to intialize {protocol_name}: {exception}. Interfaces on this protocol will be disabled.', DataLogger.LogSeverity.CRITICAL)
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):

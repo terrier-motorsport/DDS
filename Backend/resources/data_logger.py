@@ -173,6 +173,7 @@ class DataLogger:
         }
         return self.LOG_FORMAT % log_data
 
+
     def __createLogFile(self, path):
         logging.basicConfig(
             filename=path,
@@ -188,7 +189,6 @@ class DataLogger:
         if timestamp is None:
             timestamp = time.time()  # Use the current time if no timestamp is given
         return strftime("%Y-%m-%d-%H:%M:%S", localtime(timestamp))
-
 
 
     def __createCSVFile(self, path):

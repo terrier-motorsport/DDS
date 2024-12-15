@@ -53,7 +53,8 @@ class Interface:
         '''
         ACTIVE = 1,
         DISABLED = 2,
-        ERROR = 3
+        ERROR = 3,
+        NOT_INITIALIZED = 4
 
     CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
     cached_values: dict              # Dictionary to store cached values
@@ -63,14 +64,15 @@ class Interface:
     def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logger : DataLogger):
         '''
         Parent class for all interfaces.
-        In case you didn't know, this is the initializer.
+        This initalizer should contain code which is not expected to raise an error.
+        Code which initializes the physical aspect of interfaces should be put in initalize()
         '''
 
         # Class variables
         self.sensorProtocol = sensorProtocol
         self.name = name
         self.log = logger
-        self.status = self.Status.ACTIVE
+        self.status = self.Status.NOT_INITIALIZED
 
         # Init cache
         self.cached_values = {}
@@ -78,6 +80,21 @@ class Interface:
         # Init cache timeout
         self.last_cache_update = time.time()
 
+        # Log device creation
+        self.log.writeLog(self.name, f'Created {self.sensorProtocol.name} device {self.name}.')
+
+
+    def initalize(self):
+        '''
+        This method encapsulates the part of the initalization which talks to the physical devices.
+        If there is an error with the physical devices, this may raise an error.
+        '''
+        
+        # Set status to active
+        self.status = self.Status.ACTIVE
+
+        # Log device initilization
+        self.log.writeLog(self.name, f'Initalized {self.sensorProtocol.name} device {self.name} Successfully.')
 
 
     # ===== GETTER METHODS =====

@@ -39,9 +39,6 @@ class ADS_1015(I2CDevice):
         self.bus = i2c_bus
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
-        # Init ADC Device
-        self.__init_ads(self.bus)
-        
         # Init virtual analog inputs
         self.inputs = inputs
 
@@ -49,11 +46,20 @@ class ADS_1015(I2CDevice):
         self.data_queue = queue.Queue()  # Queue to hold sensor data
         self.thread_running = True  # Flag to control the thread's execution
 
+
+    def initialize(self):
+
+        # Init ADC Device
+        self.__init_ads(self.bus)
+
         # Start data collection thread
         self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
         time.sleep(0.5)
+
+        # Complete the initialization
+        super().initalize()
 
 
     def update(self):
