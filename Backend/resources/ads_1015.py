@@ -141,8 +141,6 @@ class ADS_1015(I2CDevice):
             return analog_in
         
 
-    
-
     def __init_ads(self, bus: smbus2.SMBus):
         # Make ADS object
         self.ads = ADS1015(i2c_dev=bus)
@@ -160,19 +158,7 @@ class ADS_1015(I2CDevice):
         self.log.writeLog(self.name, f"Found: {self.chip_type}")
 
 
-    # ===== Super Function Calls =====
 
-
-    def _update_cache_timeout(self):
-        return super()._update_cache_timeout()
-
-
-    def _log_telemetry(self, param_name, value, units):
-        return super()._log_telemetry(param_name, value, units=units)
-    
-
-    def reset_last_cache_update_timer(self):
-        return super().reset_last_cache_update_timer()
     
 
 # Example usage
