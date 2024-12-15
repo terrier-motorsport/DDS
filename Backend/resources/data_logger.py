@@ -35,7 +35,7 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    class Message:
+    class Log:
         '''Helper class to encapuslate message equatablilty'''
         def __init__(self, logger_name: str, message: str, severity, timestamp: float):
             self.logger_name = logger_name
@@ -84,7 +84,7 @@ class DataLogger:
         self.__createLogFile(self.systemLogPath)
 
         # Create the dictionary of recent log files:
-        self._last_logged_messages: List[self.Message] = []
+        self._last_logged_messages: List[self.Log] = []
 
         # Log creation of file
         self.writeLog(__class__.__name__, "Log & Telemetry file setup complete!")
@@ -124,10 +124,13 @@ class DataLogger:
 
     def writeLog(self, logger_name: str, msg: str, severity: LogSeverity = LogSeverity.INFO):
         '''Writes to the system log, avoiding duplicate messages logged within the threshold.'''
+
+        # Create the Log Object
         current_time = time.time()  # Get the current time in seconds
+        log = self.Log(logger_name, msg, severity, current_time)
 
         # Check if the message should be logged
-        if not self._shouldLogMessage(logger_name, msg, severity, current_time):
+        if not self._shouldLogMessage(log):
             return
 
         # Write the log
@@ -142,13 +145,13 @@ class DataLogger:
         self._updateLastLoggedMessages(logger_name, msg, severity, current_time)
 
 
-    def _shouldLogMessage(self, logger_name: str, msg: str, severity, current_time: float) -> bool:
+    def _shouldLogMessage(self, log: Log) -> bool:
         '''Determines whether the message should be logged.'''
         # Iterate over stored messages to check for duplicates
         for last_message in self._last_logged_messages:
-            if last_message.is_equal(self.Message(logger_name, msg, severity, current_time)):
+            if last_message.is_equal(log):
                 # Skip logging if the message is recent
-                if last_message.is_recent(current_time):
+                if last_message.is_recent(log.timestamp):
                     return False
         return True
     
@@ -160,7 +163,7 @@ class DataLogger:
             if message.is_recent(timestamp)
         ]
         # Add the new message to the list
-        self._last_logged_messages.append(self.Message(logger_name, msg, severity, timestamp))
+        self._last_logged_messages.append(self.Log(logger_name, msg, severity, timestamp))
     
 
     def __formatLogData(self, logger_name: str,  msg: str, severity: LogSeverity) -> str:
