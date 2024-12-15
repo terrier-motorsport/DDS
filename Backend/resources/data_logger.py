@@ -167,7 +167,7 @@ class DataLogger:
             "asctime": self.__getFormattedTime(log.timestamp),
             "name": log.logger_name,
             "levelname": log.severity.name,
-            "message": log.msg
+            "message": log.message
         }
         return self.LOG_FORMAT % log_data
 
