@@ -141,7 +141,7 @@ class DataLogger:
         print(self.__logToString(log))
 
         # Update the list of last logged messages
-        self._addLoggedMessage(logger_name, msg, severity, current_time)
+        self._addLoggedMessage(log)
 
 
     def _shouldLogMessage(self, log: Log) -> bool:
