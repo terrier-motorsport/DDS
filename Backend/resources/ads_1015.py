@@ -132,7 +132,6 @@ class ADS_1015(I2CDevice):
         if not self.data_queue.empty():
             return self.data_queue.get_nowait()  # Non-blocking call
         else:
-            print('Data queue is empty')
             return None  # No data available yet
 
 
