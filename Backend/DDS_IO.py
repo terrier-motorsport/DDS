@@ -232,7 +232,9 @@ class DDS_IO:
 
         try:
             # Attempt to initalize the device
-            device.initalize()              
+            print('initing adc')
+            device.initalize()  
+            print('inited adc')           
         except Exception as e:
             self.__failed_to_init_device(device=device, exception=e)
             return False
