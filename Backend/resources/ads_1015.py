@@ -139,6 +139,7 @@ class ADS_1015(I2CDevice):
         """
         while self.thread_running:
             try:
+                print('getting data')
                 voltages = self.__fetch_sensor_data()
                 print(voltages)
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
