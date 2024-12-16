@@ -55,6 +55,7 @@ class DDS_IO:
         # Update all enabled devices
         for device_name,device_object in self.devices.items():
             if device_object.status is not Interface.Status.DISABLED:
+                print(f'updating {device_name}')
                 device_object.update()
 
 
