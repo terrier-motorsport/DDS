@@ -53,9 +53,9 @@ class DDS_IO:
         '''Updates all sensors. Should be called as often as possible.'''
 
         # Update all enabled devices
-        for key,interface in self.devices.items():
-            if interface.status is not Interface.Status.DISABLED:
-                interface.update()
+        for device_name,device_object in self.devices.items():
+            if device_object.status is not Interface.Status.DISABLED:
+                device_object.update()
 
 
     def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
@@ -189,7 +189,7 @@ class DDS_IO:
             
         '''Initializes the CANBus Interface'''
 
-        self.__log('Initializing CANBus...')
+        self.__log(f'Starting i2c bus on {self.CAN_BUS}')
 
         try:
             self.can_bus = can.interface.Bus(self.CAN_BUS, interface='socketcan')
