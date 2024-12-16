@@ -60,7 +60,7 @@ class ADS_1015(I2CDevice):
         time.sleep(0.5)
 
         # Complete the initialization
-        super().initalize()
+        super().initialize()
 
 
     def update(self):
