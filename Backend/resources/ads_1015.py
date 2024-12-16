@@ -137,6 +137,7 @@ class ADS_1015(I2CDevice):
         # This is the function that the thread runs continously
         Thread function to continuously fetch sensor data.
         """
+        print('getting data')
         while self.thread_running:
             try:
                 print('getting data')
@@ -204,8 +205,14 @@ class ADS_1015(I2CDevice):
 
     def __start_threaded_data_collection(self):
         """Start the data collection in a separate thread."""
-        sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
+        
+        # This enabled the thread to run continously
         self.thread_running = True
+
+        # Make thread
+        sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
+
+        # Create the thread & start running
         sensor_thread.start()
 
 
