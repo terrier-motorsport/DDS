@@ -205,6 +205,7 @@ class ADS_1015(I2CDevice):
     def __start_threaded_data_collection(self):
         """Start the data collection in a separate thread."""
         sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
+        self.thread_running = True
         sensor_thread.start()
 
 
