@@ -124,10 +124,13 @@ class ADS_1015(I2CDevice):
 
 
     def __get_data_from_thread(self) -> List[float]:
-        """Main program calls this to fetch the latest data from the queue."""
+        """
+        Main program calls this to fetch the latest data from the queue.
+        """
         if not self.data_queue.empty():
             return self.data_queue.get_nowait()  # Non-blocking call
         else:
+            print('Data queue is empty')
             return None  # No data available yet
 
 
