@@ -136,7 +136,10 @@ class Interface:
 
 
     def reset_last_cache_update_timer(self):
-        '''Resets the timer which keeps track of the last time the cache was updated.'''
+        '''
+        Resets the timer which keeps track of the last time the cache was updated.
+        Should be called every time the cache is updated.
+        '''
         self.last_cache_update = time.time()
 
 
