@@ -200,20 +200,18 @@ class DDS_IO:
             return
 
         
-        # Init canInterface
+        # Create canInterface
         canDevice = CANInterface('MC & AMS', 
                                 can_bus=self.can_bus, 
                                 database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', 
                                 logger=self.log)
         canDevice.add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
 
+        # Initialize CAN
+        self.__safe_initialize_device(canDevice)
+
         # Log completion
-        self.__log('Successfully Initialized CANBus Devices!')
-
-
-        # Failed to initialize
-        self.__failed_to_init_device('CAN', exception=e, device_key=
-                                'canInterface')
+        self.__log('Finished initializing all CAN devices!')
     
     
     def __safe_initialize_device(self, device: Interface) -> bool:
