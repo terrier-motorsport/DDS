@@ -49,6 +49,8 @@ class ADS_1015(I2CDevice):
 
     def initialize(self):
 
+        print('init adc')
+
         # Init ADC Device
         self.__init_ads(self.bus)
 
