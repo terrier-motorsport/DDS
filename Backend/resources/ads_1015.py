@@ -71,8 +71,6 @@ class ADS_1015(I2CDevice):
         if self.status is self.Status.ERROR:
             self.__init_ads(self.bus)
 
-        print(f'device is {self.status.name}')
-
         # Fetch the sensor data
         voltages = self.__get_data_from_thread()
 
