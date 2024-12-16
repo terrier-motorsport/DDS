@@ -113,12 +113,14 @@ class Interface:
         Retrieve the most recent data associated with the key given from the cache.
         """
 
+        print(key)
+        print(self.cached_values)
+
         if key in self.cached_values:
             return self.cached_values[key]
         else:
             self.log.writeLog(self.name, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
-            return 'ERR'
-
+            return 'NONE'
 
 
     # ===== CACHING METHODS =====
