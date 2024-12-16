@@ -84,7 +84,7 @@ class Interface:
         self.log.writeLog(self.name, f'Created {self.sensorProtocol.name} device {self.name}.')
 
 
-    def initalize(self):
+    def initialize(self):
         '''
         This method encapsulates the part of the initalization which talks to the physical devices.
         If there is an error with the physical devices, this may raise an error.
