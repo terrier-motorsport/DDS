@@ -44,7 +44,6 @@ class ADS_1015(I2CDevice):
 
         # Init threading things
         self.data_queue = queue.Queue()  # Queue to hold sensor data
-        self.thread_running = True  # Flag to control the thread's execution
 
 
     def initialize(self):
@@ -142,11 +141,9 @@ class ADS_1015(I2CDevice):
         Thread function to continuously fetch sensor data.
         """
         print('getting data')
-        while self.thread_running:
+        while self.status is self.Status.ACTIVE:
             try:
-                print('getting data')
                 voltages = self.__fetch_sensor_data()
-                print(voltages)
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
                 self.reset_last_cache_update_timer()
             except Exception as e:
@@ -209,19 +206,12 @@ class ADS_1015(I2CDevice):
 
     def __start_threaded_data_collection(self):
         """Start the data collection in a separate thread."""
-        
-        # This enabled the thread to run continously
-        self.thread_running = True
 
         # Make thread
         sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
 
         # Create the thread & start running
         sensor_thread.start()
-
-
-    def __stop_thread(self):
-        self.thread_running = False
 
 
 # Example usage
