@@ -140,6 +140,7 @@ class ADS_1015(I2CDevice):
         while self.thread_running:
             try:
                 voltages = self.__fetch_sensor_data()
+                print(voltages)
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
                 self.reset_last_cache_update_timer()
             except Exception as e:
@@ -166,17 +167,6 @@ class ADS_1015(I2CDevice):
             except OSError:
                 # Occasionally this happens over i2c communication. I'm not sure why.
                 self.log.writeLog(self.name,f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
-
-            except:
-                # This will cause the value to be discarded
-                input_obj.voltage = -1
-
-                # Try to restart sensor
-                try:
-                    self.__init_ads()
-                except:
-                    pass
-                
 
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
