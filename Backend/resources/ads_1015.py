@@ -69,6 +69,7 @@ class ADS_1015(I2CDevice):
 
         # If the device is ERROR, we can attempt to reinit it.
         if self.status is self.Status.ERROR:
+            print('trying to restart')
             self.__init_ads(self.bus)
 
         # Fetch the sensor data
