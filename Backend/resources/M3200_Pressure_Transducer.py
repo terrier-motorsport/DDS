@@ -76,7 +76,7 @@ class M3200PressureSensorI2C(I2CDevice):
         self.cached_values["status"] = status
         self.cached_values["pressure"] = pressure
         self.cached_values["temperature"] = temperature
-        self.reset_last_cache_update_timer() # Reset the timeout timer
+        self._reset_last_cache_update_timer() # Reset the timeout timer
 
         # Log the data
         self._log_telemetry("status", status)
@@ -176,7 +176,7 @@ class M3200PressureSensorI2C(I2CDevice):
         return super()._log_telemetry(param_name, value)
     
 
-    def reset_last_cache_update_timer():
-        return super().reset_last_cache_update_timer()
+    def _reset_last_cache_update_timer():
+        return super()._reset_last_cache_update_timer()
     
 

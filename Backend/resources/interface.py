@@ -132,7 +132,7 @@ class Interface:
             self.log.writeLog(self.name, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
-    def reset_last_cache_update_timer(self):
+    def _reset_last_cache_update_timer(self):
         '''
         Resets the timer which keeps track of the last time the cache was updated.
         Should be called every time the cache is updated.

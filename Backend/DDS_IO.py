@@ -189,7 +189,7 @@ class DDS_IO:
             
         '''Initializes the CANBus Interface'''
 
-        self.__log(f'Starting i2c bus on {self.CAN_BUS}')
+        self.__log(f'Starting CAN bus on {self.CAN_BUS}')
 
         try:
             self.can_bus = can.interface.Bus(self.CAN_BUS, interface='socketcan')
@@ -241,8 +241,7 @@ class DDS_IO:
         # We can add it to the devices array
         self.devices[device.name] = device
 
-        return True
-        
+        return True      
 
 
     def __failed_to_init_device(self, device: Interface, exception: Exception):
@@ -257,6 +256,7 @@ class DDS_IO:
 
         # Mark the device as having an error
         self.devices[device.name].status = Interface.Status.ERROR
+
 
     def __failed_to_init_protocol(self, protocol_name: str, exception: Exception):
         '''

@@ -113,7 +113,7 @@ class ADS_1015(I2CDevice):
             self._log_telemetry(key, data, units)
 
         # Reset the timeout timer
-        self.reset_last_cache_update_timer() 
+        self._reset_last_cache_update_timer() 
 
 
     def __get_data_from_thread(self) -> List[float]:
@@ -137,7 +137,7 @@ class ADS_1015(I2CDevice):
             try:
                 voltages = self.__fetch_sensor_data()
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
-                self.reset_last_cache_update_timer()
+                self._reset_last_cache_update_timer()
             except Exception as e:
                 self.log.writeLog(f'{self.name}DataCollectionWorker', f"Error in fetching sensor data: {e}", self.log.LogSeverity.ERROR)
 
@@ -211,5 +211,4 @@ class ADS_1015(I2CDevice):
 
 # Example usage
 if __name__ == '__main__':
-
     pass
