@@ -64,7 +64,7 @@ class ADS_1015(I2CDevice):
 
         # Double check chip type (debug)
         self.chip_type = self.ads.detect_chip_type()
-        self.log.writeLog(self.name, f"Found: {self.chip_type}")
+        self._log(f"Found: {self.chip_type}")
 
         self.status = self.Status.ACTIVE
 
@@ -139,11 +139,11 @@ class ADS_1015(I2CDevice):
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
                 self._reset_last_cache_update_timer()
             except Exception as e:
-                self.log.writeLog(f'{self.name}DataCollectionWorker', f"Error in fetching sensor data: {e}", self.log.LogSeverity.ERROR)
+                self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
 
         # If we ever get here, there was a problem.
         # We should log that the data collection worker stopped working
-        self.log.writeLog(self.name, 'Data collection worker stopped.', self.log.LogSeverity.WARNING)
+        self._log('Data collection worker stopped.', self.log.LogSeverity.WARNING)
     
 
     def __fetch_sensor_data(self) -> List[float]:
@@ -164,7 +164,7 @@ class ADS_1015(I2CDevice):
                 )
             except OSError:
                 # Occasionally this happens over i2c communication. I'm not sure why.
-                self.log.writeLog(self.name,f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
+                self._log(f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
 
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
@@ -183,10 +183,7 @@ class ADS_1015(I2CDevice):
 
         if not analog_in.voltage_in_tolerange_range():
             # This means the voltage is outside of the tolerable range.
-            self.log.writeLog(
-                              self.name,
-                              msg =f"{analog_in.name} out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}",
-                              severity=self.log.LogSeverity.WARNING)
+            self._log(f"{analog_in.name} out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}", severity=self.log.LogSeverity.WARNING)
             
             # Return an empty value
             return analog_in

@@ -81,7 +81,7 @@ class Interface:
         self.last_cache_update = time.time()
 
         # Log device creation
-        self.log.writeLog(self.name, f'Created {self.sensorProtocol.name} device {self.name}.')
+        self._log(f'Created {self.sensorProtocol.name} device {self.name}.')
 
 
     def initialize(self):
@@ -94,7 +94,7 @@ class Interface:
         self.status = self.Status.ACTIVE
 
         # Log device initilization
-        self.log.writeLog(self.name, f'Initalized {self.sensorProtocol.name} device {self.name} Successfully.')
+        self._log(f'Initalized {self.sensorProtocol.name} device {self.name} Successfully.')
 
 
     # ===== GETTER METHODS =====
@@ -116,8 +116,8 @@ class Interface:
         if key in self.cached_values:
             return self.cached_values[key]
         else:
-            self.log.writeLog(self.name, f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
-            return 'NONE'
+            self._log(f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
+            return None
 
 
     # ===== CACHING METHODS =====
@@ -139,7 +139,7 @@ class Interface:
 
             # Clear the cache
             self.cached_values.clear()
-            self.log.writeLog(self.name, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
+            self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
     def _reset_last_cache_update_timer(self):
@@ -160,6 +160,13 @@ class Interface:
             units=units)
 
 
+    def _log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
+        """Centralized logging helper."""
+        self.log.writeLog(
+            logger_name=self.name,
+            msg=msg,
+            severity=severity)
+
     # ===== HELPER METHODS ====
     @staticmethod
     def map_to_percentage(value : int, min_value : int, max_value : int) -> float:
@@ -175,6 +182,7 @@ class Interface:
     
     @staticmethod
     def clamp(value, min_value, max_value):
+        """Clamps a value between a minimum and maximum."""
         return max(min_value, min(value, max_value))
 
 
@@ -198,7 +206,7 @@ class I2CDevice(Interface):
     
     def update(self):
         '''Should be overwritten by child class'''
-        self.log.writeLog(self.name, "update not overriden properly in child class.", self.log.LogSeverity.ERROR)
+        self._log(self.name, "update not overriden properly in child class.", self.log.LogSeverity.ERROR)
         pass
 
 
@@ -233,6 +241,8 @@ class CANInterface(Interface):
     # If no CAN data is retrieved within x seconds, the class removes cached data.
     cached_data_timeout_threshold = 2
 
+    # 0.1 ms timeout for reading CAN Bus
+    CAN_TIMEOUT = 0.0001  
     
     def __init__(self, name : str, can_bus: can.BusABC, database_path : str, logger : DataLogger):
         '''
@@ -268,15 +278,17 @@ class CANInterface(Interface):
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
-        if message == None:
-
-            # If no new values are discovered, we check to see if the cache has expired.
+        if not message:
             self._update_cache_timeout()
             return
 
         # Decode the recieved data
         data = self.__decode_can_msg(message)
-        
+
+        # See if data decoding was successful. If not, return
+        if not data:
+            return
+
         # Update the last retrevial time for the timeout threshold
         self.last_retrieval_time = time.time()  # Update retrieval time
 
@@ -297,12 +309,15 @@ class CANInterface(Interface):
             self.cached_values[signal_name] = value
         
 
-    def add_database(self, filename : str):
-        '''Adds additional database info to the CAN interface from a dbc file'''
+    def add_database(self, filename: str):
+        """Loads a DBC file into the CAN database."""
+        try:
+            self.db.add_dbc_file(filename)
+            self._log(severity=self.log.LogSeverity.INFO, msg=f"Loaded DBC file: {filename}")
+        except Exception as e:
+            self._log(severity=self.log.LogSeverity.ERROR, msg=f"Failed to load DBC file {filename}: {e}")
+            raise
 
-        # Add dbc file to database
-        self.db.add_dbc_file(filename)
-        self.log.writeLog(self.name, f"Loaded Messages from CAN Database: {filename}")
 
 
     def get_avail_signals(self, messageName : str):
@@ -326,11 +341,11 @@ class CANInterface(Interface):
         # If this throws an error, its most likely because the CAN Bus Network on the OS isn't open.
         # It will try to open the network and run the command again.
         try:
-            # If a message isn't found within .01ms, the function returns None.
-            msg = self.can_bus.recv(timeout=.0001)
+            # If a message isn't found within CAN_TIMEOUT, the function returns None.
+            msg = self.can_bus.recv(self.CAN_TIMEOUT)
         except can.exceptions.CanOperationError:
             self.__start_can_bus()
-            msg = self.can_bus.recv(timeout=.0001)
+            msg = self.can_bus.recv(self.CAN_TIMEOUT)
 
         # Return the message
         return msg
@@ -341,10 +356,8 @@ class CANInterface(Interface):
         try:
             return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
-            self.log.writeLog(self.name, 
-                              f"No database entry found for {msg}",
-                              self.log.LogSeverity.WARNING)
-            return {'':''}
+            self._log(f"No database entry found for {msg}", self.log.LogSeverity.WARNING)
+            return None
     
 
     def __start_can_bus(self):
@@ -353,7 +366,7 @@ class CANInterface(Interface):
         This is the command to start the can0 network
         In a terminal, all these command would be run with spaces inbetween them
         '''
-        self.log.writeLog(self.name, "CAN Bus not found... Attempting to open one.", self.log.LogSeverity.WARNING)
+        self._log("CAN Bus not found... Attempting to open one.", self.log.LogSeverity.WARNING)
         
 
         try:
@@ -369,19 +382,19 @@ class CANInterface(Interface):
                 check=True,
                 timeout=3
             )
-            self.log.writeLog(self.name, "can0 Successfully started.", self.log.LogSeverity.INFO)
+            self._log("can0 Successfully started.", self.log.LogSeverity.INFO)
 
             # Catch common errors
         except subprocess.TimeoutExpired as e:
             # Command couldn't be run
-            self.log.writeLog(self.name, "Timeout: Couldn't start can0. Try rerunning the program with sudo.", self.log.LogSeverity.CRITICAL)
+            self._log("Timeout: Couldn't start can0. Try rerunning the program with sudo.", self.log.LogSeverity.CRITICAL)
             raise TimeoutError
         except subprocess.CalledProcessError as e:
             # Tbh idk
-            self.log.writeLog(self.name, f"Error: Couldn't start can0. The command '{e.cmd}' failed with exit code {e.returncode}.", self.log.LogSeverity.CRITICAL)
+            self._log(f"Error: Couldn't start can0. The command '{e.cmd}' failed with exit code {e.returncode}.", self.log.LogSeverity.CRITICAL)
         except Exception as e:
             # I hope this one doesn't happen
-            self.log.writeLog(self.name, f"Couldn't start can0. Unexpected Error: {e}", self.log.LogSeverity.CRITICAL)
+            self._log(f"Couldn't start can0. Unexpected Error: {e}", self.log.LogSeverity.CRITICAL)
 
 
         # subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
