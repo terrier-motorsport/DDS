@@ -269,9 +269,9 @@ class DDS_IO:
         self.__log(f'Was unable to intialize {protocol_name}: {exception}. Interfaces on this protocol will be disabled.', DataLogger.LogSeverity.CRITICAL)
 
         # Disable protocol
-        if protocol_name is 'i2c':
+        if protocol_name == 'i2c':
             self.I2C_ENABLED = False
-        elif protocol_name is 'CAN':
+        elif protocol_name == 'CAN':
             self.CAN_ENABLED = False
 
     
