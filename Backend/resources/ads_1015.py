@@ -50,8 +50,23 @@ class ADS_1015(I2CDevice):
 
         print('init adc')
 
-        # Init ADC Device
-        self.__init_ads(self.bus)
+        # Make ADS object
+        self.ads = ADS1015(i2c_dev=self.bus)
+
+        # Configure ADS
+        self.ads.set_mode("continuous")
+
+        # WARNING - this must be higher than the max voltage measured in the system. 
+        # It is differential, meaning the ADS can measure ±6.144v
+        self.ads.set_programmable_gain(6.144) 
+        self.ads.set_sample_rate(3300)
+
+        # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
+        time.sleep(0.5)
+
+        # Double check chip type (debug)
+        self.chip_type = self.ads.detect_chip_type()
+        self.log.writeLog(self.name, f"Found: {self.chip_type}")
 
         # Start data collection thread
         self.__start_threaded_data_collection()
@@ -67,10 +82,6 @@ class ADS_1015(I2CDevice):
         """
         Retrieve data from the sensor, log it, and cache it.
         """
-
-        # If the device is ERROR, we can attempt to reinit it.
-        if self.status is self.Status.ERROR:
-            self.__init_ads(self.bus)
 
         # Fetch the sensor data
         voltages = self.__get_data_from_thread()
@@ -104,26 +115,6 @@ class ADS_1015(I2CDevice):
         self.reset_last_cache_update_timer() 
 
 
-    def __init_ads(self, bus: smbus2.SMBus):
-        # Make ADS object
-        self.ads = ADS1015(i2c_dev=bus)
-
-        # Configure ADS
-        self.ads.set_mode("continuous")
-
-        # WARNING - this must be higher than the max voltage measured in the system. 
-        # It is differential, meaning the ADS can measure ±6.144v
-        self.ads.set_programmable_gain(6.144) 
-        self.ads.set_sample_rate(3300)
-
-        # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
-        time.sleep(0.5)
-
-        # Double check chip type (debug)
-        self.chip_type = self.ads.detect_chip_type()
-        self.log.writeLog(self.name, f"Found: {self.chip_type}")
-
-
     def __get_data_from_thread(self) -> List[float]:
         """
         Main program calls this to fetch the latest data from the queue.
@@ -148,7 +139,10 @@ class ADS_1015(I2CDevice):
                 self.reset_last_cache_update_timer()
             except Exception as e:
                 print(f"Error in fetching sensor data: {e}")
-            # time.sleep(0.1)  # Adjust the sleep time based on how often you want to read data
+
+        # If we ever get here, there was a problem.
+        # We should log that the data collection worker stopped working
+        self.log.writeLog(self.name, 'Data collection worker stopped.', self.log.LogSeverity.WARNING)
     
 
     def __fetch_sensor_data(self) -> List[float]:
