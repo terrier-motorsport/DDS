@@ -127,12 +127,18 @@ class Interface:
         This checks to see if the cache has expired. If it has, the cache is cleared.
         """
 
-        if self.cached_values is {}:
+        # Checks if the cache is already empty
+        if not self.cached_values:
             return
 
+        # Update the current time
         current_time = time.time()
+
+        # See if the cache has expired
         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-            self.cached_values = {}
+
+            # Clear the cache
+            self.cached_values.clear()
             self.log.writeLog(self.name, "Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
