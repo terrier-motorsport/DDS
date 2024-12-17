@@ -37,7 +37,7 @@ class DataLogger:
     class Log:
         '''Helper class to encapuslate message equatablilty'''
 
-        LOG_TIMEOUT = 10          # Time before duplicate messages are logged again (seconds)
+        LOG_TIMEOUT = 3          # Time before duplicate messages are logged again (seconds)
         
         def __init__(self, logger_name: str, message: str, severity, timestamp: float):
             self.logger_name = logger_name
@@ -56,8 +56,6 @@ class DataLogger:
         def is_recent(self, current_time: float) -> bool:
             '''Checks if the message was logged within the threshold.'''
             return current_time - self.timestamp < self.LOG_TIMEOUT
-
-
 
 
     def __init__(self, fileName):
@@ -156,6 +154,7 @@ class DataLogger:
                     return False
         return True
     
+
     def _addLoggedMessage(self, log: Log):
         '''Adds a log to the list of logged messages.'''
 
