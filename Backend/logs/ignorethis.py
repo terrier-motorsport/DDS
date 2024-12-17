@@ -1,1 +1,0 @@
-# I tried to make github push the logs folder without the actual files, but it seems like there has to be a file in here thats not a .gitignore, this this file that does absolutely nothing.

@@ -11,8 +11,10 @@ import spidev           # type: ignore # This is the SPI library for the pi
 import time
 
 """
-The purpose of these classes is to handle data interpreting of a single interface/device
-Input objects are created by the DDS_IO class.
+The purpose of these classes is to serve as an abstract outline 
+of a single interface/device to be inherited by a more specific class if necessary.
+EX: the I2C Pressure/Tempature Sensor for the cooling loop.
+Objects from classes in this file are created in the DDS_IO class.
 """
 
 # ===== CONSTANTS =====
@@ -45,7 +47,7 @@ class Interface:
 
     def log_data(self, param_name: str, value):
         '''Takes in a file, parameter name & a value'''
-        self.logFile.writeData(param_name, value)
+        self.logFile.writeData(self.name, param_name, value)
         
 
     def get_name(self) -> str:
@@ -61,6 +63,77 @@ class Interface:
     def get_data(self, key : str):
         '''Gets the data from the interface'''
         print("get_data not overriden propertly in child class.")
+
+    # ===== HELPER METHODS =====
+
+    @staticmethod
+    def map_to_percentage(value : int, min_value : int, max_value : int) -> float:
+        if value < min_value or value > max_value:
+            raise ValueError("Value out of range")
+        return (value - min_value) / (max_value - min_value)
+    
+    @staticmethod
+    def percentage_to_map(percentage, min_value : int, max_value : int) -> float:
+        if percentage < 0.0 or percentage > 1.0:
+            raise ValueError("Percentage out of range")
+        return percentage * (max_value - min_value) + min_value
+    
+
+
+# ===== I2CDevice class for DDS' I2C Backend =====
+class I2CDevice(Interface):
+    
+    """
+    I2C Device which inherits the Interface class
+    Each device has its own address & commands that it responds too.
+    It is most likely that each i2c device will have it's own child class with custom decoding function.
+    """
+
+    # I2C address of device
+    i2c_address : int
+
+    cached_values: dict = {}  # Dictionary to store cached values
+    cached_data_timeout_threshold = 2  # Cache timeout in seconds
+
+    last_retrieval_time = None
+
+    def __init__(self, name : str, logFile : File, i2c_address : int):
+        
+        # Init super (Input class)
+        super().__init__(name, InterfaceProtocol.I2C, logFile=logFile)
+
+        # Init cache timeout
+        self.last_retrieval_time = time.time()
+
+        # Set I2C address
+        self.i2c_address = i2c_address
+
+    
+    def update(self):
+        pass
+
+
+    def close_connection(self):
+        pass
+
+    def reset_last_retrival_timer(self):
+        self.last_retrieval_time = time.time()
+
+    def log_data(self, param_name, value):
+        return super().log_data(param_name, value)
+
+    def _fetch_sensor_data(self):
+        print("FETCH SENSOR DATA IN I2CDevice IS BEING CALLED. IT SHOULD NOT BE GETTING CALLED.")
+        pass
+
+    def _update_cache_timeout(self):
+        """
+        Clear the cache if the data has not been updated within the timeout threshold.
+        """
+        current_time = time.time()
+        if current_time - self.last_retrieval_time > self.cached_data_timeout_threshold:
+            self.cached_values = {}
+            print("Cache cleared due to data timeout.")
 
 # ===== SPIDevice class for DDS' SPI Backend =====
 class SPIDevice(Interface):
@@ -137,9 +210,9 @@ class CANInterface(Interface):
     def update(self):
 
         '''
-        This function will first get data from the input assigned to it.
+        This function will first get data from the interface assigned to it.
         It will then log it and stuff
-        Then it will parse the messages, and add any values to the current_values dictionary
+        Then it will parse the messages, and cache all values
         '''
 
         # Get data from the CAN Bus
@@ -165,7 +238,6 @@ class CANInterface(Interface):
         # Updates / Adds all the read values to the current_values dict
         for key, value in new_values.items():
             self.cached_values[key] = value
-
 
 
     def get_data(self, key : str):
