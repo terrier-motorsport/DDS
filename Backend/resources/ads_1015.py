@@ -68,7 +68,10 @@ class ADS_1015(I2CDevice):
         self.chip_type = self.ads.detect_chip_type()
         self.log.writeLog(self.name, f"Found: {self.chip_type}")
 
+        self.status = self.Status.ACTIVE
+
         # Start data collection thread
+        # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
         self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
