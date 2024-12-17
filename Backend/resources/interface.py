@@ -126,6 +126,10 @@ class Interface:
         To be called when no new data is found.
         This checks to see if the cache has expired. If it has, the cache is cleared.
         """
+
+        if self.cached_values is {}:
+            return
+
         current_time = time.time()
         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
             self.cached_values = {}
