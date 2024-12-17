@@ -48,8 +48,6 @@ class ADS_1015(I2CDevice):
 
     def initialize(self):
 
-        print('init adc')
-
         # Make ADS object
         self.ads = ADS1015(i2c_dev=self.bus)
 
@@ -134,14 +132,14 @@ class ADS_1015(I2CDevice):
         # This is the function that the thread runs continously
         Thread function to continuously fetch sensor data.
         """
-        print('getting data')
+
         while self.status is self.Status.ACTIVE:
             try:
                 voltages = self.__fetch_sensor_data()
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
                 self.reset_last_cache_update_timer()
             except Exception as e:
-                print(f"Error in fetching sensor data: {e}")
+                self.log.writeLog(f'{self.name}DataCollectionWorker', f"Error in fetching sensor data: {e}", self.log.LogSeverity.ERROR)
 
         # If we ever get here, there was a problem.
         # We should log that the data collection worker stopped working

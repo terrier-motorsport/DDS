@@ -113,9 +113,6 @@ class Interface:
         Retrieve the most recent data associated with the key given from the cache.
         """
 
-        print(key)
-        print(self.cached_values)
-
         if key in self.cached_values:
             return self.cached_values[key]
         else:
