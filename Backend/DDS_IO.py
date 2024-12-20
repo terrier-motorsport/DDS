@@ -212,22 +212,13 @@ class DDS_IO:
         self.__log(f"Starting CAN bus on {self.CAN_BUS}")
 
         # Step 1: Attempt to initialize the CAN bus
+        
         try:
             self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
         except OSError as e:
-            # Step 2: If initialization fails, attempt to set up the CAN network
-            if CANInterface.init_can_network(log_func=self.__log, can_interface=self.CAN_BUS):
-                try:
-                    # Retry CAN bus initialization after setting up the network
-                    self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
-                except OSError as retry_error:
-                    # Log failure and disable the CAN interface if retry also fails
-                    self.__failed_to_init_protocol("CAN", retry_error)
-                    return
-            else:
-                # Log failure and disable the CAN interface if network setup fails
-                self.__failed_to_init_protocol("CAN", e)
-                return
+            # Log failure and disable the CAN interface if network setup fails
+            self.__failed_to_init_protocol("CAN", e)
+            return
 
         # Step 3: Set up the CAN interface with the database
         canDevice = CANInterface(
@@ -241,6 +232,9 @@ class DDS_IO:
 
         # Step 4: Initialize the CAN device safely
         self.__safe_initialize_device(canDevice)
+
+        # Step 4.5: Check if the device was successfully initialized by getting a message.
+        canDevice.update()
 
         # Step 5: Log completion of CAN initialization
         self.__log("Finished initializing all CAN devices!")
