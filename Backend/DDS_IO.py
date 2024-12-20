@@ -279,7 +279,7 @@ class DDS_IO:
         '''
 
         # Log the error
-        self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception.with_traceback()}', DataLogger.LogSeverity.CRITICAL)
+        self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception}', DataLogger.LogSeverity.CRITICAL)
 
         # Mark the device as having an error
         self.devices[device.name].status = Interface.Status.ERROR
