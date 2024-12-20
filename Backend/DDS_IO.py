@@ -259,7 +259,7 @@ class DDS_IO:
 
             # Check if the device can read data
             device.update()
-            
+
         except Exception as e:
             self.__failed_to_init_device(device=device, exception=e)
             return False
@@ -279,7 +279,7 @@ class DDS_IO:
         '''
 
         # Log the error
-        self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception}, continuing', DataLogger.LogSeverity.CRITICAL)
+        self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception.with_traceback()}', DataLogger.LogSeverity.CRITICAL)
 
         # Mark the device as having an error
         self.devices[device.name].status = Interface.Status.ERROR
