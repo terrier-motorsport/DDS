@@ -1,4 +1,4 @@
-# Input object for Terrier Motorsport's DDS
+# Interface object for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from enum import Enum
@@ -19,19 +19,11 @@ EX: the I2C Pressure/Tempature Sensor for the cooling loop.
 Objects from classes in this file are created in the DDS_IO class.
 """
 
-# ===== CONSTANTS =====
-
-CAN_INTERFACE = 'can0'
-UART_TX = 2
-#...
 
 # Enums for types of protocols
 class InterfaceProtocol(Enum):
     CAN = 1     # DONE
-    SPI = 2     # Not Needed?
     I2C = 3     # DONE
-    UART = 4    # Not Needed?
-
 
 
 # ===== Parent class for all interfaces =====
@@ -56,6 +48,8 @@ class Interface:
         ERROR = 3,
         NOT_INITIALIZED = 4
 
+
+    # Class variables
     CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
     cached_values: dict              # Dictionary to store cached values
     last_cache_update: float         # Time since last cache update
@@ -63,7 +57,6 @@ class Interface:
 
     def __init__(self, name : str, sensorProtocol : InterfaceProtocol, logger : DataLogger):
         '''
-        Parent class for all interfaces.
         This initalizer should contain code which is not expected to raise an error.
         Code which initializes the physical aspect of interfaces should be put in initalize()
         '''
@@ -95,6 +88,24 @@ class Interface:
 
         # Log device initilization
         self._log(f'Initalized {self.sensorProtocol.name} device {self.name} Successfully.')
+
+
+    def update(self):
+        """
+        Method intended to be overridden by child classes.
+
+        The purpose of this method is to receive data from sensors 
+        and update the `cached_values` dictionary with the latest readings.
+
+        Logs an error if the method is not properly overridden.
+        """
+        self._log(
+            self.name,
+            "The 'update' method has not been properly overridden in the child class.",
+            self.log.LogSeverity.ERROR
+        )
+        pass
+
 
 
     # ===== GETTER METHODS =====
@@ -203,12 +214,6 @@ class I2CDevice(Interface):
         # Init super (Input class)
         super().__init__(name, InterfaceProtocol.I2C, logger=logger)
 
-    
-    def update(self):
-        '''Should be overwritten by child class'''
-        self._log(self.name, "update not overriden properly in child class.", self.log.LogSeverity.ERROR)
-        pass
-
 
     def close_connection(self):
         """
@@ -219,9 +224,6 @@ class I2CDevice(Interface):
         self.bus.close()
 
 
-    def _log_telemetry(self, param_name, value, units):
-        return super()._log_telemetry(param_name, value, units)
-
 
 
 
@@ -229,27 +231,22 @@ class I2CDevice(Interface):
 class CANInterface(Interface):
 
     '''
-    CAN Interface which inherits the Input class.
+    CAN Interface which inherits the Interface class.
     Each device on the interface can have its own CAN database, which can be added using add_database().
     EX: The MC & AMS are on one CAN Interface. 
     \nFor UCP, There is only one CAN Interface running on the DDS.
     '''
 
-    # Dictionary which contains the most recent values for all the CAN data
-    cached_values : dict = {}
-
-    # If no CAN data is retrieved within x seconds, the class removes cached data.
-    cached_data_timeout_threshold = 2
-
     # 0.1 ms timeout for reading CAN Bus
     CAN_TIMEOUT = 0.0001  
     
+
     def __init__(self, name : str, can_bus: can.BusABC, database_path : str, logger : DataLogger):
         '''
         Initializer for a CANInterface
         '''
 
-        # Init super (Input class)
+        # Init super (Interface class)
         super().__init__(name, InterfaceProtocol.CAN, logger=logger)
 
         # Init database path
@@ -263,6 +260,18 @@ class CANInterface(Interface):
         # Can_interface is the interface of the device that the code is running on which can is connected to.
         # interface refers to the type of CAN Bus that is running on that physical interface.
         self.can_bus = can_bus
+
+    
+    def initialize(self):
+        """
+        Initializes the interface by communicating with physical devices.
+        This method encapsulates the part of the initialization process that involves
+        communication with physical devices. If there is an error with the physical
+        devices, this method may raise an error.
+        """
+        
+        # Finish initializaiton 
+        super().initialize()
 
     
     def update(self):
@@ -290,7 +299,7 @@ class CANInterface(Interface):
             return
 
         # Update the last retrevial time for the timeout threshold
-        self.last_retrieval_time = time.time()  # Update retrieval time
+        self._reset_last_cache_update_timer()
 
         # Log the data that was read
         for signal_name,value in data.items():
@@ -331,71 +340,118 @@ class CANInterface(Interface):
         
 
     def __fetch_can_message(self) -> can.Message:
-        
-        '''
-        Gets data from the CAN Bus and tries to parse it.
-        Returns a dictionary of parameters and values.
-        '''
+        """
+        Fetches a single CAN message from the CAN Bus and attempts to parse it.
 
-        # Read a single frame of CAN data
-        # If this throws an error, its most likely because the CAN Bus Network on the OS isn't open.
-        # It will try to open the network and run the command again.
+        This method reads a single CAN message frame from the CAN Bus. If the message is not
+        received within the specified timeout, the function will return `None`. In case of a 
+        `CanOperationError` (typically due to the CAN Bus network not being open), the method 
+        attempts to restart the CAN Bus interface and retries receiving the message.
+
+        Returns:
+            can.Message: A CAN message object containing the received message data, or `None` 
+                        if no message was received within the specified timeout.
+
+        Raises:
+            can.exceptions.CanOperationError: If the CAN Bus interface encounters an error 
+                                            during the operation (e.g., network not open).
+        
+        Notes:
+            - This function relies on the `self.can_bus.recv` method to receive the CAN message.
+            - The `CAN_TIMEOUT` is the maximum time allowed to wait for a message before returning `None`.
+            - If the CAN Bus interface is not operational, the function attempts to start it again.
+
+        """
         try:
-            # If a message isn't found within CAN_TIMEOUT, the function returns None.
+            # Read a single frame of CAN data
+            # If this throws an error, it's most likely because the CAN Bus Network on the OS isn't open.
+            # It will try to open the network and run the command again.
             msg = self.can_bus.recv(self.CAN_TIMEOUT)
         except can.exceptions.CanOperationError:
-            self.__start_can_bus()
+            self.init_can_network()  # Try to restart the CAN bus
             msg = self.can_bus.recv(self.CAN_TIMEOUT)
 
-        # Return the message
+        # Return the received message (or None if no message was received)
         return msg
+
         
     
     def __decode_can_msg(self, msg: can.Message) -> dict:
-        # Try to parse the data & return it
+        """
+        Decodes the given CAN message using a predefined message database.
+
+        This method attempts to parse the CAN message by matching its arbitration ID 
+        and data against a database of predefined message formats. If no match is found, 
+        a warning is logged, and `None` is returned.
+
+        Args:
+            msg (can.Message): The CAN message to decode. It must contain an arbitration 
+                            ID and data, which are used for decoding.
+
+        Returns:
+            dict: A dictionary with the decoded message data, or `None` if decoding fails.
+        """
+
         try:
+            # Decode the CAN message using the database
             return self.db.decode_message(msg.arbitration_id, msg.data)
         except KeyError:
+            # Log a warning if no database entry matches the arbitration ID
             self._log(f"No database entry found for {msg}", self.log.LogSeverity.WARNING)
             return None
-    
 
-    def __start_can_bus(self):
 
-        '''
-        This is the command to start the can0 network
-        In a terminal, all these command would be run with spaces inbetween them
-        '''
-        self._log("CAN Bus not found... Attempting to open one.", self.log.LogSeverity.WARNING)
-        
+    @staticmethod
+    def init_can_network(log_func: function, can_interface: str) -> bool:
+        """
+        Brings up and configures a CAN network interface at the OS level.
+
+        This method executes system commands to initialize the specified CAN interface, 
+        set its bitrate, and configure its transmit queue length. Logs messages for 
+        success, warnings, and errors. Returns a boolean indicating the success of the operation.
+
+        Args:
+            log_func (function): A logging function for logging messages with severity levels.
+            can_interface (str): The name of the CAN interface to initialize (e.g., "can0").
+
+        Returns:
+            bool: True if the CAN interface was successfully initialized, False otherwise.
+        """
+        # Log a warning to indicate the initialization attempt
+        log_func(f"CAN Bus not found... Attempting to open one on {can_interface}.", DataLogger.LogSeverity.WARNING)
 
         try:
-            # Set CAN interface up with a timeout of 3 seconds
+            # Bring up the CAN interface with the specified bitrate
             subprocess.run(
-                ["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"],
+                ["sudo", "ip", "link", "set", can_interface, "up", "type", "can", "bitrate", "1000000"],
                 check=True,
                 timeout=3
             )
-            # Set txqueuelen with a timeout of 3 seconds
-            subprocess.run(
-                ["sudo", "ifconfig", "can0", "txqueuelen", "65536"],
-                check=True,
-                timeout=3
-            )
-            self._log("can0 Successfully started.", self.log.LogSeverity.INFO)
 
-            # Catch common errors
-        except subprocess.TimeoutExpired as e:
-            # Command couldn't be run
-            self._log("Timeout: Couldn't start can0. Try rerunning the program with sudo.", self.log.LogSeverity.CRITICAL)
+            # Set the transmit queue length for the CAN interface
+            subprocess.run(
+                ["sudo", "ifconfig", can_interface, "txqueuelen", "65536"],
+                check=True,
+                timeout=3
+            )
+
+            # Log success and return True
+            log_func(f"{can_interface} successfully started.", DataLogger.LogSeverity.INFO)
+            return True
+
+        except subprocess.TimeoutExpired:
+            # Handle timeout errors and log a critical message
+            log_func(f"Timeout: Couldn't start {can_interface}. Try rerunning the program with sudo.", DataLogger.LogSeverity.CRITICAL)
             raise TimeoutError
+
         except subprocess.CalledProcessError as e:
-            # Tbh idk
-            self._log(f"Error: Couldn't start can0. The command '{e.cmd}' failed with exit code {e.returncode}.", self.log.LogSeverity.CRITICAL)
+            # Handle shell command errors and log details about the failure
+            log_func(f"Error: Couldn't start {can_interface}. The command '{e.cmd}' failed with exit code {e.returncode}.", DataLogger.LogSeverity.CRITICAL)
+
         except Exception as e:
-            # I hope this one doesn't happen
-            self._log(f"Couldn't start can0. Unexpected Error: {e}", self.log.LogSeverity.CRITICAL)
+            # Catch and log unexpected errors during initialization
+            log_func(f"Couldn't start {can_interface}. Unexpected error: {e}", DataLogger.LogSeverity.CRITICAL)
+        
+        # Return False if the interface could not be started
+        return False
 
-
-        # subprocess.run(["sudo", "ip", "link", "set", "can0", "up", "type", "can", "bitrate", "1000000"])
-        # subprocess.run(["sudo", "ifconfig", "can0", "txqueuelen", "65536"])

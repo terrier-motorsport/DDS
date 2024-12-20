@@ -1,7 +1,7 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from .resources.interface import Interface, CANInterface
+from .resources.interface import Interface, CANInterface, InterfaceProtocol
 from .resources.data_logger import DataLogger
 from .resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from .resources.ads_1015 import ADS_1015
@@ -39,13 +39,12 @@ class DDS_IO:
     
 
     # ===== Methods =====
-
     def __init__(self):
         self.log = DataLogger('DDS_Log')
 
         self.__log('Starting Dash Display System Backend...')
 
-        self.__log('Initializing IO Devices')
+
         self.__initialize_devices()
         
 
@@ -54,8 +53,18 @@ class DDS_IO:
 
         # Update all enabled devices
         for device_name,device_object in self.devices.items():
-            if device_object.status is not Interface.Status.DISABLED:
+
+            status = device_object.status
+
+            if status is Interface.Status.ACTIVE:
                 device_object.update()
+            
+            elif status is Interface.Status.ERROR:
+                device_object.initialize()
+
+            elif device_object.status is Interface.Status.DISABLED:
+                return
+                
 
 
     def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
@@ -103,6 +112,9 @@ class DDS_IO:
 
         '''Initializes all sensors & interfaces for the DDS'''
 
+        self.__log('Initializing IO Devices')
+
+        # Create empty devices list
         self.devices = {}
 
 
@@ -186,33 +198,46 @@ class DDS_IO:
     
 
     def __initialize_CAN(self):
-            
-        '''Initializes the CANBus Interface'''
+        """
+        Initializes the CANBus interface and sets up connected devices.
+        """
 
-        self.__log(f'Starting CAN bus on {self.CAN_BUS}')
+        self.__log(f"Starting CAN bus on {self.CAN_BUS}")
 
+        # Step 1: Attempt to initialize the CAN bus
         try:
-            self.can_bus = can.interface.Bus(self.CAN_BUS, interface='socketcan')
+            self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
         except OSError as e:
-            # If we cannot start the CAN Bus on initialization, we can not intialize any devices.
-            # As a result, we log the error and disable the CAN Interface
-            self.__failed_to_init_protocol('CAN', e)
-            return
+            # Step 2: If initialization fails, attempt to set up the CAN network
+            if CANInterface.init_can_network():
+                try:
+                    # Retry CAN bus initialization after setting up the network
+                    self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
+                except OSError as retry_error:
+                    # Log failure and disable the CAN interface if retry also fails
+                    self.__failed_to_init_protocol("CAN", retry_error)
+                    return
+            else:
+                # Log failure and disable the CAN interface if network setup fails
+                self.__failed_to_init_protocol("CAN", e)
+                return
 
-        
-        # Create canInterface
-        canDevice = CANInterface('MC & AMS', 
-                                can_bus=self.can_bus, 
-                                database_path='Backend/candatabase/CANDatabaseDTI500v2.dbc', 
-                                logger=self.log)
-        canDevice.add_database('Backend/candatabase/Orion_CANBUSv4.dbc') # Add the DBC file for the AMS to the CAN interface
+        # Step 3: Set up the CAN interface with the database
+        canDevice = CANInterface(
+            name="MC & AMS", 
+            can_bus=self.can_bus, 
+            database_path="Backend/candatabase/CANDatabaseDTI500v2.dbc", 
+            logger=self.log
+        )
+        # Add the AMS-specific DBC file to the CAN interface
+        canDevice.add_database("Backend/candatabase/Orion_CANBUSv4.dbc")
 
-        # Initialize CAN
+        # Step 4: Initialize the CAN device safely
         self.__safe_initialize_device(canDevice)
 
-        # Log completion
-        self.__log('Finished initializing all CAN devices!')
-    
+        # Step 5: Log completion of CAN initialization
+        self.__log("Finished initializing all CAN devices!")
+
     
     def __safe_initialize_device(self, device: Interface) -> bool:
         """
@@ -258,7 +283,7 @@ class DDS_IO:
         self.devices[device.name].status = Interface.Status.ERROR
 
 
-    def __failed_to_init_protocol(self, protocol_name: str, exception: Exception):
+    def __failed_to_init_protocol(self, protocol: InterfaceProtocol, exception: Exception):
         '''
         This logs an error when a protocol (ex. i2c) is unable to be intialized.
         This is usually caused by hardware being configured incorrectly, or running the program on an OS which doesn't support the protocol.
@@ -266,12 +291,12 @@ class DDS_IO:
         '''
 
         # Log the error
-        self.__log(f'Was unable to intialize {protocol_name}: {exception}. Interfaces on this protocol will be disabled.', DataLogger.LogSeverity.CRITICAL)
+        self.__log(f'Was unable to intialize {protocol.name}: {exception}. Interfaces on this protocol will be disabled.', DataLogger.LogSeverity.CRITICAL)
 
         # Disable protocol
-        if protocol_name == 'i2c':
+        if protocol is InterfaceProtocol.I2C:
             self.I2C_ENABLED = False
-        elif protocol_name == 'CAN':
+        elif protocol is InterfaceProtocol.CAN:
             self.CAN_ENABLED = False
 
     
