@@ -269,6 +269,18 @@ class CANInterface(Interface):
         communication with physical devices. If there is an error with the physical
         devices, this method may raise an error.
         """
+
+        # Check if messages can be read successfully
+        try:
+            self.__fetch_can_message()
+        except can.CanOperationError as e:
+            # Try to init the CAN Network if it failed
+            self.init_can_network(self._log, self.can_bus)
+
+            # Try to fetch a message again. If it still throws an error, 
+            # the calling method will catch it.
+            self.__fetch_can_message()
+            
         
         # Finish initializaiton 
         super().initialize()
