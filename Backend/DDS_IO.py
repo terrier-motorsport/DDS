@@ -209,7 +209,7 @@ class DDS_IO:
             self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
         except OSError as e:
             # Step 2: If initialization fails, attempt to set up the CAN network
-            if CANInterface.init_can_network():
+            if CANInterface.init_can_network(log_func=self.__log, can_interface=self.CAN_BUS):
                 try:
                     # Retry CAN bus initialization after setting up the network
                     self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
