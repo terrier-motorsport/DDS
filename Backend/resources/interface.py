@@ -341,12 +341,10 @@ class CANInterface(Interface):
 
     def __fetch_can_message(self) -> can.Message:
         """
-        Fetches a single CAN message from the CAN Bus and attempts to parse it.
+        Fetches a single CAN message from the CAN Bus.
 
         This method reads a single CAN message frame from the CAN Bus. If the message is not
-        received within the specified timeout, the function will return `None`. In case of a 
-        `CanOperationError` (typically due to the CAN Bus network not being open), the method 
-        attempts to restart the CAN Bus interface and retries receiving the message.
+        received within the specified timeout, the function will return `None`. 
 
         Returns:
             can.Message: A CAN message object containing the received message data, or `None` 
@@ -362,17 +360,10 @@ class CANInterface(Interface):
             - If the CAN Bus interface is not operational, the function attempts to start it again.
 
         """
-        try:
-            # Read a single frame of CAN data
-            # If this throws an error, it's most likely because the CAN Bus Network on the OS isn't open.
-            # It will try to open the network and run the command again.
-            msg = self.can_bus.recv(self.CAN_TIMEOUT)
-        except can.exceptions.CanOperationError:
-            self.init_can_network()  # Try to restart the CAN bus
-            msg = self.can_bus.recv(self.CAN_TIMEOUT)
 
-        # Return the received message (or None if no message was received)
-        return msg
+        # Read a single frame of CAN data
+        return self.can_bus.recv(self.CAN_TIMEOUT)
+
 
         
     

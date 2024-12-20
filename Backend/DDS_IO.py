@@ -57,10 +57,16 @@ class DDS_IO:
             status = device_object.status
 
             if status is Interface.Status.ACTIVE:
-                device_object.update()
+                try:
+                    device_object.update()
+                except Exception as e:
+                    device_object.status = Interface.Status.ERROR
             
             elif status is Interface.Status.ERROR:
-                device_object.initialize()
+                try:
+                    device_object.initialize()
+                except Exception as e:
+                    return
 
             elif device_object.status is Interface.Status.DISABLED:
                 return
