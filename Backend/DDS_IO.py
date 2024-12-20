@@ -233,9 +233,6 @@ class DDS_IO:
         # Step 4: Initialize the CAN device safely
         self.__safe_initialize_device(canDevice)
 
-        # Step 4.5: Check if the device was successfully initialized by getting a message.
-        canDevice.update()
-
         # Step 5: Log completion of CAN initialization
         self.__log("Finished initializing all CAN devices!")
 
@@ -258,7 +255,11 @@ class DDS_IO:
 
         try:
             # Attempt to initalize the device
-            device.initialize()           
+            device.initialize()
+
+            # Check if the device can read data
+            device.update()
+            
         except Exception as e:
             self.__failed_to_init_device(device=device, exception=e)
             return False
