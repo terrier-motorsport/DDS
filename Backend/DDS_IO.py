@@ -60,6 +60,7 @@ class DDS_IO:
                 try:
                     device_object.update()
                 except Exception as e:
+                    self.__log(f'Failed to update {device_name}. {e}')
                     device_object.status = Interface.Status.ERROR
             
             elif status is Interface.Status.ERROR:
