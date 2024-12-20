@@ -3,7 +3,7 @@
 
 from enum import Enum
 from .data_logger import DataLogger
-from typing import Union
+from typing import Union, Callable
 
 import can
 import cantools
@@ -401,8 +401,10 @@ class CANInterface(Interface):
             return None
 
 
+
+
     @staticmethod
-    def init_can_network(log_func: function, can_interface: str) -> bool:
+    def init_can_network(log_func: Callable[[str, DataLogger.LogSeverity], None], can_interface: str) -> bool:
         """
         Brings up and configures a CAN network interface at the OS level.
 
@@ -411,7 +413,8 @@ class CANInterface(Interface):
         success, warnings, and errors. Returns a boolean indicating the success of the operation.
 
         Args:
-            log_func (function): A logging function for logging messages with severity levels.
+            log_func (Callable[[str, str], None]): A logging function that accepts a message 
+                string and a severity level string as arguments.
             can_interface (str): The name of the CAN interface to initialize (e.g., "can0").
 
         Returns:
@@ -446,12 +449,4 @@ class CANInterface(Interface):
 
         except subprocess.CalledProcessError as e:
             # Handle shell command errors and log details about the failure
-            log_func(f"Error: Couldn't start {can_interface}. The command '{e.cmd}' failed with exit code {e.returncode}.", DataLogger.LogSeverity.CRITICAL)
-
-        except Exception as e:
-            # Catch and log unexpected errors during initialization
-            log_func(f"Couldn't start {can_interface}. Unexpected error: {e}", DataLogger.LogSeverity.CRITICAL)
-        
-        # Return False if the interface could not be started
-        return False
-
+            log_func(f"Error: Couldn't start {can_interface}. The command '{e.cmd}' failed", DataLogger.LogSeverity.INFO)
