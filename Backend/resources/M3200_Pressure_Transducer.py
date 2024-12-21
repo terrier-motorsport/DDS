@@ -4,8 +4,8 @@
         # With the 2024-2025 season, we have no i2c M3200.
         # (This page was a mistake, but probably still works)
 
-from interface import I2CDevice, InterfaceProtocol, Interface
-from data_logger import DataLogger
+from Backend.resources.interface import I2CDevice, InterfaceProtocol, Interface
+from Backend.resources.data_logger import DataLogger
 import smbus # type: ignore
 import time
 

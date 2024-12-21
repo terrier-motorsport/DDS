@@ -1,10 +1,10 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from .resources.interface import Interface, CANInterface, InterfaceProtocol
-from .resources.data_logger import DataLogger
-from .resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
-from .resources.ads_1015 import ADS_1015
+from Backend.resources.interface import Interface, CANInterface, InterfaceProtocol
+from Backend.resources.data_logger import DataLogger
+from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
+from Backend.resources.ads_1015 import ADS_1015
 from typing import Optional, Type, Union, List, Dict
 import smbus2
 import can
@@ -299,6 +299,7 @@ class DDS_IO:
             self.I2C_ENABLED = False
         elif protocol is InterfaceProtocol.CAN:
             self.CAN_ENABLED = False
+            self.__log('Make sure you are running the DDS w/ sudo to init CAN Correctly.')
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
