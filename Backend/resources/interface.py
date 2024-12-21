@@ -281,7 +281,11 @@ class CANInterface(Interface):
         # Get the interface name
         interface_name = channel_info[start:end]
 
-        self.__init_can_network(interface_name)
+
+        try:
+            self.__fetch_can_message()
+        except can.CanOperationError as e:
+            self.__init_can_network(interface_name)
             
         
         # Finish initializaiton 
