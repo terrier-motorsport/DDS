@@ -46,6 +46,8 @@ class DDS_IO:
 
 
         self.__initialize_devices()
+
+        time.sleep(3)
         
 
     def update(self):
