@@ -281,7 +281,6 @@ class CANInterface(Interface):
         # Get the interface name
         interface_name = channel_info[start:end]
 
-
         self.__init_can_network(interface_name)
             
         
@@ -426,30 +425,30 @@ class CANInterface(Interface):
         # Log a warning to indicate the initialization attempt
         self._log(f"CAN Bus not found... Attempting to open one on {can_interface}.", DataLogger.LogSeverity.WARNING)
 
-        try:
-            # Bring up the CAN interface with the specified bitrate
-            subprocess.run(
-                ["sudo", "ip", "link", "set", can_interface, "up", "type", "can", "bitrate", "1000000"],
-                check=True,
-                timeout=3
-            )
+        # try:
+        # Bring up the CAN interface with the specified bitrate
+        subprocess.run(
+            ["sudo", "ip", "link", "set", can_interface, "up", "type", "can", "bitrate", "1000000"],
+            check=True,
+            timeout=3
+        )
 
-            # Set the transmit queue length for the CAN interface
-            subprocess.run(
-                ["sudo", "ifconfig", can_interface, "txqueuelen", "65536"],
-                check=True,
-                timeout=3
-            )
+        # Set the transmit queue length for the CAN interface
+        subprocess.run(
+            ["sudo", "ifconfig", can_interface, "txqueuelen", "65536"],
+            check=True,
+            timeout=3
+        )
 
-            # Log success and return True
-            self._log(f"{can_interface} successfully started.", DataLogger.LogSeverity.INFO)
-            return True
+            # # Log success and return True
+            # self._log(f"{can_interface} successfully started.", DataLogger.LogSeverity.INFO)
+            # return True
 
-        except subprocess.TimeoutExpired:
-            # Handle timeout errors and log a critical message
-            self._log(f"Timeout: Couldn't start {can_interface}. Try rerunning the program with sudo.", DataLogger.LogSeverity.CRITICAL)
-            raise TimeoutError
+        # except subprocess.TimeoutExpired:
+        #     # Handle timeout errors and log a critical message
+        #     self._log(f"Timeout: Couldn't start {can_interface}. Try rerunning the program with sudo.", DataLogger.LogSeverity.CRITICAL)
+        #     raise TimeoutError
 
-        except subprocess.CalledProcessError as e:
-            # Handle shell command errors and log details about the failure
-            self._log(f"Error: Couldn't start {can_interface}. The command '{e.cmd}' failed", DataLogger.LogSeverity.INFO)
+        # except subprocess.CalledProcessError as e:
+        #     # Handle shell command errors and log details about the failure
+        #     self._log(f"Error: Couldn't start {can_interface}. The command '{e.cmd}' failed", DataLogger.LogSeverity.INFO)
