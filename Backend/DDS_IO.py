@@ -264,9 +264,6 @@ class DDS_IO:
             self.__failed_to_init_device(device=device, exception=e)
             return False
         
-        # If we get here, the device was sucessfully initialized
-        # We can add it to the devices array
-        self.devices[device.name] = device
 
         return True      
 
