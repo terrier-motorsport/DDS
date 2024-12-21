@@ -270,6 +270,7 @@ class CANInterface(Interface):
         devices, this method may raise an error.
         """
 
+        print(self.can_bus.channel_info)
         self.__init_can_network(self.can_bus.channel_info)
             
         
