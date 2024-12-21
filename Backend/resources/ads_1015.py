@@ -1,8 +1,8 @@
 # ADS 1015 class for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from Backend.resources.interface import I2CDevice
-from Backend.resources.data_logger import DataLogger
+from Backend.interface import I2CDevice
+from Backend.data_logger import DataLogger
 from Backend.resources.analog_in import Analog_In
 from typing import List
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.

@@ -2,7 +2,7 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 from enum import Enum
-from Backend.resources.data_logger import DataLogger
+from Backend.data_logger import DataLogger
 from typing import Union
 
 import can

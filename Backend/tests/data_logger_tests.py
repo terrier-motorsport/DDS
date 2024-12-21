@@ -6,7 +6,7 @@
 import random
 import time
 
-from resources.data_logger import DataLogger
+from Backend.data_logger import DataLogger
 
 f = DataLogger("DDS_Logs")
 
