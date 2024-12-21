@@ -271,7 +271,18 @@ class CANInterface(Interface):
         """
 
         print(self.can_bus.channel_info)
-        self.__init_can_network(self.can_bus.channel_info)
+
+        # Extract 'can0' using string methods
+        # The channel info typically looks like "socketcan channel 'can0'""
+        channel_info = self.can_bus.channel_info
+        start = channel_info.find("'") + 1
+        end = channel_info.find("'", start)
+
+        # Get the interface name
+        interface_name = channel_info[start:end]
+
+
+        self.__init_can_network(interface_name)
             
         
         # Finish initializaiton 
