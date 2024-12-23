@@ -3,9 +3,10 @@
 
 from Backend.interface import Interface, CANInterface, InterfaceProtocol
 from Backend.data_logger import DataLogger
+from Backend.value_monitor import ParameterMonitor
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
-from typing import Union, Dict
+from typing import Union, Dict, List
 import smbus2
 import can
 
@@ -36,14 +37,15 @@ class DDS_IO:
 
     # ===== Class Variables =====
     log : DataLogger
+    parameter_monitor: ParameterMonitor
     
 
     # ===== Methods =====
     def __init__(self):
         self.log = DataLogger('DDS_Log')
+        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
 
         self.__log('Starting Dash Display System Backend...')
-
 
         self.__initialize_devices()
 
@@ -61,6 +63,7 @@ class DDS_IO:
             if status is Interface.Status.ACTIVE:
                 try:
                     device_object.update()
+                    self.__monitor_device_parameters(device_object)
                 except Exception as e:
                     self.__log(f'Failed to update {device_name}. {e}')
                     device_object.status = Interface.Status.ERROR
@@ -73,7 +76,6 @@ class DDS_IO:
 
             elif device_object.status is Interface.Status.DISABLED:
                 return
-                
 
 
     def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
@@ -108,6 +110,10 @@ class DDS_IO:
         
         # Return the data
         return data
+    
+
+    def get_warnings(self) -> List[str]:
+        return self.parameter_monitor.get_warnings()
 
 
     def __get_device(self, deviceKey : str) -> Interface:
@@ -164,7 +170,7 @@ class DDS_IO:
         try:
             self.i2c_bus = smbus2.SMBus(bus=self.I2C_BUS)
         except Exception as e:
-            self.__failed_to_init_protocol('i2c', e)
+            self.__failed_to_init_protocol(InterfaceProtocol.I2C, e)
             return
 
 
@@ -219,7 +225,7 @@ class DDS_IO:
             self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
         except OSError as e:
             # Log failure and disable the CAN interface if network setup fails
-            self.__failed_to_init_protocol("CAN", e)
+            self.__failed_to_init_protocol(InterfaceProtocol.CAN, e)
             return
 
         # Step 3: Set up the CAN interface with the database
@@ -302,6 +308,22 @@ class DDS_IO:
             self.__log('Make sure you are running the DDS w/ sudo to init CAN Correctly.')
 
     
+    def __monitor_device_parameters(self, device: Interface):
+        """
+        Monitors the parameters of a given device and checks if their values are within the defined limits.
+
+        Args:
+            device (Interface): The device whose parameters are to be monitored.
+
+        This function retrieves all parameter names from the device's cached values and checks each parameter's value
+        against the defined limits using the ParameterMonitor. If a parameter value is out of range, a warning is raised.
+        """
+        param_names = device.get_all_param_names()
+
+        for param_name in param_names:
+            self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))
+
+    
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         self.log.writeLog(
             logger_name='DDS_IO',
@@ -350,6 +372,9 @@ if __name__ == '__main__':
 
             coldtemp = io.get_device_data('coolingLoopSensors', 'coldTemperature')
             print(f"cold temp: {coldtemp}")
+
+            for warning in io.get_warnings():
+                print(f'{warning}')
 
             # Calculate and print the average delta time
             if delta_times:

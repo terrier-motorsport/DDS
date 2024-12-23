@@ -1,0 +1,6 @@
+{
+    "hotPressure": {"min": 0.8, "max": 2.5},
+    "hotTemperature": {"min": 30, "max": 110},
+    "coldPressure": {"min": 0.8, "max": 2.5},
+    "coldTemperature": {"min": -20, "max": 60}
+}

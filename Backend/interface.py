@@ -3,7 +3,7 @@
 
 from enum import Enum
 from Backend.data_logger import DataLogger
-from typing import Union
+from typing import Union, List
 
 import can
 import cantools
@@ -213,6 +213,16 @@ class Interface:
             self._log(f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
             return None
 
+
+    def get_all_param_names(self) -> List[str]:
+        """
+        Returns all parameter names (keys) from the cached values dictionary.
+
+        Returns:
+            List[str]: A list of all parameter names in the cached values dictionary.
+        """
+        return list(self.cached_values.keys())
+        
 
     # ===== CACHING METHODS =====
     def _update_cache_timeout(self):
