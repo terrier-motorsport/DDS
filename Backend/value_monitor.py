@@ -48,7 +48,7 @@ class ParameterWarning:
         self.priority = priority
 
     def __str__(self) -> str:
-        return f'{self.param_name} ({self.param_value}) is out of range: [{self.min}, {self.max}]'
+        return f'{self.param_name} ({round(self.param_value, 2)}) is out of range: [{self.min}, {self.max}]'
 
 
 class ParameterMonitor:
@@ -231,4 +231,3 @@ if __name__ == '__main__':
         print("Test 7 Passed")
     except AssertionError:
         print("Test 7 Failed")
-
