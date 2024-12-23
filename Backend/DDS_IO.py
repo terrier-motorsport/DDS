@@ -113,7 +113,7 @@ class DDS_IO:
     
 
     def get_warnings(self) -> List[str]:
-        return self.parameter_monitor.active_warnings.__str__()
+        return str(self.parameter_monitor.active_warnings)
 
 
     def __get_device(self, deviceKey : str) -> Interface:
