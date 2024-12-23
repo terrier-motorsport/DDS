@@ -113,6 +113,10 @@ class DDS_IO:
     
 
     def get_warnings(self) -> List[str]:
+        warning_strings = []
+        for warning in self.parameter_monitor.active_warnings:
+            warning_strings.append(str(warning))
+
         return str(self.parameter_monitor.active_warnings)
 
 
