@@ -69,19 +69,34 @@ class InternalADXL343(InternalDevice):
         pass
 
     def get_acceleration(self) -> List[float]:
+        '''
+        Reads the acceleration data from the sensor and returns it as a list of floats.
+        Takes into account the g_range of the sensor.
+        '''
+        # Read the current g range
+        g_range = self.get_range()
 
-        measList = self.bus.read_i2c_block_data(self.DEVICE_ADDR, self.DATA_X0, 6)
-        #print(measList)
-        
-        xAccel = (self.unsigned_byte_to_signed_byte(measList[1]) << 8) + measList[0]
-        yAccel = (self.unsigned_byte_to_signed_byte(measList[3]) << 8) + measList[2]
-        zAccel = (self.unsigned_byte_to_signed_byte(measList[5]) << 8) + measList[4]
-        
+        # Read 6 bytes of data from the accelerometer
+        meas_list = self.bus.read_i2c_block_data(self.DEVICE_ADDR, self.DATA_X0, 6)
 
-        # 4 mG/bit, we need 250 bit to have 1 G
-        print('Accelerometer : X=%.4f G, Y=%.4f G, Z=%.4f G\n' % (xAccel / 250, yAccel / 250, zAccel / 250))
+        # Convert the data to signed 16-bit values
+        x_raw = (self.unsigned_byte_to_signed_byte(meas_list[1]) << 8) + meas_list[0]
+        y_raw = (self.unsigned_byte_to_signed_byte(meas_list[3]) << 8) + meas_list[2]
+        z_raw = (self.unsigned_byte_to_signed_byte(meas_list[5]) << 8) + meas_list[4]
+
+        # Calculate the scale factor based on the g range
+        scale_factor = g_range / 256.0
+
+        # Convert the raw acceleration data to g values
+        x_accel = x_raw * scale_factor
+        y_accel = y_raw * scale_factor
+        z_accel = z_raw * scale_factor
+
+        print('Accelerometer : X=%.4f G, Y=%.4f G, Z=%.4f G\n' % (x_accel, y_accel, z_accel))
         
         time.sleep(0.05)
+
+        return [x_accel, y_accel, z_accel]
 
 
     def get_range(self) -> int:
