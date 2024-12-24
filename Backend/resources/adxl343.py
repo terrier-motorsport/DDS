@@ -17,6 +17,8 @@ class InternalADXL323(InternalDevice):
     This class handles the low level i2c communication, and seperates it from the higher level
     functionality of the ADXL343 class. 
 
+    Datasheet: https://www.analog.com/media/en/technical-documentation/data-sheets/adxl343.pdf
+
     Some Code by Mohamed Amine Mzoughi (https://github.com/embeddedmz/ADXL343/blob/master/adxl343.py)
     Modified by Jackson Justus (jackjust@bu.edu)
     '''
