@@ -12,7 +12,7 @@ import smbus2
 import threading
 import queue
 
-class InternalADXL323(InternalDevice):
+class InternalADXL343(InternalDevice):
     '''
     This class handles the low level i2c communication, and seperates it from the higher level
     functionality of the ADXL343 class. 
@@ -25,10 +25,17 @@ class InternalADXL323(InternalDevice):
 
     # ===== CONSTANTS FOR DATA DECODING =====
 
-    DEVICE_ADDR_7_BITS = 0x1D
-    BW_RATE = 0x2C
-    POWER_CTL = 0x2D
-    DATA_FORMAT = 0x31
+    # Device Address
+    DEVICE_ADDR: int            # i2c Address of the device (7 bits)
+    VALID_ADDRESSES = [0x1D, 0x53]
+
+    # I2C Registers
+    TAP_DUR = 0x21              # TAP_DUR is an 8-bit register holding the max time an event must exceed THRESH_TAP to qualify as a tap. Scale: 625 µs/LSB. A value of 0 disables tap functions.
+    BW_RATE = 0x2C              # A setting of 0 in the LOW_POWER bit selects normal operation, and a setting of 1 selects reduced power operation, which has somewhat higher noise (see the Power Modes section for details).
+    POWER_CTL = 0x2D            # Bits from [D7 -> D0]: 0 0 Link AUTO_SLEEP Measure Sleep Wakeup
+    DATA_FORMAT = 0x31          # Bits from [D7 -> D0]: SELF_TEST SPI INT_INVERT 0 FULL_RES Justify (Range)x2
+    G_RANGES = {2: 0x00, 4: 0x01, 8: 0x02, 16: 0x03}
+
     DATA_X0 = 0x32
     DATA_X1 = 0x33
     DATA_Y0 = 0x34
@@ -39,25 +46,31 @@ class InternalADXL323(InternalDevice):
 
     def __init__(self, i2c_bus: smbus2.SMBus, i2c_addr: int):
         self.bus = i2c_bus
-        self.addr = i2c_addr
 
-        self.range = self.bus.read_byte_data(self.DEVICE_ADDR_7_BITS, self.DATA_FORMAT)
-        print('Range code (must be 0 otherwise modify this script to update it) : %d\n' % (self.range & 0x03))
+        # Set address if it is valid.
+        if i2c_addr not in self.VALID_ADDRESSES:
+            raise ValueError(f'I2C Address [{i2c_addr}] is not valid for the ADXL343')
+        self.DEVICE_ADDR = i2c_addr
+
+        # Read the range of the device
+        range_code = self.get_range()
+        
+        print('Range code (must be 0 otherwise modify this script to update it) : %d\n' % (range_code))
         time.sleep(0.05)
 
-        self.rate = self.bus.read_byte_data(self.DEVICE_ADDR_7_BITS, self.BW_RATE)
-        print('Rate code (must be 10 otherwise modify this script to update it) : %d\n' % (self.rate & 0x0F))
+        rate = self.bus.read_byte_data(self.DEVICE_ADDR, self.BW_RATE)
+        print('Rate code (must be 10 otherwise modify this script to update it) : %d\n' % (rate & 0x0F))
         time.sleep(0.05)
 
         # Exit standby mode
         # It is recommended to configure the device in standby mode and then to enable measurement mode.
-        self.bus.write_byte_data(self.DEVICE_ADDR_7_BITS, self.POWER_CTL, 0x08)
+        self.bus.write_byte_data(self.DEVICE_ADDR, self.POWER_CTL, 0x08)
         time.sleep(0.05)
         pass
 
     def get_acceleration(self) -> List[float]:
 
-        measList = self.bus.read_i2c_block_data(self.DEVICE_ADDR_7_BITS, self.DATA_X0, 6)
+        measList = self.bus.read_i2c_block_data(self.DEVICE_ADDR, self.DATA_X0, 6)
         #print(measList)
         
         xAccel = (self.unsigned_byte_to_signed_byte(measList[1]) << 8) + measList[0]
@@ -69,6 +82,51 @@ class InternalADXL323(InternalDevice):
         print('Accelerometer : X=%.4f G, Y=%.4f G, Z=%.4f G\n' % (xAccel / 250, yAccel / 250, zAccel / 250))
         
         time.sleep(0.05)
+
+
+    def get_range(self) -> int:
+        '''
+        Returns the `g` range of the accelerometer from the DATA_FORMAT register.
+
+        These bits determine the `g` range. See table below.
+
+        D1 D0 g Range
+        0  0  ±2 g
+        0  1  ±4 g
+        1  0  ±8 g
+        1  1  ±16 g
+        '''
+        data_format_register = self.bus.read_byte_data(self.DEVICE_ADDR, self.DATA_FORMAT)
+        range_bits = data_format_register & 0x03 # Hex mask for last two bits
+        for g_range, bits in self.G_RANGES.items():
+            if bits == range_bits:
+                return g_range
+        raise ValueError('Invalid range bits in DATA_FORMAT register')
+    
+
+    def set_g_range(self, range: int):
+        '''
+        Sets the `g` range of the accelerometer.
+
+        Possible ranges: [±2g, ±4g, ±8g, ±16g]
+        '''
+
+        # Validate the range given
+        if range not in self.G_RANGES:
+            raise ValueError(f'{range} is not a valid range for {self.__class__}')
+        
+        # Read the current DATA_FORMAT register value
+        data_format_register = self.bus.read_byte_data(self.DEVICE_ADDR, self.DATA_FORMAT)
+        
+        # Clear the D1 and D0 bits (Range bits)
+        data_format_register &= ~0x03
+        
+        # Set the new range
+        data_format_register |= self.G_RANGES[range]
+        
+        # Write the new DATA_FORMAT register value
+        self.bus.write_byte_data(self.DEVICE_ADDR, self.DATA_FORMAT, data_format_register)
+        
 
 
 class ADXL343(I2CDevice):
@@ -103,13 +161,12 @@ class ADXL343(I2CDevice):
     def initialize(self):
 
         # Make ADXL343 object
-        self.adxl343 = InternalADXL323(self.bus, self.addr)
+        self.adxl343 = InternalADXL343(self.bus, self.addr)
 
         # Configure ADXL343
+        self.adxl343.set_g_range(8)
 
-        # WARNING - this must be higher than the max voltage measured in the system. 
-        # It is differential, meaning the ADS can measure ±6.144v
-        # self.ads.set_programmable_gain(6.144) 
+
         # self.ads.set_sample_rate(3300)
 
         # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
