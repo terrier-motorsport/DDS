@@ -34,7 +34,13 @@ class InternalADXL343(InternalDevice):
     BW_RATE = 0x2C              # A setting of 0 in the LOW_POWER bit selects normal operation, and a setting of 1 selects reduced power operation, which has somewhat higher noise (see the Power Modes section for details).
     POWER_CTL = 0x2D            # Bits from [D7 -> D0]: 0 0 Link AUTO_SLEEP Measure Sleep Wakeup
     DATA_FORMAT = 0x31          # Bits from [D7 -> D0]: SELF_TEST SPI INT_INVERT 0 FULL_RES Justify (Range)x2
-    G_RANGES = {2: 0x00, 4: 0x01, 8: 0x02, 16: 0x03}
+    G_RANGE_SETTINGS = {
+    2: {"bit_depth": 10, "sensitivity": 256, "configuration": 0x00},  # ±2g range
+    4: {"bit_depth": 11, "sensitivity": 128, "configuration": 0x01},  # ±4g range
+    8: {"bit_depth": 12, "sensitivity": 64, "configuration": 0x02},   # ±8g range
+    16: {"bit_depth": 13, "sensitivity": 32, "configuration": 0x03}   # ±16g range
+}
+    CURRENT_RANGE: int
 
     DATA_X0 = 0x32
     DATA_X1 = 0x33
@@ -72,31 +78,62 @@ class InternalADXL343(InternalDevice):
         '''
         Reads the acceleration data from the sensor and returns it as a list of floats.
         Takes into account the g_range of the sensor.
+
+        Returns:
+            `[x_accel, y_accel, z_accel]`
         '''
-        # Read the current g range
-        g_range = self.get_range()
 
         # Read 6 bytes of data from the accelerometer
         meas_list = self.bus.read_i2c_block_data(self.DEVICE_ADDR, self.DATA_X0, 6)
 
-        # Convert the data to signed 16-bit values
-        x_raw = (self.unsigned_byte_to_signed_byte(meas_list[1]) << 8) + meas_list[0]
-        y_raw = (self.unsigned_byte_to_signed_byte(meas_list[3]) << 8) + meas_list[2]
-        z_raw = (self.unsigned_byte_to_signed_byte(meas_list[5]) << 8) + meas_list[4]
+        # Convert the 6 bytes into 16-bit raw values
+        x_raw = (meas_list[1] << 8) + meas_list[0]
+        y_raw = (meas_list[3] << 8) + meas_list[2]
+        z_raw = (meas_list[5] << 8) + meas_list[4]
 
-        # Calculate the scale factor based on the g range
-        scale_factor = g_range / 256.0
+        # Handle signed conversion based on bit depth
+        # The raw values are unsigned, so they need to be converted to signed values
+        # We use the convert_raw_to_g_with_range function to handle the conversion
+        x_accel = self.__convert_raw_to_g_with_range(x_raw)
+        y_accel = self.__convert_raw_to_g_with_range(y_raw)
+        z_accel = self.__convert_raw_to_g_with_range(z_raw)
 
-        # Convert the raw acceleration data to g values
-        x_accel = x_raw * scale_factor
-        y_accel = y_raw * scale_factor
-        z_accel = z_raw * scale_factor
-
+        # Print the acceleration in g for each axis
         print('Accelerometer : X=%.4f G, Y=%.4f G, Z=%.4f G\n' % (x_accel, y_accel, z_accel))
-        
+
+        # Sleep to avoid flooding the sensor with requests
         time.sleep(0.05)
 
         return [x_accel, y_accel, z_accel]
+
+    
+
+    def __convert_raw_to_g_with_range(self, lsb_value):
+        """
+        Converts raw accelerometer data to acceleration in g based on the g range.
+
+        Parameters:
+            lsb_value (int): The raw digital value from the accelerometer.
+            g_range (int): The current g range (e.g., 2, 4, 8, 16).
+
+        Returns:
+            float: The acceleration in g.
+        """
+        # Check if the g range is valid
+        if self.CURRENT_RANGE not in self.G_RANGE_SETTINGS:
+            raise ValueError(f"Invalid g range: {self.CURRENT_RANGE}. Valid ranges: {list(self.G_RANGE_SETTINGS.keys())}")
+
+        # Get the settings for the specified range
+        bit_depth = self.G_RANGE_SETTINGS[self.CURRENT_RANGE]["bit_depth"]
+        sensitivity = self.G_RANGE_SETTINGS[self.CURRENT_RANGE]["sensitivity"]
+
+        # Convert unsigned value to signed value
+        signed_value = self.unsigned_byte_to_signed_byte(lsb_value, bit_depth)
+
+        # Convert to g
+        g_value = signed_value / sensitivity
+        return g_value
+
 
 
     def get_range(self) -> int:
@@ -113,7 +150,7 @@ class InternalADXL343(InternalDevice):
         '''
         data_format_register = self.bus.read_byte_data(self.DEVICE_ADDR, self.DATA_FORMAT)
         range_bits = data_format_register & 0x03 # Hex mask for last two bits
-        for g_range, bits in self.G_RANGES.items():
+        for g_range, bits in self.G_RANGE_SETTINGS['configuration'].items():
             if bits == range_bits:
                 return g_range
         raise ValueError('Invalid range bits in DATA_FORMAT register')
@@ -127,8 +164,11 @@ class InternalADXL343(InternalDevice):
         '''
 
         # Validate the range given
-        if range not in self.G_RANGES:
+        if range not in self.G_RANGE_SETTINGS['configuration']:
             raise ValueError(f'{range} is not a valid range for {self.__class__}')
+        
+        # Set the range
+        self.CURRENT_RANGE = range
         
         # Read the current DATA_FORMAT register value
         data_format_register = self.bus.read_byte_data(self.DEVICE_ADDR, self.DATA_FORMAT)
@@ -137,7 +177,7 @@ class InternalADXL343(InternalDevice):
         data_format_register &= ~0x03
         
         # Set the new range
-        data_format_register |= self.G_RANGES[range]
+        data_format_register |= self.G_RANGE_SETTINGS['configuration'][self.CURRENT_RANGE]
         
         # Write the new DATA_FORMAT register value
         self.bus.write_byte_data(self.DEVICE_ADDR, self.DATA_FORMAT, data_format_register)
