@@ -68,6 +68,7 @@ class ADS_1015(I2CDevice):
 
         # Start data collection thread
         # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
+        self.status = self.Status.ACTIVE
         self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
