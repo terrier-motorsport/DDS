@@ -271,17 +271,17 @@ class DDS_IO:
         # Add the device to the devices dict:
         self.devices[device.name] = device
 
-        # try:
-        # Attempt to initalize the device
-        device.initialize()
+        try:
+            # Attempt to initalize the device
+            device.initialize()
 
-        # Check if the device can read data
-        device.update()
+            # Check if the device can read data
+            device.update()
 
-        # except Exception as e:
-        #     self.__failed_to_init_device(device=device, exception=e)
-        #     return False
-        # return True      
+        except Exception as e:
+            self.__failed_to_init_device(device=device, exception=e)
+            return False
+        return True      
 
 
     def __failed_to_init_device(self, device: Interface, exception: Exception):
