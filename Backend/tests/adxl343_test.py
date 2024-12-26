@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import smbus2
 import time
 
-from Backend.resources.adxl343 import InternalADXL343  # Adjust import to match your file/module structure
+from Backend.resources.adxl343 import InternalADXL343, DATA_FORMAT, POWER_CTL, BW_RATE  # Adjust import to match your file/module structure
 
 class TestInternalADXL343(unittest.TestCase):
 
@@ -38,9 +38,9 @@ class TestInternalADXL343(unittest.TestCase):
             self.fail(f"Initialization with valid address raised ValueError unexpectedly: {e}")
 
         # Ensure the device actually read the g-range register
-        self.mock_bus.read_byte_data.assert_any_call(self.valid_address, device.DATA_FORMAT)
+        self.mock_bus.read_byte_data.assert_any_call(self.valid_address, DATA_FORMAT)
         # Ensure it wrote to POWER_CTL to exit standby mode
-        self.mock_bus.write_byte_data.assert_any_call(self.valid_address, device.POWER_CTL, 0x08)
+        self.mock_bus.write_byte_data.assert_any_call(self.valid_address, POWER_CTL, 0x08)
         # The device’s current_g_range should be 2 (±2g) by default
         self.assertEqual(device.current_g_range, 2, "Expected default ±2g upon reading 0x00 from DATA_FORMAT.")
 
@@ -72,7 +72,7 @@ class TestInternalADXL343(unittest.TestCase):
         # Suppose we want to set ±4g => bits 01 => 0x01
         # We'll mock read_byte_data so after writing 0x01, read_g_range sees it in the register
         def mock_read_byte_data(addr, register):
-            if register == device.DATA_FORMAT:
+            if register == DATA_FORMAT:
                 return 0x01  # ±4g
             return 0x00
 
@@ -82,7 +82,7 @@ class TestInternalADXL343(unittest.TestCase):
         self.assertEqual(device.current_g_range, 4, "Expected class property to update to ±4g.")
         # Confirm the device re-read the DATA_FORMAT register
         self.assertIn(
-            (device.DEVICE_ADDR, device.DATA_FORMAT),
+            (device.device_addr, DATA_FORMAT),
             [(args[0], args[1]) for args, _ in self.mock_bus.read_byte_data.call_args_list],
             "Expected a re-read of DATA_FORMAT to verify ±4g setting."
         )
@@ -207,7 +207,7 @@ class TestInternalADXL343(unittest.TestCase):
 
         for unsigned_value, bit_depth, expected_signed in test_cases:
             with self.subTest(unsigned_value=unsigned_value, bit_depth=bit_depth):
-                result = device.unsigned_byte_to_signed_byte(unsigned_value, bit_depth)
+                result = device._unsigned_byte_to_signed_byte(unsigned_value, bit_depth)
                 self.assertEqual(
                     result,
                     expected_signed,
@@ -216,6 +216,141 @@ class TestInternalADXL343(unittest.TestCase):
                         f"expected {expected_signed}, got {result}"
                     )
                 )
+
+    
+    def test_write_bit_to_byte_fifth_bit(self):
+        """
+        Tests writing 1 and 0 to the fifth bit in a byte using write_bit_to_byte.
+        """
+
+        device = self.InternalADXL343(self.mock_bus, self.valid_address)
+
+
+        original_byte = 0b00000000  # Start with all bits 0
+        modified_byte = device._write_bit_to_byte(original_byte, 5, 1)
+        self.assertEqual(modified_byte, 0b00100000,
+                         f"Failed to set the 5th bit. Expected 0b00100000, got {modified_byte:08b}")
+
+        # Now clear the 5th bit
+        modified_byte = device._write_bit_to_byte(modified_byte, 5, 0)
+        self.assertEqual(modified_byte, 0b00000000,
+                         f"Failed to clear the 5th bit. Expected 0b00000000, got {modified_byte:08b}")
+
+        # Test setting the 5th bit in a byte that already has other bits set
+        original_byte = 0b11011010
+        modified_byte = device._write_bit_to_byte(original_byte, 5, 1)
+        # This should produce 0b11111010 because bit 5 is now set (1)
+        self.assertEqual(modified_byte, 0b11111010,
+                         f"Failed to set the 5th bit in a mixed byte. Expected 0b11111010, got {modified_byte:08b}")
+
+        # Clearing the 5th bit of that same mixed byte
+        modified_byte = device._write_bit_to_byte(modified_byte, 5, 0)
+        # Now it should go back to 0b11011010
+        self.assertEqual(modified_byte, 0b11011010,
+                         f"Failed to clear the 5th bit in a mixed byte. Expected 0b11011010, got {modified_byte:08b}")
+
+
+    def test_write_bits_to_byte_example(self):
+        """
+        Tests writing multiple consecutive bits in a byte using write_bits_to_byte.
+        """
+        device = self.InternalADXL343(self.mock_bus, self.valid_address)
+
+        # 1) Start with an all-zero byte, set 3 bits (bits 1, 2, 3) to 0b101 (5 decimal).
+        #    That means bits 1..3 in the result should be: 0b101 => positions 1..3 => 0b1010 => 0xA
+        original_byte = 0b00000000
+        modified_byte = device._write_bits_to_byte(original_byte, start_bit=1, bit_count=3, new_value=0b101)
+        self.assertEqual(modified_byte, 0b00001010,
+                        f"Failed to set bits 1..3 to 0b101. Expected 0b00001010, got {modified_byte:08b}")
+
+        # 2) Clear those same 3 bits by writing 0b000 into bits 1..3.
+        modified_byte = device._write_bits_to_byte(modified_byte, start_bit=1, bit_count=3, new_value=0b000)
+        self.assertEqual(modified_byte, 0b00000000,
+                        f"Failed to clear bits 1..3. Expected 0b00000000, got {modified_byte:08b}")
+
+        # 3) Test writing bits in a byte that already has some bits set outside the target region.
+        #    For instance, set bits 4..6 to 0b111, while bit 7 remains set.
+        original_byte = 0b10000000  # bit 7 is set
+        modified_byte = device._write_bits_to_byte(original_byte, start_bit=4, bit_count=3, new_value=0b111)
+        # This sets bits [4..6] to 0b111 => positions 4,5,6 => 0b01110000 (0x70) plus the existing bit 7 => 0xF0
+        self.assertEqual(modified_byte, 0b11110000,
+                        f"Failed to set bits 4..6 to 0b111. Expected 0b11110000, got {modified_byte:08b}")
+
+        # 4) Now clear bits 5..6 in that same byte by writing 0b00 into them, leaving bit 4 = 1 and bit 7 = 1.
+        #    So we should end up with 0b10010000 => 0x90
+        modified_byte = device._write_bits_to_byte(modified_byte, start_bit=5, bit_count=2, new_value=0b00)
+        self.assertEqual(modified_byte, 0b10010000,
+                        f"Failed to clear bits 5..6. Expected 0b10010000, got {modified_byte:08b}")
+        
+
+    def test_write_rate(self):
+        """
+        Tests that write_rate correctly updates the BW_RATE register for a valid rate.
+        """
+        device = self.InternalADXL343(self.mock_bus, self.valid_address)
+
+        # Mock the current register value and the desired rate
+        self.mock_bus.read_byte_data.return_value = 0b00011111  # Example initial value
+
+        # Set a valid rate (e.g., 100 Hz)
+        valid_rate = 100  # Corresponds to 0b1010 in DATA_RATE_SETTINGS
+        device.write_sample_rate(valid_rate)
+
+        # Confirm the register was updated
+        self.mock_bus.write_byte_data.assert_called_with(
+            device.device_addr,
+            BW_RATE,
+            0b00011010  # Updated value: original upper bits unchanged, lower bits set to 0b1010
+        )
+
+
+    def test_write_rate_1_56_hz(self):
+        """
+        Tests that write_rate correctly updates the BW_RATE register for a rate of 1.56 Hz.
+        """
+        device = self.InternalADXL343(self.mock_bus, self.valid_address)
+
+        # Mock the current register value before writing
+        self.mock_bus.read_byte_data.return_value = 0b10110000  # Example current value
+
+        # 1.56 Hz should correspond to 0b0100 in DATA_RATE_SETTINGS
+        DATA_RATE_SETTINGS = {1.56: 0b0100}
+        expected_bits = DATA_RATE_SETTINGS[1.56]
+
+        # Call write_rate to set 1.56 Hz
+        device.write_sample_rate(1.56)
+
+        # Expected value: Keep the upper bits of the original register (0b1011xxxx) unchanged,
+        # and replace the lower 4 bits with 0b0100 (for 1.56 Hz).
+        expected_register_value = (0b10110000 & 0xF0) | expected_bits  # Upper bits unchanged, lower updated
+
+        # Verify the correct value was written to the BW_RATE register
+        self.mock_bus.write_byte_data.assert_called_with(
+            device.device_addr,
+            BW_RATE,
+            expected_register_value
+        )
+
+
+    def test_write_rate_invalid_rate(self):
+        """
+        Tests that write_rate raises a ValueError for an invalid rate.
+        """
+        device = self.InternalADXL343(self.mock_bus, self.valid_address)
+
+        # An invalid rate (not in DATA_RATE_SETTINGS)
+        invalid_rate = 123.45  # Example invalid rate
+
+        # Ensure that calling write_rate with an invalid rate raises a ValueError
+        with self.assertRaises(ValueError) as context:
+            device.write_sample_rate(invalid_rate)
+
+        # Verify the error message is descriptive
+        self.assertIn(
+            f'Rate {invalid_rate} is not valid.',
+            str(context.exception),
+            "Error message should include the invalid rate."
+        )
 
 if __name__ == "__main__":
     unittest.main()
