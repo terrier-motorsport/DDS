@@ -40,4 +40,4 @@ jobs:
       
     - name: Run Unittests
       run: |
-        python -m unittest discover -s ./Backend/tests -p
+        python -m unittest discover -s Backend/tests -p "*_test.py"
