@@ -19,7 +19,6 @@ python-can==4.4.2
 requests==2.32.3
 scipy==1.14.1
 smbus2==0.5.0
-spidev==3.6
 textparser==0.24.0
 typing_extensions==4.12.2
 urllib3==2.2.3
