@@ -18,7 +18,6 @@ EX. The UI calls functions from here which pulls data from sensor objects.
 """
 
 
-
 class DDS_IO:
 
     # ===== Debugging Variables =====
