@@ -6,6 +6,7 @@ from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
+from Backend.resources.adxl343 import ADXL343
 from typing import Union, Dict, List
 import smbus2
 import can
@@ -209,6 +210,15 @@ class DDS_IO:
 
         self.__safe_initialize_device(coolingLoopDevice)
 
+        # ===== Init accelerometer ===== 
+
+        accelerometerDeviceName = 'frontAccelerometer'
+        accelerometerI2CAddr = 0x1D
+
+        accelerometer = ADXL343(accelerometerDeviceName, self.log, self.i2c_bus, accelerometerI2CAddr)
+        self.__safe_initialize_device(accelerometer)
+
+        # ===== FINISHED ===== 
         self.__log('Finished initializing all i2c devices!')
     
 
@@ -271,8 +281,6 @@ class DDS_IO:
         except Exception as e:
             self.__failed_to_init_device(device=device, exception=e)
             return False
-        
-
         return True      
 
 
