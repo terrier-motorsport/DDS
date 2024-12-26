@@ -53,6 +53,7 @@ DATA_Y1 = 0x35
 DATA_Z0 = 0x36
 DATA_Z1 = 0x37
 
+
 class InternalADXL343(InternalDevice):
     '''
     This class handles the low level i2c communication, and seperates it from the higher level
