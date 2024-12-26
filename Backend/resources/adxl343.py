@@ -1,17 +1,15 @@
 # ADXL343 Accelerometer class for Terrier Motorsport's DDS
-    # Code by Jackson Justus (jackjust@bu.edu)
-    # Additional Code by Mohamed Amine Mzoughi (https://github.com/embeddedmz/ADXL343/blob/master/adxl343.py)
+# Code by Jackson Justus (jackjust@bu.edu)
+# Additional Code by Mohamed Amine Mzoughi (https://github.com/embeddedmz/ADXL343/blob/master/adxl343.py)
 
 from Backend.interface import I2CDevice
 from Backend.data_logger import DataLogger
-from Backend.resources.analog_in import Analog_In
 from Backend.resources.internal_device import InternalDevice
 from typing import List
 import time
 import smbus2
 import threading
 import queue
-
 
 
 VALID_ADDRESSES = [0x1D, 0x53]
@@ -23,12 +21,12 @@ POWER_CTL = 0x2D            # Bits from [D7 -> D0]: 0 0 Link AUTO_SLEEP Measure 
 DATA_RATE_SETTINGS = {      # Data rate (Hz) vs. Data Rate Code.
     3200: 0b1111,  # 0xF
     1600: 0b1110,  # 0xE
-    800:  0b1101,  # 0xD
-    400:  0b1100,  # 0xC
-    200:  0b1011,  # 0xB
-    100:  0b1010,  # 0xA
-    50:   0b1001,  # 0x9
-    25:   0b1000,  # 0x8
+    800: 0b1101,   # 0xD
+    400: 0b1100,   # 0xC
+    200: 0b1011,   # 0xB
+    100: 0b1010,   # 0xA
+    50: 0b1001,    # 0x9
+    25: 0b1000,    # 0x8
     12.5: 0b0111,  # 0x7
     6.25: 0b0110,  # 0x6
     3.13: 0b0101,  # 0x5
@@ -40,10 +38,10 @@ DATA_RATE_SETTINGS = {      # Data rate (Hz) vs. Data Rate Code.
 }
 DATA_FORMAT = 0x31          # Bits from [D7 -> D0]: SELF_TEST SPI INT_INVERT 0 FULL_RES Justify (Range)x2
 G_RANGE_SETTINGS = {
-2: {"bit_depth": 10, "sensitivity": 256, "configuration": 0x00},  # ±2g range
-4: {"bit_depth": 11, "sensitivity": 128, "configuration": 0x01},  # ±4g range
-8: {"bit_depth": 12, "sensitivity": 64, "configuration": 0x02},   # ±8g range
-16: {"bit_depth": 13, "sensitivity": 32, "configuration": 0x03}   # ±16g range
+    2: {"bit_depth": 10, "sensitivity": 256, "configuration": 0x00},  # ±2g range
+    4: {"bit_depth": 11, "sensitivity": 128, "configuration": 0x01},  # ±4g range
+    8: {"bit_depth": 12, "sensitivity": 64, "configuration": 0x02},   # ±8g range
+    16: {"bit_depth": 13, "sensitivity": 32, "configuration": 0x03}   # ±16g range
 }
 
 DATA_X0 = 0x32
@@ -57,7 +55,7 @@ DATA_Z1 = 0x37
 class InternalADXL343(InternalDevice):
     '''
     This class handles the low level i2c communication, and seperates it from the higher level
-    functionality of the ADXL343 class. 
+    functionality of the ADXL343 class.
 
     Datasheet: https://www.analog.com/media/en/technical-documentation/data-sheets/adxl343.pdf
 
