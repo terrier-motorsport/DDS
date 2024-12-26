@@ -57,7 +57,7 @@ class ADS_1015(I2CDevice):
         # WARNING - this must be higher than the max voltage measured in the system. 
         # It is differential, meaning the ADS can measure ±6.144v
         self.ads.set_programmable_gain(6.144) 
-        self.ads.set_sample_rate(3300)
+        self.ads.set_sample_rate(250)
 
         # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
         time.sleep(0.5)

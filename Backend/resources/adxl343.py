@@ -390,16 +390,28 @@ class ADXL343(I2CDevice):
     This process significantly reduces the amount of time it takes to run the DDS_IO.update() function.
     """
 
-    # This list represensts the four channels that correspond to the four on the physical ADC pins
-    inputs : List[Analog_In]
-
-
 
     # ===== METHODS =====
 
     def __init__(self, name: str, logger: DataLogger, i2c_bus: smbus2.SMBus, i2c_addr: int):
+        """
+        Initializes the device, setting up I2C communication, logging, and threading infrastructure.
 
-        # Initialize super class (I2CDevice)
+        Parameters:
+            name (str): 
+                The name of the device, used for identification and logging purposes.
+            logger (DataLogger): 
+                An instance of `DataLogger` to log events, errors, and sensor data.
+            i2c_bus (smbus2.SMBus): 
+                The I2C bus object for communication with the sensor.
+            i2c_addr (int): 
+                The I2C address of the sensor.
+
+        Notes:
+            - This initialization supports multithreaded environments by using a `queue.Queue` 
+            for storing and processing sensor data asynchronously.
+        """
+        # Initialize superclass
         super().__init__(name, logger=logger)
 
         # Init I2C bus
@@ -407,11 +419,14 @@ class ADXL343(I2CDevice):
         self.addr = i2c_addr
         self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
 
-        # Init threading things
+        # Init threading resources
         self.data_queue = queue.Queue()  # Queue to hold sensor data
 
 
     def initialize(self):
+        """
+        Initializes the sensor and starts data collection.
+        """
 
         # Make ADXL343 object
         self.adxl343 = InternalADXL343(self.bus, self.addr)
@@ -419,20 +434,14 @@ class ADXL343(I2CDevice):
         # Configure ADXL343
         self.adxl343.write_g_range(8)
         self.adxl343.write_sample_rate(200)
-        self.adxl343
+        self.adxl343.write_low_power_mode(False)
 
-
-        # self.ads.set_sample_rate(3300)
-
-        # Those commands run in real time, so we need to sleep to make sure that the physical i2c commands are recieved
+        # Ensure I2C commands are received
         time.sleep(0.5)
-
-        # Double check chip type (debug)
-        # self.chip_type = self.ads.detect_chip_type()
-        # self._log(f"Found: {self.chip_type}")
 
         # Start data collection thread
         # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
+        self.status = self.Status.ACTIVE
         self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
@@ -457,8 +466,6 @@ class ADXL343(I2CDevice):
             # If no new values are discovered, we check to see if the cache has expired.
             self._update_cache_timeout()
             return
-
-        # Parse / reformat data
 
         # Expand data from object
         key = self.name
@@ -507,32 +514,25 @@ class ADXL343(I2CDevice):
 
     def __fetch_sensor_data(self) -> List[float]:
         """
-        Reads voltages from the ADC for each channel, updates the corresponding inputs, 
-        and returns a list of voltages.
+        Reads acceleration values and returns a list of accelerations.
         This is used to run the data collection thread, and should not be called from the main thread.
         """
-        accelerations = []  # Initialize a list to store the voltages
+        accelerations = []  # Initialize a list to store the data
 
-        # Iterate through each channel and corresponding input
-        for channel in self.CHANNELS:
-
-            # Read the voltage for the current channel with compensation
-            try:
-                # TODO: Get data & add it to accelerations list
-                acceleration = 1
-                pass
-            except OSError:
-                # Occasionally this happens over i2c communication. I'm not sure why.
-                self._log(f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
-
-            # Store the voltage in the voltages list
-            accelerations.append(acceleration)
+        # Read the data
+        try:
+            accelerations = self.adxl343.read_acceleration_in_g()
+        except OSError:
+            # Occasionally this happens over i2c communication. I'm not sure why.
+            self._log(f'Failed to get acceleration data from {self.name}!', severity=self.log.LogSeverity.ERROR)
 
         return accelerations
       
 
     def __start_threaded_data_collection(self):
-        """Start the data collection in a separate thread."""
+        """
+        Start the data collection in a separate thread.
+        """
 
         # Make thread
         sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
@@ -543,4 +543,7 @@ class ADXL343(I2CDevice):
 
 # Example usage
 if __name__ == '__main__':
-    pass
+
+    bus = smbus2.SMBus(1)
+    log = DataLogger('testing')
+    accel = ADXL343('testSensor', log, bus, 0x1D)
