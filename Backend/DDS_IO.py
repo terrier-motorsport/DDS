@@ -294,6 +294,10 @@ class DDS_IO:
         # Log the error
         self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception}', DataLogger.LogSeverity.CRITICAL)
 
+        if isinstance(exception, OSError):
+            if exception.errno is 121:
+                self.__log(f'Make sure {device.name} is properly wired and shows up on i2cdetect!')
+
         # Mark the device as having an error
         self.devices[device.name].status = Interface.Status.ERROR
 
