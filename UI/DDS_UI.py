@@ -18,6 +18,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
+from Backend.DDS_IO import DDS_IO
 
 
 # Anna LaPrade's version as of 11/14/24
@@ -245,23 +246,45 @@ class Battery (FloatLayout):
 
         # Add content to the battery
         # Percentage label
-        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='40sp', position=((30), (rect_height/2)+130))
+        self.battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='40sp', position=((30), (rect_height/2)+130))
         
         # Percentage icon (TO BE CHANGED)
-        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
+        self.battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
         
         # Temperature
-        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
+        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
         
         # Discharge rate 
-        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='30sp', position=((170), (rect_height/2)-350))
+        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='30sp', position=((170), (rect_height/2)-350))
         
         
         # Adds widgets to the battery rectangle 
-        self.left_rect.add_widget(battery_label)  # 
-        self.left_rect.add_widget(battery_icon)
-        self.left_rect.add_widget(battery_temp)
-        self.left_rect.add_widget(battery_discharge)
+        self.left_rect.add_widget(self.battery_label)
+        self.left_rect.add_widget(self.battery_icon)
+        self.left_rect.add_widget(self.battery_temp)
+        self.left_rect.add_widget(self.battery_discharge)
+
+    def update_data(self, data):
+        '''Updated the data of all dynamic values on the widget.'''
+
+        # Percentage label
+        stateOfCharge = data['canInterface']['Pack_SOC']
+        self.battery_label.value_source = stateOfCharge
+        self.battery_label.text = f"{stateOfCharge}%"
+
+        # Percentage icon 
+        self.battery_icon.value_source = stateOfCharge
+
+        # Temperature
+        batteryTemp = data['canInterface']['High_Temperature']
+        self.battery_temp.value_source = batteryTemp
+        self.battery_temp.text = f'{batteryTemp}ºF'
+
+        # Discharge rate 
+        dischargeRate = data['canInterface']['Pack_Current']
+        self.battery_discharge.value_source = dischargeRate
+        self.battery_discharge.text = f"{dischargeRate} Amps"
+        
 
 
 
@@ -333,14 +356,6 @@ class Center(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Temporary source 
-        def temp_source():
-            return 80
-        
-        # Temporary source 
-        def temp_source2():
-            return 200
-            
 
         # Use FloatLayout for layout behavior
         self.center_block = FloatLayout(size_hint=(None, None), size=(Window.width - 210, Window.height))
@@ -349,7 +364,7 @@ class Center(FloatLayout):
 
         # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{temp_source()}",
+            text=f"{999}",
             font_size='140sp',
             pos_hint={'center_x': 0.675, 'center_y': 0.60}
         )
@@ -358,11 +373,21 @@ class Center(FloatLayout):
 
          # Create a label to display the rpm value
         self.rpm_label = Label(
-            text=f"{temp_source()} RPM",
+            text=f"{999} RPM",
             font_size='70sp',
             pos_hint={'center_x': 0.675, 'center_y': 0.25}
         )
         self.center_block.add_widget(self.rpm_label)
+
+    def update_data(self, data):
+        '''Updated the data of all dynamic values on the widget.'''
+
+        if isinstance(data['canInterface']['ERPM'], float):
+            self.rpm_label.text = f"{data['canInterface']['ERPM']:.1f} RPM"
+            self.speed_label.text = f"{data['canInterface']['ERPM'] * 10:.1f}"
+        else:
+            print(data['canInterface']['ERPM'])
+            self.speed_label.text = str(data['canInterface']['ERPM'])
 
 
 
@@ -377,28 +402,36 @@ class Center(FloatLayout):
 
 
 class MainLayout (FloatLayout):
-    def __init__(self, **kwargs):
+
+    def __init__(self, data: dict, **kwargs):
         super().__init__(**kwargs)
         
         # Set the orientation of layout
         self.orientation = 'horizontal'
 
         # Create an instance of the Battery class and add it to the layout
-        left_instance = Battery()
-        self.add_widget(left_instance)
+        self.left_instance = Battery()
+        self.add_widget(self.left_instance)
 
         # Create an instance of the Center class and add it to the layout
-        center_instance = Center()
-        self.add_widget(center_instance)
+        self.center_instance = Center()
+        self.add_widget(self.center_instance)
 
         # Create an instance of the Warnings class and add it to the layout
-        right_instance = Warnings()
-        self.add_widget(right_instance)
+        self.right_instance = Warnings()
+        self.add_widget(self.right_instance)
 
 
-
+import random
 # full app 
 class MyApp(App):
+
+    def __init__(self, io: DDS_IO, demoMode=False, **kwargs):
+        super().__init__(**kwargs)
+        self.io = io
+        self.demoMode = demoMode
+        
+        
     def build(self):
         # Set the window size to 1024x600
         Window.size = (1024, 600)
@@ -406,8 +439,51 @@ class MyApp(App):
         # Set background color 
         Window.clearcolor = (33/255, 33/255, 48/255, 1)  # dark blue 
 
+        # Set update intervals
+        IO_UPDATE_INTERVAL = 0.0001
+        if not self.demoMode:
+            UI_UPDATE_INTERVAL = 0.016
+        else:
+            UI_UPDATE_INTERVAL = 0.5
+
+        Clock.schedule_interval(self.update_io, IO_UPDATE_INTERVAL)
+        Clock.schedule_interval(self.update_ui, UI_UPDATE_INTERVAL)
+
+        print('hey')
+
+        self.data = {
+            'canInterface': {
+                'ERPM': random.random(),
+                'Pack_SOC': 50,
+                'High_Temperature': 92,
+                'Pack_Current': 162
+            }
+        }
+
+        self.layout = MainLayout(self.data)
         
-        return MainLayout()
+        return self.layout
+    
+    def update_io(self, dt):
+        # Update all io
+        self.io.update()
+        print(dt)
+
+        # Get the device data
+        for deviceKey, deviceData in self.data.items():
+            for paramKey, paramValue in deviceData.items():
+                self.data[deviceKey][paramKey] = self.io.get_device_data(deviceKey, paramKey)
+
+                if self.demoMode and (self.data[deviceKey][paramKey] is None):
+                    self.data[deviceKey][paramKey] = random.random()
+
+                print(f'updated {paramKey} with {self.data[deviceKey][paramKey]}')
+
+
+    def update_ui(self, dt):
+        self.layout.center_instance.update_data(self.data)
+        self.layout.left_instance.update_data(self.data)
+
 
 
 # Runs the app

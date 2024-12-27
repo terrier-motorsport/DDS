@@ -22,6 +22,8 @@ class DataLogger:
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
 
+    printLogsToConsole: bool
+
     LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
 
     
@@ -58,8 +60,11 @@ class DataLogger:
             return current_time - self.timestamp < self.LOG_TIMEOUT
 
 
-    def __init__(self, fileName):
+    def __init__(self, fileName, printLogsToConsole=True):
         '''Initialize the Data Logger.'''
+
+        # Save settings
+        self.printLogsToConsole = printLogsToConsole
 
         # Validate the file name
         self.__validateFileName(fileName)
@@ -138,7 +143,8 @@ class DataLogger:
         logger.log(severity.value, msg)
 
         # Print to the console
-        print(self.__logToString(log))
+        if self.printLogsToConsole:
+            print(self.__logToString(log))
 
         # Update the list of last logged messages
         self._addLoggedMessage(log)

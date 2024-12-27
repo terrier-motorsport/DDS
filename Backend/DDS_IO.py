@@ -41,15 +41,17 @@ class DDS_IO:
     
 
     # ===== Methods =====
-    def __init__(self):
-        self.log = DataLogger('DDS_Log')
+    def __init__(self, debug=True):
+        self.log = DataLogger('DDS_Log', debug)
+        self.debug = debug
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
 
         self.__log('Starting Dash Display System Backend...')
 
         self.__initialize_devices()
 
-        time.sleep(3)
+        if debug:
+            time.sleep(3)
         
 
     def update(self):
