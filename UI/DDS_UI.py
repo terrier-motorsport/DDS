@@ -7,6 +7,7 @@
     # Have you installed Kivy and OpenCV?
     # Do NOT run further that Python 3.12, kivy does not have 3.13 support yet as of 11/16
 
+from typing import List
 import cv2
 import kivy
 from kivy.app import App
@@ -227,7 +228,7 @@ class Battery (FloatLayout):
         corner_radius = 20
 
         # Example value source function for demonstration
-        def temp_source():
+        def get_pack_state_of_charge():
             soc = self.io.get_device_data('canInterface','Pack_SOC')
             if soc is not None:
                 return soc
@@ -235,7 +236,7 @@ class Battery (FloatLayout):
                 return -1
         
         # Example value source function for demonstration
-        def temp_source2():
+        def get_cell_high_temperature():
             highTemp = self.io.get_device_data('canInterface','High_Temperature')  
             if highTemp is not None:
                 return highTemp
@@ -243,7 +244,7 @@ class Battery (FloatLayout):
                 return -1
         
         # Example value source function for demonstration
-        def temp_source3():
+        def get_pack_current():
             current = self.io.get_device_data('canInterface','Pack_Current')
             if current is not None:
                 return current
@@ -260,16 +261,16 @@ class Battery (FloatLayout):
 
         # Add content to the battery
         # Percentage label
-        self.battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='40sp', position=((30), (rect_height/2)+130))
+        self.battery_label = OutlineColorChangingLabel_Battery(value_source=get_pack_state_of_charge, text=f"{get_pack_state_of_charge():.2f}%", font_size='40sp', position=((30), (rect_height/2)+130))
         
         # Percentage icon (TO BE CHANGED)
-        self.battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
+        self.battery_icon = OutlineColorChangingLabel_Battery(value_source=get_pack_state_of_charge, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
         
         # Temperature
-        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
+        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=get_cell_high_temperature, text=f"{get_cell_high_temperature():.2f} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
         
         # Discharge rate 
-        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Amps", font_size='30sp', position=((170), (rect_height/2)-350))
+        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=get_pack_current, text=f"{get_cell_high_temperature():.2f} Amps", font_size='30sp', position=((170), (rect_height/2)-350))
         
         
         # Adds widgets to the battery rectangle 
@@ -287,10 +288,14 @@ class Battery (FloatLayout):
 #                               #
 #################################
 
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
+
 # Creates widget with warnings 
 class Warnings (FloatLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
+
+        self.io = io
 
         # rectangle dimensions
         rect_height = 700
@@ -312,29 +317,42 @@ class Warnings (FloatLayout):
 
         
         # Temporary source to mock values 
-        def temp_source():
-            return True
+        def get_warnings() -> List[ParameterWarning]:
+            return io.get_warnings()
+            
 
 
         # Lable to show what section is for 
-        self.warning_label = Label(
-            text="WARNINGS",
-            font_size='50sp',
-            pos=(1700, 800), 
-            color=(33/255, 33/255, 48/255, 1) 
-        )
+        # self.warning_label = Label(
+        #     text="WARNINGS",
+        #     font_size='50sp',
+        #     pos=(1700, 800), 
+        #     color=(33/255, 33/255, 48/255, 1) 
+        # )
 
-        self.right_rect.add_widget(self.warning_label)
+        # self.right_rect.add_widget(self.warning_label)
 
         # If warning flag set to true, display a warning! 
-        if temp_source() == True:
-            self.warning = Label(
-                text="WARNING 1",
+        warnings = get_warnings()
+        for warning in warnings:
+            self.warningLabel = Label(
+                text=warning.msg,
                 font_size='20sp',
                 pos=(1550, 700), 
                 color=(1, 0, 0, 1) 
             )
-            self.right_rect.add_widget(self.warning)
+            self.right_rect.add_widget(self.warningLabel)
+
+        # OLD CODE
+        # if get_warnings() == None:
+
+        #     self.warning = Label(
+        #         text="WARNING 1",
+        #         font_size='20sp',
+        #         pos=(1550, 700), 
+        #         color=(1, 0, 0, 1) 
+        #     )
+        #     self.right_rect.add_widget(self.warning)
 
             
 
@@ -346,9 +364,24 @@ class Warnings (FloatLayout):
 
 # Creates widget in center of display with speed and RPM 
 class Center(FloatLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
 
+        self.io = io
+
+        def get_speed():
+            erpm = self.io.get_device_data('canInterface','ERPM')
+            if erpm is not None:
+                return erpm * 10
+            else:
+                return -1
+        
+        def get_rpm():
+            erpm = self.io.get_device_data('canInterface','ERPM')
+            if erpm is not None:
+                return erpm/3
+            else:
+                return -1
 
         # Use FloatLayout for layout behavior
         self.center_block = FloatLayout(size_hint=(None, None), size=(Window.width - 210, Window.height))
@@ -357,7 +390,7 @@ class Center(FloatLayout):
 
         # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{999}",
+            text=f"{get_speed():.2f}",
             font_size='140sp',
             pos_hint={'center_x': 0.675, 'center_y': 0.60}
         )
@@ -366,21 +399,21 @@ class Center(FloatLayout):
 
          # Create a label to display the rpm value
         self.rpm_label = Label(
-            text=f"{999} RPM",
+            text=f"{get_rpm():.2f} RPM",
             font_size='70sp',
             pos_hint={'center_x': 0.675, 'center_y': 0.25}
         )
         self.center_block.add_widget(self.rpm_label)
 
-    def update_data(self, data):
-        '''Updated the data of all dynamic values on the widget.'''
+    # def update_data(self, data):
+    #     '''Updated the data of all dynamic values on the widget.'''
 
-        if isinstance(data['canInterface']['ERPM'], float):
-            self.rpm_label.text = f"{data['canInterface']['ERPM']:.1f} RPM"
-            self.speed_label.text = f"{data['canInterface']['ERPM'] * 10:.1f}"
-        else:
-            print(data['canInterface']['ERPM'])
-            self.speed_label.text = str(data['canInterface']['ERPM'])
+    #     if isinstance(data['canInterface']['ERPM'], float):
+    #         self.rpm_label.text = f"{data['canInterface']['ERPM']:.1f} RPM"
+    #         self.speed_label.text = f"{data['canInterface']['ERPM'] * 10:.1f}"
+    #     else:
+    #         print(data['canInterface']['ERPM'])
+    #         self.speed_label.text = str(data['canInterface']['ERPM'])
 
 
 
@@ -407,11 +440,11 @@ class MainLayout (FloatLayout):
         self.add_widget(self.left_instance)
 
         # Create an instance of the Center class and add it to the layout
-        self.center_instance = Center()
+        self.center_instance = Center(io)
         self.add_widget(self.center_instance)
 
         # Create an instance of the Warnings class and add it to the layout
-        self.right_instance = Warnings()
+        self.right_instance = Warnings(io)
         self.add_widget(self.right_instance)
 
 
@@ -442,16 +475,16 @@ class MyApp(App):
         Clock.schedule_interval(self.update_io, IO_UPDATE_INTERVAL)
         # Clock.schedule_interval(self.update_ui, UI_UPDATE_INTERVAL)
 
-        print('hey')
+        # print('hey')
 
-        self.data = {
-            'canInterface': {
-                'ERPM': random.random(),
-                'Pack_SOC': 50,
-                'High_Temperature': 92,
-                'Pack_Current': 162
-            }
-        }
+        # self.data = {
+        #     'canInterface': {
+        #         'ERPM': random.random(),
+        #         'Pack_SOC': 50,
+        #         'High_Temperature': 92,
+        #         'Pack_Current': 162
+        #     }
+        # }
 
         self.layout = MainLayout(self.io)
         
@@ -463,19 +496,19 @@ class MyApp(App):
         print(dt)
 
         # Get the device data
-        for deviceKey, deviceData in self.data.items():
-            for paramKey, paramValue in deviceData.items():
-                self.data[deviceKey][paramKey] = self.io.get_device_data(deviceKey, paramKey)
+        # for deviceKey, deviceData in self.data.items():
+        #     for paramKey, paramValue in deviceData.items():
+        #         self.data[deviceKey][paramKey] = self.io.get_device_data(deviceKey, paramKey)
 
-                if self.demoMode and (self.data[deviceKey][paramKey] is None):
-                    self.data[deviceKey][paramKey] = random.random()
+        #         if self.demoMode and (self.data[deviceKey][paramKey] is None):
+        #             self.data[deviceKey][paramKey] = random.random()
 
-                print(f'updated {paramKey} with {self.data[deviceKey][paramKey]}')
+        #         print(f'updated {paramKey} with {self.data[deviceKey][paramKey]}')
 
 
-    def update_ui(self, dt):
-        self.layout.center_instance.update_data(self.data)
-        self.layout.left_instance.update_data(self.data)
+    # def update_ui(self, dt):
+    #     self.layout.center_instance.update_data(self.data)
+    #     self.layout.left_instance.update_data(self.data)
 
 
 

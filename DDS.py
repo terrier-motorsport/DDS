@@ -5,7 +5,7 @@ from Backend.DDS_IO import DDS_IO
 from UI.DDS_UI import MyApp
 
 
-io = DDS_IO(False)
+io = DDS_IO(debug=False, demo_mode=True)
 
 app = MyApp(io=io, demoMode=True)
 

@@ -1,6 +1,7 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
+import random
 from Backend.interface import Interface, CANInterface, InterfaceProtocol
 from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor
@@ -41,9 +42,10 @@ class DDS_IO:
     
 
     # ===== Methods =====
-    def __init__(self, debug=True):
+    def __init__(self, debug=True, demo_mode=False):
         self.log = DataLogger('DDS_Log', debug)
         self.debug = debug
+        self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
 
         self.__log('Starting Dash Display System Backend...')
@@ -88,6 +90,9 @@ class DDS_IO:
         # If the device is None, we can return early
         if device is None:
             self.__log(f'Device {device_key} not found.', DataLogger.LogSeverity.WARNING)
+
+            if self.demo_mode:
+                return random.random()
             return
         
         # If the device is not active, we can return early
@@ -108,7 +113,10 @@ class DDS_IO:
         # If the data is None, we can return early
         if data is None:
             self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
-            return
+
+            if self.demo_mode:
+                return random.random()
+            return None
         
         # Return the data
         return data
