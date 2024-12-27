@@ -211,8 +211,10 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
 # Displays data relevant to battery within a box, 
 # including preentage, temperature, and discharge rate
 class Battery (FloatLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
+
+        self.io = io
 
         # rectangle dimensions
         rect_height = 700
@@ -226,15 +228,27 @@ class Battery (FloatLayout):
 
         # Example value source function for demonstration
         def temp_source():
-            return 80  # Replace with actual logic to provide a dynamic value
+            soc = self.io.get_device_data('canInterface','Pack_SOC')
+            if soc is not None:
+                return soc
+            else:
+                return -1
         
         # Example value source function for demonstration
         def temp_source2():
-            return 20  # Replace with actual logic to provide a dynamic value
+            highTemp = self.io.get_device_data('canInterface','High_Temperature')  
+            if highTemp is not None:
+                return highTemp
+            else:
+                return -1
         
         # Example value source function for demonstration
         def temp_source3():
-            return 7  # Replace with actual logic to provide a dynamic value
+            current = self.io.get_device_data('canInterface','Pack_Current')
+            if current is not None:
+                return current
+            else:
+                return -1
 
         
         # Creates a float layout within the box
@@ -255,7 +269,7 @@ class Battery (FloatLayout):
         self.battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
         
         # Discharge rate 
-        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='30sp', position=((170), (rect_height/2)-350))
+        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Amps", font_size='30sp', position=((170), (rect_height/2)-350))
         
         
         # Adds widgets to the battery rectangle 
@@ -263,27 +277,6 @@ class Battery (FloatLayout):
         self.left_rect.add_widget(self.battery_icon)
         self.left_rect.add_widget(self.battery_temp)
         self.left_rect.add_widget(self.battery_discharge)
-
-    def update_data(self, data):
-        '''Updated the data of all dynamic values on the widget.'''
-
-        # Percentage label
-        stateOfCharge = data['canInterface']['Pack_SOC']
-        self.battery_label.value_source = stateOfCharge
-        self.battery_label.text = f"{stateOfCharge}%"
-
-        # Percentage icon 
-        self.battery_icon.value_source = stateOfCharge
-
-        # Temperature
-        batteryTemp = data['canInterface']['High_Temperature']
-        self.battery_temp.value_source = batteryTemp
-        self.battery_temp.text = f'{batteryTemp}ºF'
-
-        # Discharge rate 
-        dischargeRate = data['canInterface']['Pack_Current']
-        self.battery_discharge.value_source = dischargeRate
-        self.battery_discharge.text = f"{dischargeRate} Amps"
         
 
 
@@ -403,14 +396,14 @@ class Center(FloatLayout):
 
 class MainLayout (FloatLayout):
 
-    def __init__(self, data: dict, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
         
         # Set the orientation of layout
         self.orientation = 'horizontal'
 
         # Create an instance of the Battery class and add it to the layout
-        self.left_instance = Battery()
+        self.left_instance = Battery(io)
         self.add_widget(self.left_instance)
 
         # Create an instance of the Center class and add it to the layout
@@ -447,7 +440,7 @@ class MyApp(App):
             UI_UPDATE_INTERVAL = 0.5
 
         Clock.schedule_interval(self.update_io, IO_UPDATE_INTERVAL)
-        Clock.schedule_interval(self.update_ui, UI_UPDATE_INTERVAL)
+        # Clock.schedule_interval(self.update_ui, UI_UPDATE_INTERVAL)
 
         print('hey')
 
@@ -460,7 +453,7 @@ class MyApp(App):
             }
         }
 
-        self.layout = MainLayout(self.data)
+        self.layout = MainLayout(self.io)
         
         return self.layout
     
