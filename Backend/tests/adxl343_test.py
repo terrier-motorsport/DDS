@@ -137,12 +137,17 @@ class TestADXL343(unittest.TestCase):
 
                 self.adxl.update()
 
-                # We should have updated the cache with valid_data
-                self.assertIn(self.device_name, self.adxl.cached_values)
-                self.assertEqual(self.adxl.cached_values[self.device_name], valid_data)
+                # Verify that the cached values match the dummy data
+                self.assertEqual(self.adxl.get_data('x'), 0.12)
+                self.assertEqual(self.adxl.get_data('y'), 0.98)
+                self.assertEqual(self.adxl.get_data('z'), -0.21)
 
                 # Telemetry logging should be called
-                mock_log_telemetry.assert_called_once_with(self.device_name, valid_data, 'g')
+                mock_log_telemetry.assert_has_calls([
+                    call('x', valid_data[0], 'g'),
+                    call('y', valid_data[1], 'g'),
+                    call('z', valid_data[2], 'g')
+                ], any_order=False)  # Set to True if order doesn't matter
 
                 # We do not call _update_cache_timeout if we successfully retrieved data
                 mock_update_cache.assert_not_called()
@@ -274,6 +279,24 @@ class TestADXL343(unittest.TestCase):
         result = self.adxl._ADXL343__fetch_sensor_data()
         self.assertEqual(result, [], "Should return an empty list on OSError.")
         mock_log.assert_called_once()
+
+    def test_get_cached_values_via_update(self):
+        """
+        Test retrieving the x, y, and z acceleration values using the get_cached_values function,
+        with data provided through the update method.
+        """
+        # Define the dummy data to simulate accelerometer readings
+        dummy_data = [0.15, -0.45, 0.85]
+
+        # Patch the __get_data_from_thread method to return dummy data
+        with patch.object(self.adxl, '_ADXL343__get_data_from_thread', return_value=dummy_data):
+            # Call the update method, which should cache the data
+            self.adxl.update()
+
+            # Verify that the cached values match the dummy data
+            self.assertEqual(self.adxl.get_data('x'), 0.15)
+            self.assertEqual(self.adxl.get_data('y'), -0.45)
+            self.assertEqual(self.adxl.get_data('z'), 0.85)
         
 # This allows running the tests directly (e.g., `python test_adxl343.py`)
 if __name__ == "__main__":
