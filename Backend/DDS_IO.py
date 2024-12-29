@@ -4,7 +4,7 @@
 import random
 from Backend.interface import Interface, CANInterface, InterfaceProtocol
 from Backend.data_logger import DataLogger
-from Backend.value_monitor import ParameterMonitor
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
 from Backend.resources.adxl343 import ADXL343
@@ -94,10 +94,10 @@ class DDS_IO:
 
         # If the device is None, we can return early
         if device is None:
-            self.__log(f'Device {device_key} not found.', DataLogger.LogSeverity.WARNING)
+            self.__log(f'Device {device_key} not found. (Data Req: {parameter})', DataLogger.LogSeverity.WARNING)
 
             if self.demo_mode:
-                return random.random()
+                return random.random() * 100
             return
         
         # If the device is not active, we can return early
@@ -128,7 +128,18 @@ class DDS_IO:
     
 
     def get_warnings(self) -> List[str]:
-        return self.parameter_monitor.get_warnings()
+        '''Returns a list of active warnings'''
+        warnings = self.parameter_monitor.get_warnings()
+
+        if not self.demo_mode:
+            return warnings
+        else:
+            warnings = [
+                ParameterWarning('RPM', 9324, 0, 9000).getMsg(),
+                ParameterWarning('Mike', 1, 0, 0.5).getMsg(),
+                ParameterWarning('Anna', 2398, 100, 2397).getMsg(),
+            ]
+            return warnings
 
 
     def __get_device(self, deviceKey : str) -> Interface:

@@ -85,6 +85,7 @@ class OutlineColorChangingLabel_Battery(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
+        self.text = f"{self.value:.2f}%"
         self.update_color()
 
     def update_color(self):
@@ -139,6 +140,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
+        self.text = f"{self.value:.2f}°F"
         self.update_color()
 
     def update_color(self):
@@ -194,6 +196,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
+        self.text = f"{self.value:.2f} Amps"
         self.update_color()
 
     def update_color(self):
@@ -327,38 +330,18 @@ class Warnings (FloatLayout):
             return io.get_warnings()
             
 
-
-        # Lable to show what section is for 
-        # self.warning_label = Label(
-        #     text="WARNINGS",
-        #     font_size='50sp',
-        #     pos=(1700, 800), 
-        #     color=(33/255, 33/255, 48/255, 1) 
-        # )
-
-        # self.right_rect.add_widget(self.warning_label)
-
         # If warning flag set to true, display a warning! 
         warnings = get_warnings()
+        startPosY = 500
         for warning in warnings:
             self.warningLabel = Label(
-                text=warning.msg,
+                text=warning,
                 font_size='20sp',
-                pos=(1550, 700), 
+                pos=(1550, startPosY), 
                 color=(1, 0, 0, 1) 
             )
             self.right_rect.add_widget(self.warningLabel)
-
-        # OLD CODE
-        # if get_warnings() == None:
-
-        #     self.warning = Label(
-        #         text="WARNING 1",
-        #         font_size='20sp',
-        #         pos=(1550, 700), 
-        #         color=(1, 0, 0, 1) 
-        #     )
-        #     self.right_rect.add_widget(self.warning)
+            startPosY += 100
 
             
 
@@ -376,14 +359,14 @@ class Center(FloatLayout):
         self.io = io
 
         def get_speed():
-            erpm = self.io.get_device_data('canInterface','ERPM')
+            erpm = self.io.get_device_data('canInterface','ERPM') * 50
             if erpm is not None:
-                return erpm * 10
+                return erpm/10
             else:
                 return -1
         
         def get_rpm():
-            erpm = self.io.get_device_data('canInterface','ERPM')
+            erpm = self.io.get_device_data('canInterface','ERPM') * 50
             if erpm is not None:
                 return erpm/3
             else:
@@ -410,16 +393,6 @@ class Center(FloatLayout):
             pos_hint={'center_x': 0.675, 'center_y': 0.25}
         )
         self.center_block.add_widget(self.rpm_label)
-
-    # def update_data(self, data):
-    #     '''Updated the data of all dynamic values on the widget.'''
-
-    #     if isinstance(data['canInterface']['ERPM'], float):
-    #         self.rpm_label.text = f"{data['canInterface']['ERPM']:.1f} RPM"
-    #         self.speed_label.text = f"{data['canInterface']['ERPM'] * 10:.1f}"
-    #     else:
-    #         print(data['canInterface']['ERPM'])
-    #         self.speed_label.text = str(data['canInterface']['ERPM'])
 
 
 
@@ -454,7 +427,6 @@ class MainLayout (FloatLayout):
         self.add_widget(self.right_instance)
 
 
-import random
 # full app 
 class MyApp(App):
 
@@ -473,48 +445,17 @@ class MyApp(App):
 
         # Set update intervals
         IO_UPDATE_INTERVAL = 0.0001
-        if not self.demoMode:
-            UI_UPDATE_INTERVAL = 0.016
-        else:
-            UI_UPDATE_INTERVAL = 0.5
 
         Clock.schedule_interval(self.update_io, IO_UPDATE_INTERVAL)
-        # Clock.schedule_interval(self.update_ui, UI_UPDATE_INTERVAL)
 
-        # print('hey')
-
-        # self.data = {
-        #     'canInterface': {
-        #         'ERPM': random.random(),
-        #         'Pack_SOC': 50,
-        #         'High_Temperature': 92,
-        #         'Pack_Current': 162
-        #     }
-        # }
 
         self.layout = MainLayout(self.io)
         
         return self.layout
     
     def update_io(self, dt):
-        # Update all io
         self.io.update()
         # print(dt)
-
-        # Get the device data
-        # for deviceKey, deviceData in self.data.items():
-        #     for paramKey, paramValue in deviceData.items():
-        #         self.data[deviceKey][paramKey] = self.io.get_device_data(deviceKey, paramKey)
-
-        #         if self.demoMode and (self.data[deviceKey][paramKey] is None):
-        #             self.data[deviceKey][paramKey] = random.random()
-
-        #         print(f'updated {paramKey} with {self.data[deviceKey][paramKey]}')
-
-
-    # def update_ui(self, dt):
-    #     self.layout.center_instance.update_data(self.data)
-    #     self.layout.left_instance.update_data(self.data)
 
 
 
