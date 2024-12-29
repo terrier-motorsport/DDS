@@ -7,6 +7,12 @@
     # Have you installed Kivy and OpenCV?
     # Do NOT run further that Python 3.12, kivy does not have 3.13 support yet as of 11/16
 
+# This disables kivy logs (interferes with Backend logs)
+import os
+os.environ["KIVY_NO_CONSOLELOG"] = "0"
+os.environ["KIVY_LOG_MODE"] = "PYTHON"
+
+
 from typing import List
 import cv2
 import kivy

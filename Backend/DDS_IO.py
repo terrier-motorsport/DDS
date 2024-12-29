@@ -42,8 +42,16 @@ class DDS_IO:
     
 
     # ===== Methods =====
-    def __init__(self, debug=True, demo_mode=False):
-        self.log = DataLogger('DDS_Log', debug)
+    def __init__(self, debug=False, demo_mode=False):
+        '''
+        Starts the Backend of the DDS.
+
+        Parameters:
+            debug (bool): Puts the DataLogger into debug mode
+            demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
+
+        '''
+        self.log = DataLogger('DDS_Log', printLogsToConsole=debug)
         self.debug = debug
         self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
@@ -52,9 +60,6 @@ class DDS_IO:
 
         self.__initialize_devices()
 
-        if debug:
-            time.sleep(3)
-        
 
     def update(self):
         '''Updates all sensors. Should be called as often as possible.'''
@@ -83,7 +88,7 @@ class DDS_IO:
 
 
     def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
-        ''' Gets a single parameter from a specified device.'''
+        '''Gets a single parameter from a specified device.'''
 
         device = self.__get_device(device_key)
 
@@ -268,7 +273,7 @@ class DDS_IO:
         """
         Safely initialize an instance of a Interface child class, and add it to the devices dict.
         
-        Args:
+        Parameters:
             cls (Type[Interface]): The child class to instantiate.
             *args: Positional arguments for the child class constructor.
             **kwargs: Keyword arguments for the child class constructor.
@@ -333,7 +338,7 @@ class DDS_IO:
         """
         Monitors the parameters of a given device and checks if their values are within the defined limits.
 
-        Args:
+        Parameters:
             device (Interface): The device whose parameters are to be monitored.
 
         This function retrieves all parameter names from the device's cached values and checks each parameter's value
@@ -347,7 +352,7 @@ class DDS_IO:
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         self.log.writeLog(
-            logger_name='DDS_IO',
+            loggerName='DDS_IO',
             msg=msg,
             severity=severity)
 
