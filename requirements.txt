@@ -13,6 +13,7 @@ Kivy==2.3.0
 Kivy-Garden==0.1.5
 msgpack==1.0.8
 numpy==2.2.0
+opencv-python==4.10.0.84
 packaging==24.2
 Pygments==2.18.0
 python-can==4.4.2
