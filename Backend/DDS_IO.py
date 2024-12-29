@@ -1,9 +1,10 @@
 # Signal Input/Output for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
+import random
 from Backend.interface import Interface, CANInterface, InterfaceProtocol
 from Backend.data_logger import DataLogger
-from Backend.value_monitor import ParameterMonitor
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
 from Backend.resources.adxl343 import ADXL343
@@ -41,16 +42,24 @@ class DDS_IO:
     
 
     # ===== Methods =====
-    def __init__(self):
+    def __init__(self, debug=False, demo_mode=False):
+        '''
+        Starts the Backend of the DDS.
+
+        Parameters:
+            debug (bool): Puts the DataLogger into debug mode
+            demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
+
+        '''
         self.log = DataLogger('DDS_Log')
+        self.debug = debug
+        self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
 
         self.__log('Starting Dash Display System Backend...')
 
         self.__initialize_devices()
 
-        time.sleep(3)
-        
 
     def update(self):
         '''Updates all sensors. Should be called as often as possible.'''
@@ -79,13 +88,16 @@ class DDS_IO:
 
 
     def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
-        ''' Gets a single parameter from a specified device.'''
+        '''Gets a single parameter from a specified device.'''
 
         device = self.__get_device(device_key)
 
         # If the device is None, we can return early
         if device is None:
-            self.__log(f'Device {device_key} not found.', DataLogger.LogSeverity.WARNING)
+            self.__log(f'Device {device_key} not found. (Data Req: {parameter})', DataLogger.LogSeverity.WARNING)
+
+            if self.demo_mode:
+                return random.random() * 100
             return
         
         # If the device is not active, we can return early
@@ -106,14 +118,28 @@ class DDS_IO:
         # If the data is None, we can return early
         if data is None:
             self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
-            return
+
+            if self.demo_mode:
+                return random.random()
+            return None
         
         # Return the data
         return data
     
 
     def get_warnings(self) -> List[str]:
-        return self.parameter_monitor.get_warnings()
+        '''Returns a list of active warnings'''
+        warnings = self.parameter_monitor.get_warnings()
+
+        if not self.demo_mode:
+            return warnings
+        else:
+            warnings = [
+                ParameterWarning('RPM', 9324, 0, 9000).getMsg(),
+                ParameterWarning('Mike', 1, 0, 0.5).getMsg(),
+                ParameterWarning('Anna', 2398, 100, 2397).getMsg(),
+            ]
+            return warnings
 
 
     def __get_device(self, deviceKey : str) -> Interface:
@@ -258,7 +284,7 @@ class DDS_IO:
         """
         Safely initialize an instance of a Interface child class, and add it to the devices dict.
         
-        Args:
+        Parameters:
             cls (Type[Interface]): The child class to instantiate.
             *args: Positional arguments for the child class constructor.
             **kwargs: Keyword arguments for the child class constructor.
@@ -323,7 +349,7 @@ class DDS_IO:
         """
         Monitors the parameters of a given device and checks if their values are within the defined limits.
 
-        Args:
+        Parameters:
             device (Interface): The device whose parameters are to be monitored.
 
         This function retrieves all parameter names from the device's cached values and checks each parameter's value
@@ -337,7 +363,7 @@ class DDS_IO:
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         self.log.writeLog(
-            logger_name='DDS_IO',
+            loggerName='DDS_IO',
             msg=msg,
             severity=severity)
 

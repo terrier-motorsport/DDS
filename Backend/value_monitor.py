@@ -46,9 +46,13 @@ class ParameterWarning:
         self.min = min
         self.max = max
         self.priority = priority
+        self.msg = f'{self.param_name} ({self.param_value:.2f}) is out of range: [{self.min}, {self.max}]'
+
+    def getMsg(self) -> str:
+        return self.msg
 
     def __str__(self) -> str:
-        return f'{self.param_name} ({round(self.param_value, 2)}) is out of range: [{self.min}, {self.max}]'
+        return self.msg
 
 
 class ParameterMonitor:

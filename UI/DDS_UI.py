@@ -7,6 +7,13 @@
     # Have you installed Kivy and OpenCV?
     # Do NOT run further that Python 3.12, kivy does not have 3.13 support yet as of 11/16
 
+# This disables kivy logs (interferes with Backend logs)
+import os
+os.environ["KIVY_NO_CONSOLELOG"] = "0"
+os.environ["KIVY_LOG_MODE"] = "PYTHON"
+
+
+from typing import List
 import cv2
 import kivy
 from kivy.app import App
@@ -18,6 +25,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
+from Backend.DDS_IO import DDS_IO
 
 
 # Anna LaPrade's version as of 11/14/24
@@ -77,6 +85,7 @@ class OutlineColorChangingLabel_Battery(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
+        self.text = f"{self.value:.2f}%"
         self.update_color()
 
     def update_color(self):
@@ -131,6 +140,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
+        self.text = f"{self.value:.2f}°F"
         self.update_color()
 
     def update_color(self):
@@ -186,6 +196,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
+        self.text = f"{self.value:.2f} Amps"
         self.update_color()
 
     def update_color(self):
@@ -210,8 +221,10 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
 # Displays data relevant to battery within a box, 
 # including preentage, temperature, and discharge rate
 class Battery (FloatLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
+
+        self.io = io
 
         # rectangle dimensions
         rect_height = 700
@@ -224,16 +237,28 @@ class Battery (FloatLayout):
         corner_radius = 20
 
         # Example value source function for demonstration
-        def temp_source():
-            return 80  # Replace with actual logic to provide a dynamic value
+        def get_pack_state_of_charge():
+            soc = self.io.get_device_data('canInterface','Pack_SOC')
+            if soc is not None:
+                return soc
+            else:
+                return -1
         
         # Example value source function for demonstration
-        def temp_source2():
-            return 20  # Replace with actual logic to provide a dynamic value
+        def get_cell_high_temperature():
+            highTemp = self.io.get_device_data('canInterface','High_Temperature')  
+            if highTemp is not None:
+                return highTemp
+            else:
+                return -1
         
         # Example value source function for demonstration
-        def temp_source3():
-            return 7  # Replace with actual logic to provide a dynamic value
+        def get_pack_current():
+            current = self.io.get_device_data('canInterface','Pack_Current')
+            if current is not None:
+                return current
+            else:
+                return -1
 
         
         # Creates a float layout within the box
@@ -245,23 +270,24 @@ class Battery (FloatLayout):
 
         # Add content to the battery
         # Percentage label
-        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='40sp', position=((30), (rect_height/2)+130))
+        self.battery_label = OutlineColorChangingLabel_Battery(value_source=get_pack_state_of_charge, text=f"{get_pack_state_of_charge():.2f}%", font_size='40sp', position=((30), (rect_height/2)+130))
         
         # Percentage icon (TO BE CHANGED)
-        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
+        self.battery_icon = OutlineColorChangingLabel_Battery(value_source=get_pack_state_of_charge, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
         
         # Temperature
-        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
+        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=get_cell_high_temperature, text=f"{get_cell_high_temperature():.2f} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
         
         # Discharge rate 
-        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='30sp', position=((170), (rect_height/2)-350))
+        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=get_pack_current, text=f"{get_cell_high_temperature():.2f} Amps", font_size='30sp', position=((170), (rect_height/2)-350))
         
         
         # Adds widgets to the battery rectangle 
-        self.left_rect.add_widget(battery_label)  # 
-        self.left_rect.add_widget(battery_icon)
-        self.left_rect.add_widget(battery_temp)
-        self.left_rect.add_widget(battery_discharge)
+        self.left_rect.add_widget(self.battery_label)
+        self.left_rect.add_widget(self.battery_icon)
+        self.left_rect.add_widget(self.battery_temp)
+        self.left_rect.add_widget(self.battery_discharge)
+        
 
 
 
@@ -271,10 +297,14 @@ class Battery (FloatLayout):
 #                               #
 #################################
 
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
+
 # Creates widget with warnings 
 class Warnings (FloatLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
+
+        self.io = io
 
         # rectangle dimensions
         rect_height = 700
@@ -296,29 +326,22 @@ class Warnings (FloatLayout):
 
         
         # Temporary source to mock values 
-        def temp_source():
-            return True
-
-
-        # Lable to show what section is for 
-        self.warning_label = Label(
-            text="WARNINGS",
-            font_size='50sp',
-            pos=(1700, 800), 
-            color=(33/255, 33/255, 48/255, 1) 
-        )
-
-        self.right_rect.add_widget(self.warning_label)
+        def get_warnings() -> List[ParameterWarning]:
+            return io.get_warnings()
+            
 
         # If warning flag set to true, display a warning! 
-        if temp_source() == True:
-            self.warning = Label(
-                text="WARNING 1",
+        warnings = get_warnings()
+        startPosY = 500
+        for warning in warnings:
+            self.warningLabel = Label(
+                text=warning,
                 font_size='20sp',
-                pos=(1550, 700), 
+                pos=(1550, startPosY), 
                 color=(1, 0, 0, 1) 
             )
-            self.right_rect.add_widget(self.warning)
+            self.right_rect.add_widget(self.warningLabel)
+            startPosY += 100
 
             
 
@@ -330,17 +353,24 @@ class Warnings (FloatLayout):
 
 # Creates widget in center of display with speed and RPM 
 class Center(FloatLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
 
-        # Temporary source 
-        def temp_source():
-            return 80
+        self.io = io
+
+        def get_speed():
+            erpm = self.io.get_device_data('canInterface','ERPM')
+            if erpm is not None:
+                return erpm*5
+            else:
+                return -1
         
-        # Temporary source 
-        def temp_source2():
-            return 200
-            
+        def get_rpm():
+            erpm = self.io.get_device_data('canInterface','ERPM')
+            if erpm is not None:
+                return erpm*10
+            else:
+                return -1
 
         # Use FloatLayout for layout behavior
         self.center_block = FloatLayout(size_hint=(None, None), size=(Window.width - 210, Window.height))
@@ -349,7 +379,7 @@ class Center(FloatLayout):
 
         # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{temp_source()}",
+            text=f"{get_speed():.2f}",
             font_size='140sp',
             pos_hint={'center_x': 0.675, 'center_y': 0.60}
         )
@@ -358,7 +388,7 @@ class Center(FloatLayout):
 
          # Create a label to display the rpm value
         self.rpm_label = Label(
-            text=f"{temp_source()} RPM",
+            text=f"{get_rpm():.2f} RPM",
             font_size='70sp',
             pos_hint={'center_x': 0.675, 'center_y': 0.25}
         )
@@ -377,28 +407,35 @@ class Center(FloatLayout):
 
 
 class MainLayout (FloatLayout):
-    def __init__(self, **kwargs):
+
+    def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
         
         # Set the orientation of layout
         self.orientation = 'horizontal'
 
         # Create an instance of the Battery class and add it to the layout
-        left_instance = Battery()
-        self.add_widget(left_instance)
+        self.left_instance = Battery(io)
+        self.add_widget(self.left_instance)
 
         # Create an instance of the Center class and add it to the layout
-        center_instance = Center()
-        self.add_widget(center_instance)
+        self.center_instance = Center(io)
+        self.add_widget(self.center_instance)
 
         # Create an instance of the Warnings class and add it to the layout
-        right_instance = Warnings()
-        self.add_widget(right_instance)
-
+        self.right_instance = Warnings(io)
+        self.add_widget(self.right_instance)
 
 
 # full app 
 class MyApp(App):
+
+    def __init__(self, io: DDS_IO, demoMode=False, **kwargs):
+        super().__init__(**kwargs)
+        self.io = io
+        self.demoMode = demoMode
+        
+        
     def build(self):
         # Set the window size to 1024x600
         Window.size = (1024, 600)
@@ -406,8 +443,20 @@ class MyApp(App):
         # Set background color 
         Window.clearcolor = (33/255, 33/255, 48/255, 1)  # dark blue 
 
+        # Set update intervals
+        IO_UPDATE_INTERVAL = 0.0001
+
+        Clock.schedule_interval(self.update_io, IO_UPDATE_INTERVAL)
+
+
+        self.layout = MainLayout(self.io)
         
-        return MainLayout()
+        return self.layout
+    
+    def update_io(self, dt):
+        self.io.update()
+        # print(dt)
+
 
 
 # Runs the app

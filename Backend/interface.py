@@ -105,7 +105,7 @@ class Interface:
         of the interface device. Child classes must then implement their own `__init__()` and `initialize()` 
         methods to handle device-specific initialization.
 
-        Args:
+        Parameters:
             name (str): The name of the interface device.
             sensorProtocol (InterfaceProtocol): The protocol used by the sensor interface (e.g., I2C, CAN).
             logger (DataLogger): A logger instance for logging device-related messages.
@@ -198,7 +198,7 @@ class Interface:
         """
         Retrieves the most recent cached data associated with the provided key.
 
-        Args:
+        Parameters:
             key (str): The key for which the associated cached data is to be retrieved.
 
         Returns:
@@ -269,7 +269,7 @@ class Interface:
         """
         Logs telemetry data to the telemetry file.
 
-        Args:
+        Parameters:
             param_name (str): The name of the parameter being logged.
             value (Any): The value of the parameter.
             units (str): The units of the parameter's value.
@@ -283,7 +283,7 @@ class Interface:
 
     def _log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         """Shorthand logging method."""
-        self.log.writeLog(logger_name=self.name, msg=msg, severity=severity)
+        self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
 
 
     # ===== HELPER METHODS ====
@@ -326,7 +326,7 @@ class I2CDevice(Interface):
         """
         Initializes an I2CDevice instance.
 
-        Args:
+        Parameters:
             name (str): The name of the I2C device.
             logger (DataLogger): Logger for logging device events and messages.
         """
@@ -371,7 +371,7 @@ class CANInterface(Interface):
         """
         Initializes a CANInterface instance.
 
-        Args:
+        Parameters:
             name (str): The name of the interface.
             can_bus (can.BusABC): The CAN bus interface object.
             database_path (str): Path to the DBC file for CAN database.
@@ -450,7 +450,7 @@ class CANInterface(Interface):
         """
         Adds a DBC file to the CAN database.
 
-        Args:
+        Parameters:
             filename (str): Path to the DBC file to be added.
         """
         try:
@@ -521,7 +521,7 @@ class CANInterface(Interface):
         """
         Decodes the given CAN message using the stored CAN Databases.
 
-        Args:
+        Parameters:
             msg (can.Message): The CAN message to decode.
 
         Returns:
@@ -543,7 +543,7 @@ class CANInterface(Interface):
 
         Configures the CAN interface by setting its bitrate and transmit queue length at the OS level.
 
-        Args:
+        Parameters:
             can_interface (str): The name of the CAN interface (e.g., "can0").
         """
 

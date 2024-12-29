@@ -14,10 +14,18 @@ from typing import Dict, List
 
 class DataLogger:
     '''
-    This class manages writing system logs & telemetry data.
+    - **Data Logger**
+    - Logs all data from the DDS_IO (Telemetry), as well as keeps track of major changes in I/O status (Logs).
+        - Telemetry
+            - Every time a device has new data, it is written to the `Telemetry.csv` file.
+            - This page details how to decode & interpret the log files:
+                - [DDS Telemetry Interpretation](https://www.notion.so/DDS-Telemetry-Interpretation-bffed1cd9a70488e8eb383ce73dcf0a9?pvs=21)
+        - Logs
+            - This is treated more as a high level overview. When the status of the I/O changes, logs will be written to the `System.log` file.
+                - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    baseDirectoryPath = './Backend/logs/'
+    logDirectoryPath = './Backend/logs/'
     directoryPath: str        # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
@@ -34,61 +42,49 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    class Log:
-        '''Helper class to encapuslate message equatablilty'''
+    def __init__(self, directoryName: str):
+        """
+        Initialize the Data Logger with paths, handlers, and settings.
+        """
 
-        LOG_TIMEOUT = 3          # Time before duplicate messages are logged again (seconds)
-        
-        def __init__(self, logger_name: str, message: str, severity, timestamp: float):
-            self.logger_name = logger_name
-            self.message = message
-            self.severity = severity
-            self.timestamp = timestamp
-        
-        def is_equal(self, other) -> bool:
-            '''Checks if this message matches another message in all attributes.'''
-            return (
-                self.logger_name == other.logger_name and
-                self.message == other.message and
-                self.severity == other.severity
-            )
-        
-        def is_recent(self, current_time: float) -> bool:
-            '''Checks if the message was logged within the threshold.'''
-            return current_time - self.timestamp < self.LOG_TIMEOUT
+        # Initialize variables
+        self.__validateFileName(directoryName)
 
+        # Make the directory & save the path
+        self.directoryPath = self.__make_directory(directoryName)
 
-    def __init__(self, fileName):
-        '''Initialize the Data Logger.'''
-
-        # Validate the file name
-        self.__validateFileName(fileName)
-
-        # Create the directory file path (date & time + name)
-        currentTime = self.__getFormattedTime()
-        self.directoryPath = os.path.join(self.baseDirectoryPath, f"{currentTime}-{fileName}")
-
-        # Create the dictionary of recent log files:
-        self._last_logged_messages: List[self.Log] = []
-
-        # Ensure the base directory exists, create it if not.
-        if not os.path.exists(self.directoryPath):
-            os.makedirs(self.directoryPath)
-            self.writeLog(__class__.__name__, f"Directory created at {self.directoryPath}")
-        else:
-            self.writeLog(__class__.__name__, f"Directory already exists at {self.directoryPath}, continuing.")
-
-        # Create the paths for the files
+        # Paths for telemetry and system logs
         self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
         self.systemLogPath = os.path.join(self.directoryPath, "System.log")
+        self.debugLogPath = os.path.join(self.directoryPath, "debug.log")
 
-        # Create the files
-        self.__createCSVFile(self.telemetryPath)
-        self.__createLogFile(self.systemLogPath)
+        # Create files
+        self.__createCSVFile("Telemetry.csv")
+        self.__configureLogger(self.systemLogPath, self.debugLogPath)
 
-        # Log creation of file
-        self.writeLog(__class__.__name__, "Log & Telemetry file setup complete!")
-        
+        # Log setup completion
+        self.writeLog("DataLogger", "Log & Telemetry file setup complete!")
+
+
+    def __getLogger(self, loggerName: str) -> logging.Logger:
+        """
+        Gets a logger from the logging packqage and configures the logger.
+
+        Parameters:
+            loggerName (str): The name of the logger
+         
+        Returns:
+            Logger (logging.Logger): The logger which correlates to the name provided.
+        """
+        # Get the logger with the specified name
+        logger = logging.getLogger(loggerName)
+
+        # Tell it to listen to any logs above the DEBUG level.
+        logger.setLevel(logging.DEBUG)
+
+        # Return that baby
+        return logger
+
 
     def writeTelemetry(self, device_name: str, param_name: str, value, units: str):
         '''Writes to the telemetry data with the specified parameters'''
@@ -122,62 +118,56 @@ class DataLogger:
         return data
     
 
-    def writeLog(self, logger_name: str, msg: str, severity: LogSeverity = LogSeverity.INFO):
-        '''Writes to the system log, avoiding duplicate messages logged within the threshold.'''
+    def writeLog(self, loggerName: str, msg: str, severity: LogSeverity = LogSeverity.INFO):
+        """
+        Writes a log message, avoiding duplicate messages within the timeout threshold.
 
-        # Create the Log Object
-        current_time = time.time()  # Get the current time in seconds
-        log = self.Log(logger_name, msg, severity, current_time)
+        Parameters:
+            loggerName (str): Name of the system creating the log message
+            msg (str): The content to be logged
+            severity (LogSeverity): The level of the log
+        """
 
-        # Check if the message should be logged
-        if not self._shouldLogMessage(log):
-            return
-
-        # Write the log
-        logger = logging.getLogger(logger_name)
-        logger.log(severity.value, msg)
-
-        # Print to the console
-        print(self.__logToString(log))
-
-        # Update the list of last logged messages
-        self._addLoggedMessage(log)
+        logger = self.__getLogger(loggerName)
+        logger.log(level=severity.value,msg=f"{msg}")
 
 
-    def _shouldLogMessage(self, log: Log) -> bool:
-        '''Determines whether the message should be logged.'''
-        # Iterate over stored messages to check for duplicates
-        for last_message in self._last_logged_messages:
-            if last_message.is_equal(log):
-                # Skip logging if the message is recent
-                if last_message.is_recent(log.timestamp):
-                    return False
-        return True
-    
+    def __configureLogger(self, systemLogPath: str, debugLogPath: str):
+        '''
+        Sets up the logging module.
 
-    def _addLoggedMessage(self, log: Log):
-        '''Adds a log to the list of logged messages.'''
+        Parameters:
+            systemLogPath (str): The path of the System.log file to be created by the logger. Contains >= INFO logs.
+            debugLogPath (str): The path of the debug.log file to be created by the logger. Contains >= DEBUG logs.
 
-        # Add the new message to the list
-        self._last_logged_messages.append(log)
-    
+        FROM LOGGING DOCUMENTATION:
+        Does basic configuration for the logging system by creating a StreamHandler with a default Formatter and adding it to the root logger. 
+        The functions debug(), info(), warning(), error() and critical() will call basicConfig() automatically if no handlers are defined for the root logger.
+        This function does nothing if the root logger already has handlers configured, unless the keyword argument force is set to True.
+        NOTE: This function should be called from the main thread before other threads are started. 
+        '''
 
-    def __logToString(self, log: Log) -> str:
-        '''Formats the log data for printing to the console.'''
-        log_data = {
-            "asctime": self.__getFormattedTime(log.timestamp),
-            "name": log.logger_name,
-            "levelname": log.severity.name,
-            "message": log.message
-        }
-        return self.LOG_FORMAT % log_data
+        # Handlers to be added to the base logger
+        systemLogFileHandler = logging.FileHandler(systemLogPath)
+        systemLogFileHandler.setLevel(logging.INFO)        # Log anything to the file >= INFO
 
+        debugLogFileHandler = logging.FileHandler(debugLogPath)
+        debugLogFileHandler.setLevel(logging.DEBUG)        # Log anything to the file >= DEBUG
 
-    def __createLogFile(self, path):
+        streamHandler = logging.StreamHandler()            
+        streamHandler.setLevel(logging.DEBUG)              # Log anything to the console >= DEBUG
+
+        # Write to the logging config
         logging.basicConfig(
-            filename=path,
-            level=logging.INFO,
-            format=self.LOG_FORMAT)
+            level=logging.INFO,     # Logs anything with a level above INFO
+            format=self.LOG_FORMAT, 
+            handlers=[
+                systemLogFileHandler,
+                debugLogFileHandler,
+                streamHandler
+            ],
+            force=True
+            )
         
 
     def __getFormattedTime(self, timestamp: float = None) -> str:
@@ -190,10 +180,18 @@ class DataLogger:
         return strftime("%Y-%m-%d-%H:%M:%S", localtime(timestamp))
 
 
-    def __createCSVFile(self, path):
-        '''Create the telemetry file'''
+    def __createCSVFile(self, fileName: str):
+        '''
+        Create a csv file with a specified fileName & write the header row to it.
+        Header row: `["Time", "Device", "Parameter", "Value", "Units"]`
 
-        with open(path, "w") as file:
+        Parameters:
+            fileName (str): The name of the file to be created.
+        '''
+
+        filePath = os.path.join(self.directoryPath, fileName)
+
+        with open(filePath, "w") as file:
             # Create the CSV writer
             writer = csvWriter(file)
 
@@ -217,6 +215,30 @@ class DataLogger:
                 raise ValueError(f"Invalid file name. Only alphanumeric characters, underscores, and hyphens are allowed. Invalid character: '{char}'")
             if char in invalid_chars:
                 raise ValueError(f"Invalid file name. Contains prohibited characters: {invalid_chars}")
+            
+    
+    def __make_directory(self, directoryName: str) -> str:
+        '''
+        Creates a directory within the base log directory.
+        Used to make the path of the directory which will contain the .log & .csv file.
+
+        Parameters:
+            directoryName (str): The name of the directory being made.
+        
+        Returns:
+            directoryPath (str): The string of the made directory path.
+        '''
+
+        # Make the path to the directory
+        current_time = self.__getFormattedTime()
+        directoryPath = os.path.join(self.logDirectoryPath, f"{current_time}-{directoryName}")
+
+        # Make the directory
+        if not os.path.exists(directoryPath):
+            os.makedirs(directoryPath)
+
+        # Return the path
+        return directoryPath
 
 
 
@@ -227,6 +249,10 @@ if __name__ == '__main__':
     # Initialize the DataLogger with a valid file name
     data_logger = DataLogger("example_log")
 
+
+    print(data_logger.telemetryPath)
+    print(data_logger.systemLogPath)
+
     # Simulate writing telemetry data
     data_logger.writeTelemetry(device_name="EngineSensor", param_name="RPM", value=3500, units="RPM")
     data_logger.writeTelemetry(device_name="BatteryMonitor", param_name="Voltage", value=12.7, units="V")
@@ -234,19 +260,24 @@ if __name__ == '__main__':
 
     # Simulate writing system log messages
     data_logger.writeLog(
-        logger_name="SystemLogger",
+        loggerName="SystemLogger",
         msg="System initialization complete.",
         severity=DataLogger.LogSeverity.INFO
     )
     data_logger.writeLog(
-        logger_name="EngineSensor",
+        loggerName="EngineSensor",
         msg="RPM exceeds safe limit!",
         severity=DataLogger.LogSeverity.WARNING
     )
     data_logger.writeLog(
-        logger_name="SystemLogger",
+        loggerName="SystemLogger",
         msg="System initialization complete.",  # Duplicate message, should not log again within 10 seconds.
         severity=DataLogger.LogSeverity.INFO
+    )
+    data_logger.writeLog(
+        loggerName="lmao",
+        msg="test",  # Duplicate message, should not log again within 10 seconds.
+        severity=DataLogger.LogSeverity.DEBUG
     )
 
     # Simulate retrieving telemetry data
@@ -257,14 +288,14 @@ if __name__ == '__main__':
     # Log an error message after a delay (to avoid duplicate filtering)
     time.sleep(6)
     data_logger.writeLog(
-        logger_name="BatteryMonitor",
+        loggerName="BatteryMonitor",
         msg="Battery voltage dropped below threshold!",
         severity=DataLogger.LogSeverity.ERROR
     )
     
     time.sleep(5)
     data_logger.writeLog(
-        logger_name="BatteryMonitor",
+        loggerName="BatteryMonitor",
         msg="Battery voltage dropped below threshold!",
         severity=DataLogger.LogSeverity.ERROR
     )

@@ -467,15 +467,17 @@ class ADXL343(I2CDevice):
             return
 
         # Expand data from object
-        key = self.name
-        accelerations = accelerations
         units = 'g'
 
         # Update cache with new data
-        self.cached_values[key] = accelerations
+        self.cached_values['x'] = accelerations[0]
+        self.cached_values['y'] = accelerations[1]
+        self.cached_values['z'] = accelerations[2]
 
         # Log the data
-        self._log_telemetry(key, accelerations, units)
+        self._log_telemetry('x', accelerations[0], units)
+        self._log_telemetry('y', accelerations[1], units)
+        self._log_telemetry('z', accelerations[2], units)
 
         # Reset the timeout timer
         self._reset_last_cache_update_timer() 
