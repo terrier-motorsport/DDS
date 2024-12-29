@@ -499,7 +499,7 @@ class MyApp(App):
     def update_io(self, dt):
         # Update all io
         self.io.update()
-        print(dt)
+        # print(dt)
 
         # Get the device data
         # for deviceKey, deviceData in self.data.items():

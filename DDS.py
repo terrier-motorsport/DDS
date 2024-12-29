@@ -16,8 +16,8 @@ from Backend.DDS_IO import DDS_IO
 
 io = DDS_IO(debug=True, demo_mode=True)
 
-# app = MyApp(io=io, demoMode=True)
+app = MyApp(io=io, demoMode=True)
 
 
 
-# app.run()
+app.run()
