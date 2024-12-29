@@ -359,16 +359,16 @@ class Center(FloatLayout):
         self.io = io
 
         def get_speed():
-            erpm = self.io.get_device_data('canInterface','ERPM') * 50
+            erpm = self.io.get_device_data('canInterface','ERPM')
             if erpm is not None:
-                return erpm/10
+                return erpm*5
             else:
                 return -1
         
         def get_rpm():
-            erpm = self.io.get_device_data('canInterface','ERPM') * 50
+            erpm = self.io.get_device_data('canInterface','ERPM')
             if erpm is not None:
-                return erpm/3
+                return erpm*10
             else:
                 return -1
 
