@@ -58,6 +58,16 @@ class TestParameterMonitor(unittest.TestCase):
             "lastServiceDate": {
                 "type": "timestamp",
                 "before": "2025-01-01T00:00:00"
+            },
+            "deviceErrorCode": {
+                "type": "mappedError",
+                "typical": "0x0",
+                "codes": {
+                    "0x1": "Error 1: Overvoltage detected",
+                    "0x2": "Error 2: Overcurrent detected",
+                    "0x3": "Error 3: Thermal runaway",
+                    "0x4": "Error 4: Communication failure"
+                }
             }
         }
 
@@ -110,6 +120,13 @@ class TestParameterMonitor(unittest.TestCase):
         monitor.check_value("hotPressure", 3.0)  # out of range (max=2.5)
         self.assertEqual(len(monitor.active_warnings), 1)
         self.assertIn("out of range", monitor.active_warnings[0].msg)
+
+    def test_check_value_incorrect_type_edge(self):
+        """Edge: Provide a incorrect value type"""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        monitor.check_value("hotPressure", True)  # out of range (max=2.5)
+        self.assertEqual(len(monitor.active_warnings), 1)
+        self.assertIn("not numeric", monitor.active_warnings[0].msg)
 
     # ------------------------------------------------------------------
     #  _validate_value(...) 
@@ -266,6 +283,89 @@ class TestParameterMonitor(unittest.TestCase):
         # 2025-01-01T10:00:00 is NOT before 2025-01-01T00:00:00
         msg = monitor._validate_timestamp("lastServiceDate", "2025-01-01T10:00:00", rules)
         self.assertIn("which is not before 2025-01-01T00:00:00", msg)
+
+    # ------------------------------------------------------------------
+    #  _validate_mapped_error(...)
+    # ------------------------------------------------------------------
+
+    def test__validate_mapped_error_normal_typical_value(self):
+        """Normal: Provide the typical value, expect VALID_RETURN_STR."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        rules = {
+            "type": "mappedError",
+            "typical": "0x0",
+            "codes": {
+                "0x1": "Error 1: Overvoltage detected",
+                "0x2": "Error 2: Overcurrent detected",
+                "0x3": "Error 3: Thermal runaway",
+                "0x4": "Error 4: Communication failure"
+            }
+        }
+        msg = monitor._validate_mapped_error("deviceErrorCode", "0x0", rules)
+        self.assertEqual(msg, VALID_RETURN_STR)
+
+    def test__validate_mapped_error_edge_value_in_codes(self):
+        """Edge: Provide a value not equal to the typical value, expect the associated message."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        rules = {
+            "type": "mappedError",
+            "typical": "0x0",
+            "codes": {
+                "0x1": "Error 1: Overvoltage detected",
+                "0x2": "Error 2: Overcurrent detected",
+                "0x3": "Error 3: Thermal runaway",
+                "0x4": "Error 4: Communication failure"
+            }
+        }
+        msg = monitor._validate_mapped_error("deviceErrorCode", "0x2", rules)
+        self.assertIn("Error 2: Overcurrent detected", msg)
+        self.assertIn("deviceErrorCode", msg)
+
+    def test__validate_mapped_error_edge_value_not_in_codes(self):
+        """Edge: Provide a value not in the codes list, expect an unknown code warning."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        rules = {
+            "type": "mappedError",
+            "typical": "0x0",
+            "codes": {
+                "0x1": "Error 1: Overvoltage detected",
+                "0x2": "Error 2: Overcurrent detected",
+                "0x3": "Error 3: Thermal runaway",
+                "0x4": "Error 4: Communication failure"
+            }
+        }
+        msg = monitor._validate_mapped_error("deviceErrorCode", "0x5", rules)
+        self.assertIn("unknown code", msg)
+        self.assertIn("deviceErrorCode has unknown code '0x5'", msg)
+
+    def test__validate_mapped_error_unknown_code(self):
+        """Test: Provide an unknown code for mappedError, expect an unknown code warning."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        rules = self.sample_config["deviceErrorCode"]
+        msg = monitor._validate_mapped_error("deviceErrorCode", "0x5", rules)
+        self.assertIn("unknown code", msg)
+        self.assertIn("deviceErrorCode has unknown code '0x5'", msg)
+
+    def test_check_value_invalid_data_type_numeric(self):
+        """Test: Provide a non-numeric value for a numeric parameter, expect an error."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        monitor.check_value("hotPressure", "invalid")  # non-numeric input
+        self.assertEqual(len(monitor.active_warnings), 1)
+        self.assertIn("not numeric", monitor.active_warnings[0].msg)
+
+    def test_check_value_invalid_data_type_array(self):
+        """Test: Provide a non-array value for an array parameter, expect an error."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        monitor.check_value("batteryCellTemperatures", "invalid")  # non-array input
+        self.assertEqual(len(monitor.active_warnings), 1)
+        self.assertIn("which is not a list", monitor.active_warnings[0].msg)
+
+    def test_check_value_invalid_data_type_boolean(self):
+        """Test: Provide a non-boolean value for a boolean parameter, expect an error."""
+        monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+        monitor.check_value("isBrakeApplied", None)  # non-boolean input
+        self.assertEqual(len(monitor.active_warnings), 1)
+        self.assertIn("is not a boolean", monitor.active_warnings[0].msg)
 
     # ------------------------------------------------------------------
     #  create_warning(warning: ParameterWarning)

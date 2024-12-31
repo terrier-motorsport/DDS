@@ -54,17 +54,25 @@ parameter being monitored. The supported types and their rules are detailed belo
         - "before": (Optional) The latest acceptable timestamp (e.g., "2025-01-01T00:00:00").
         - "after": (Optional) The earliest acceptable timestamp (e.g., "2020-01-01T00:00:00").
 
-6. **Unknown/Unsupported Types**
+6. **Mapped Error** (type: "mappedError")
+    - Validates parameters with error codes that map to specific error messages.
+    - Rules:
+        - "codes": A dictionary mapping each error code (key) to a corresponding error message (value).
+        - "typical": (Optional) A single "typical" value indicating the normal/expected state. If the parameter
+          value matches this typical value, no warning is generated. If it deviates, the mapped error message
+          for the current value is returned.
+
+7. **Unknown/Unsupported Types**
     - If a parameter's "type" is not recognized, it will be ignored and a warning may be logged.
 
     
 Configuration Structure
 -----------------------
 Each parameter in the JSON configuration file must define:
-    - "type": The type of validation to apply (e.g., "numeric", "boolean").
-    - Rules specific to the type (e.g., "min", "max" for "numeric"; "valid" for "categorical").
-
+    - "type": The type of validation to apply (e.g., "numeric", "boolean", "mappedError").
+    - Rules specific to the type (e.g., "min", "max" for "numeric"; "valid" for "categorical"; "typical" for "mappedError").
     
+
 Example Configuration
 ----------------------
 {
@@ -89,6 +97,16 @@ Example Configuration
     "lastServiceDate": {
         "type": "timestamp",
         "before": "2025-01-01T00:00:00"
+    },
+    "deviceErrorCode": {
+        "type": "mappedError",
+        "codes": {
+            "0x1": "Error 1: Overvoltage detected",
+            "0x2": "Error 2: Overcurrent detected",
+            "0x3": "Error 3: Thermal runaway",
+            "0x4": "Error 4: Communication failure"
+        },
+        "typical": "0x0"
     }
 }
 """
@@ -139,15 +157,16 @@ class ParameterMonitor:
 
     Attributes:
         active_warnings (list[ParameterWarning]): A list to store active warnings.
-        parameter_limits (dict): A dictionary containing the min and max limits for each parameter.
+        parameter_limits (dict): A dictionary containing the limits and validation rules for each parameter.
 
-    Methods:
-        __init__(value_limits_file_path: str): Initializes the ParameterMonitor with a configuration file.
-        check_value(param_name: str, param_value: float): Checks if a parameter value is within the defined limits and raises a warning if it is not.
-        create_warning(warning: ParameterWarning): Adds a warning to the warning list if it does not already exist.
-        clear_warning(param_name: str): Clears the warning for a specific parameter.
-        get_warnings() -> List[str]: Returns a list of active warnings as strings.
-        __load_config(config_path: str) -> dict: Loads the value limits configuration from a file.
+    Supported Parameter Types:
+        - Numeric ("numeric"): Parameters with numerical values and optional min/max bounds.
+        - Boolean ("boolean"): Parameters with boolean values and an optional expected value.
+        - Categorical ("categorical"): Parameters with string values validated against a predefined list.
+        - Array ("array"): Parameters containing lists of numerical values validated against min/max bounds.
+        - Timestamp ("timestamp"): Parameters with ISO 8601 timestamps validated against "before" or "after" constraints.
+        - Mapped Error ("mappedError"): Parameters with error codes mapping to specific error messages. Includes optional
+        support for a "typical" value that represents the normal/expected state.
     """
 
     active_warnings: list[ParameterWarning]
@@ -177,7 +196,7 @@ class ParameterMonitor:
 
     def check_value(self, param_name: str, param_value: Union[float, bool, str, list]):
         """
-        Checks if a parameter value is within the defined limits/rules 
+        Checks if a parameter value is within the defined constraint
         and raises a warning if it is not.
 
         Args:
@@ -242,11 +261,11 @@ class ParameterMonitor:
             return self._validate_array(param_name, param_value, rules)
         elif param_type == 'timestamp':
             return self._validate_timestamp(param_name, param_value, rules)
+        elif param_type == 'mappedError':
+            return self._validate_mapped_error(param_name, param_value, rules)
         else:
             # Unknown type => treat it as an Error
-            msg = f"Parameter '{param_name}' has unknown validation type '{param_type}'."
-            self.__log(msg, DataLogger.LogSeverity.ERROR)
-            return msg
+            return self.__log_and_return_err(f"Parameter '{param_name}' has unknown validation type '{param_type}'.")
 
 
     def _validate_numeric(self, param_name: str, param_value: Union[float, int], rules: dict) -> str:
@@ -256,8 +275,8 @@ class ParameterMonitor:
         Returns:
             `str`: An error message if invalid, else empty string.
         """
-        # Check correct type
-        if not isinstance(param_value, (int, float)):
+        # Check correct type (must be a int/float & not a bool)
+        if not (isinstance(param_value, (int, float)) and not isinstance(param_value, bool)):
             return (f"{param_name} has value '{param_value}' which is not numeric.")
 
         min_val = rules.get('min', float('-inf'))
@@ -276,9 +295,7 @@ class ParameterMonitor:
             `str`: An error message if invalid, else empty string.
         """
         if not isinstance(param_value, bool):
-            msg = f"{param_name} has value '{param_value}' which is not a boolean."
-            self.__log(msg, DataLogger.LogSeverity.ERROR)
-            return msg  # Explicitly return the string
+            return self.__log_and_return_err(f"{param_name} has value '{param_value}' which is not a boolean.")
 
         expected_val = rules.get('expected')
         if expected_val is not None and param_value != expected_val:
@@ -308,7 +325,7 @@ class ParameterMonitor:
             `str`: An error message if invalid, else empty string.
         """
         if not isinstance(param_value, list):
-            return self.__log(f"{param_name} has value '{param_value}' which is not a list.", DataLogger.LogSeverity.ERROR)
+            return self.__log_and_return_err(f"{param_name} has value '{param_value}' which is not a list.")
 
         min_val = rules.get('min', float('-inf'))
         max_val = rules.get('max', float('inf'))
@@ -322,12 +339,16 @@ class ParameterMonitor:
 
 
     def _validate_timestamp(self, param_name: str, param_value: str, rules: dict) -> str:
+        """
+        Validates the current time against a predetermined timestamp.
+
+        Returns:
+            `str`: An error message if invalid, else empty string.
+        """
         try:
             dt_value = datetime.datetime.fromisoformat(param_value)
         except ValueError:
-            msg = f"{param_name} has value '{param_value}' which is not a valid ISO timestamp."
-            self.__log(msg, DataLogger.LogSeverity.ERROR)
-            return msg  # Return the actual string, not the log call
+            return self.__log_and_return_err(f"{param_name} has value '{param_value}' which is not a valid ISO timestamp.")
 
         before_str = rules.get('before')
         after_str = rules.get('after')
@@ -339,7 +360,8 @@ class ParameterMonitor:
                 if dt_value >= before_dt:
                     return (f"{param_name} = {param_value}, which is not before {before_str}.")
             except ValueError:
-                return self.__log(f"{param_name} has invalid 'before' constraint '{before_str}'.", DataLogger.LogSeverity.ERROR)
+                return self.__log_and_return_err(
+                    f"{param_name} has invalid 'before' constraint '{before_str}'.", DataLogger.LogSeverity.ERROR)
 
         # Check 'after'
         if after_str:
@@ -348,9 +370,43 @@ class ParameterMonitor:
                 if dt_value <= after_dt:
                     return (f"{param_name} = {param_value}, which is not after {after_str}.")
             except ValueError:
-                return self.__log(f"{param_name} has invalid 'after' constraint '{after_str}'.", DataLogger.LogSeverity.ERROR)
+                return self.__log_and_return_err(
+                    f"{param_name} has invalid 'after' constraint '{after_str}'.", DataLogger.LogSeverity.ERROR)
 
         return VALID_RETURN_STR
+    
+    def _validate_mapped_error(
+        self, 
+        param_name: str, 
+        param_value: Union[str, int], 
+        rules: dict
+    ) -> str:
+        """
+        Validates an error-code parameter where each code maps to a message.
+
+        For "mappedError" parameters:
+            - If the current value matches the "typical" value, VALID_RETURN_STR is returned.
+            - If the current value deviates from the "typical" value, the corresponding message from the "codes" field
+            is returned.
+            - If the current value is not in the "codes" field, a warning for an unknown code is generated.
+
+        Returns:
+            str: An error message if invalid, or VALID_RETURN_STR if valid.
+        """
+        codes_map = rules.get("codes", {})
+        param_str = str(param_value)  # Convert param_value to string for comparison
+        typical_value = str(rules.get("typical", ""))  # Ensure typical value is a string
+
+        # If the current value matches the typical value, return VALID_RETURN_STR
+        if param_str == typical_value:
+            return VALID_RETURN_STR
+
+        # If the current value is in the codes map, return the associated message
+        if param_str in codes_map:
+            return f"{param_name} {codes_map[param_str]}"
+
+        # If the value is not recognized, return a error
+        return self.__log_and_return_err(f"{param_name} has unknown code '{param_value}'.")
 
 
     def create_warning(self, warning: ParameterWarning):
@@ -404,6 +460,17 @@ class ParameterMonitor:
             `List[ParameterWarning]`: A list of active warnings.
         """
         return self.active_warnings
+    
+    def __log_and_return_err(self, err_msg: str) -> str:
+        '''
+        Shorthand for logging an error & returning it on the same line.
+
+        Returns:
+            `err_msg`
+        '''
+
+        self.__log(err_msg, DataLogger.LogSeverity.ERROR)
+        return err_msg
 
 
     def __load_config(self, config_path: str) -> dict[str, dict]:
@@ -416,8 +483,28 @@ class ParameterMonitor:
         Returns:
             dict: A dictionary containing the value limits.
         """
+        config: dict[str, dict]
+
+        # Read JSON File
         with open(config_path, 'r') as file:
-            return json.load(file)
+            config = json.load(file)
+
+        # Validate mappedError configurations
+        for param_name, param_rules in config.items():
+            if param_rules.get("type") == "mappedError":
+                typical = param_rules.get("typical")
+                if typical is not None and str(typical) in param_rules.get("codes", {}):
+                    msg = (f"Parameter '{param_name}' has a 'typical' value '{typical}' "
+                        f"that exists in its 'codes' dictionary. This is not allowed.")
+                    self.__log(msg, DataLogger.LogSeverity.ERROR)
+                    raise ValueError(msg)
+                
+        # Log File Read
+        self.__log('Successfully loaded valuelimits.json.')
+        return config
+        
+    
+    
         
 
     def __log(self, msg: str, severity=DataLogger.LogSeverity.DEBUG):
@@ -450,7 +537,17 @@ if __name__ == "__main__":
         },
         "lastServiceDate": {
             "type": "timestamp",
-            "before": "2025-01-01T00:00:00"
+            "before": "2025-05-01T00:00:00"
+        },
+        "deviceErrorCode": {
+            "type": "mappedError",
+            "codes": {
+                "0x1": "Error 1: Overvoltage detected",
+                "0x2": "Error 2: Overcurrent detected",
+                "0x3": "Error 3: Thermal runaway",
+                "0x4": "Error 4: Communication failure"
+            },
+            "typical": "0x0"
         }
     }
     """
@@ -462,7 +559,7 @@ if __name__ == "__main__":
     value_monitor = ParameterMonitor(value_limits, logger)
 
     print("Loaded parameter limits:")
-    print(value_monitor.parameter_limits)
+    print(json.dumps(value_monitor.parameter_limits, indent=4))
 
     # Example test data
     test_data = {
@@ -470,7 +567,8 @@ if __name__ == "__main__":
         "isBrakeApplied": True,           # boolean, expected = false => warning
         "gearSelection": "X",             # categorical, invalid => warning
         "batteryCellTemperatures": [25, 48, 52],  # array, last element out of range
-        "lastServiceDate": "2025-05-01T12:00:00"  # timestamp, after the allowed date
+        "lastServiceDate": "2025-05-01T12:00:00",  # timestamp, after the allowed date
+        "deviceErrorCode": "0x2"          # mappedError, not typical => warning
     }
 
     # Validate each parameter
@@ -479,5 +577,6 @@ if __name__ == "__main__":
         value_monitor.check_value(param_name, param_value)
 
     # Print out warnings
+    print("\nActive Warnings:")
     for warning in value_monitor.get_warnings():
         print(warning.getMsg())
