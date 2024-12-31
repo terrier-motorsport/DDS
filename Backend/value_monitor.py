@@ -216,20 +216,6 @@ class ParameterMonitor:
             # If it's valid, clear any existing warning
             self.clear_warning(param_name)
 
-        # try:
-        #     min_value = self.parameter_limits[param_name]['min']
-        #     max_value = self.parameter_limits[param_name]['max']
-        # except KeyError:
-        #     # This happens if there is no database entry for the parameter.
-        #     # In this case, we can ignore it and return early.
-        #     return
-
-        # if not min_value <= param_value <= max_value:
-        #     # Raise a warning for the parameter
-        #     parameter_warning = ParameterWarning(param_name, param_value, min_value, max_value)
-        #     self.create_warning(parameter_warning)
-        # else:
-        #     self.clear_warning(param_name)
 
     def _validate_value(
         self, 
@@ -425,15 +411,22 @@ class ParameterMonitor:
 
     def clear_warning(self, param_name: str):
         """
-        Clears the warning for a specific parameter.
+        Clears the warning for a specific parameter and logs the action.
 
         Args:
             param_name (str): The name of the parameter to clear the warning for.
         """
+        initial_warning_count = len(self.active_warnings)
+
+        # Remove the warning for the specified parameter
         self.active_warnings = [
-            warning for warning in self.active_warnings 
+            warning for warning in self.active_warnings
             if warning.param_name != param_name
         ]
+
+        # Check if a warning was cleared and log the action
+        if len(self.active_warnings) < initial_warning_count:
+            self.__log(f"Warning cleared for parameter '{param_name}'.", DataLogger.LogSeverity.INFO)
 
 
     def get_warnings_as_str(self) -> List[str]:
@@ -539,24 +532,24 @@ if __name__ == "__main__":
         "deviceErrorCode": {
             "type": "mappedError",
             "codes": {
-                "0x1": "Error 1: Overvoltage detected",
-                "0x2": "Error 2: Overcurrent detected",
-                "0x3": "Error 3: Thermal runaway",
-                "0x4": "Error 4: Communication failure"
+                "1": "Error 1: Overvoltage detected",
+                "2": "Error 2: Overcurrent detected",
+                "3": "Error 3: Thermal runaway",
+                "4": "Error 4: Communication failure"
             },
-            "typical": "0x0"
+            "typical": "0"
         }
     }
     """
     # Parse JSON into a dictionary
-    value_limits = json.loads(json_config)
+    value_limits = json5.loads(json_config)
 
     # Initialize the ParameterMonitor
     logger = DataLogger('ValueMonitor_Test')
     value_monitor = ParameterMonitor(value_limits, logger)
 
     print("Loaded parameter limits:")
-    print(json.dumps(value_monitor.parameter_limits, indent=4))
+    print(json5.dumps(value_monitor.parameter_limits, indent=4))
 
     # Example test data
     test_data = {
@@ -565,7 +558,7 @@ if __name__ == "__main__":
         "gearSelection": "X",             # categorical, invalid => warning
         "batteryCellTemperatures": [25, 48, 52],  # array, last element out of range
         "lastServiceDate": "2025-05-01T12:00:00",  # timestamp, after the allowed date
-        "deviceErrorCode": "0x2"          # mappedError, not typical => warning
+        "deviceErrorCode": 0x2            # mappedError, not typical => warning
     }
 
     # Validate each parameter
@@ -574,6 +567,8 @@ if __name__ == "__main__":
         value_monitor.check_value(param_name, param_value)
 
     # Print out warnings
-    print("\nActive Warnings:")
-    for warning in value_monitor.get_warnings():
-        print(warning.getMsg())
+    # print("\nActive Warnings:")
+    # for warning in value_monitor.get_warnings():
+    #     print(warning.getMsg())
+
+    value_monitor.check_value('deviceErrorCode', 0x0)

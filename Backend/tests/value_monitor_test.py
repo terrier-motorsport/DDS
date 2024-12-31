@@ -1,7 +1,5 @@
 import unittest
-import os
-import json
-import datetime
+import json5
 from unittest.mock import MagicMock, patch, mock_open
 
 # Assuming these classes/functions are defined in value_monitor.py
@@ -83,7 +81,7 @@ class TestParameterMonitor(unittest.TestCase):
 
     def test_init_using_file_path_normal(self):
         """Normal: Provide a valid JSON file path, ensuring it loads without error."""
-        test_json_str = json.dumps(self.sample_config)
+        test_json_str = json5.dumps(self.sample_config)
         with patch("builtins.open", mock_open(read_data=test_json_str)):
             monitor = ParameterMonitor("path/to/config.json", self.mock_logger)
             self.assertEqual(monitor.parameter_limits, self.sample_config)
@@ -497,18 +495,19 @@ class TestParameterMonitor(unittest.TestCase):
     def test___load_config_normal_file(self):
         """Normal: Load a valid JSON file from disk."""
         # Use mock_open to simulate file reading
-        test_json_str = json.dumps(self.sample_config)
+        test_json_str = json5.dumps(self.sample_config)
         monitor = ParameterMonitor(self.sample_config, self.mock_logger)
         with patch("builtins.open", mock_open(read_data=test_json_str)):
             loaded = monitor._ParameterMonitor__load_config("fake_path.json")
         self.assertEqual(loaded, self.sample_config)
 
     def test___load_config_edge_invalid_json(self):
-        """Edge: Raise JSONDecodeError when the file is invalid JSON."""
-        invalid_json = "{someInvalidJson}"
+        """Edge: Raise ValueError when the file contains invalid JSON5."""
+        invalid_json = "{someInvalidJson}"  # Invalid JSON5 input
         monitor = ParameterMonitor(self.sample_config, self.mock_logger)
+
         with patch("builtins.open", mock_open(read_data=invalid_json)):
-            with self.assertRaises(json.JSONDecodeError):
+            with self.assertRaises(ValueError):  # json5 raises ValueError for invalid input
                 monitor._ParameterMonitor__load_config("fake_path.json")
 
     def test___load_config_edge_file_not_found(self):
