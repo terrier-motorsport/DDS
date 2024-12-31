@@ -54,7 +54,7 @@ class DDS_IO:
         self.log = DataLogger('DDS_Log')
         self.debug = debug
         self.demo_mode = demo_mode
-        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
+        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
 
         self.__log('Starting Dash Display System Backend...')
 

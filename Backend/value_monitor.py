@@ -1,7 +1,6 @@
 # Value Monitor for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-
 """
 Module Overview
 ---------------
@@ -111,12 +110,10 @@ Example Configuration
 }
 """
 
-import json
+import json5
 import datetime
 from typing import List, Union
 from Backend.data_logger import DataLogger
-
-
 
 
 class ParameterWarning:
@@ -487,7 +484,7 @@ class ParameterMonitor:
 
         # Read JSON File
         with open(config_path, 'r') as file:
-            config = json.load(file)
+            config = json5.load(file)
 
         # Validate mappedError configurations
         for param_name, param_rules in config.items():
