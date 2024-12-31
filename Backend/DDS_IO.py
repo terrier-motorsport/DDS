@@ -129,7 +129,7 @@ class DDS_IO:
 
     def get_warnings(self) -> List[str]:
         '''Returns a list of active warnings'''
-        warnings = self.parameter_monitor.get_warnings()
+        warnings = self.parameter_monitor.get_warnings_as_str()
 
         if not self.demo_mode:
             return warnings
