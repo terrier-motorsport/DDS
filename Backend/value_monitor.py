@@ -67,8 +67,9 @@ parameter being monitored. The supported types and their rules are detailed belo
     
 Configuration Structure
 -----------------------
-Each parameter in the JSON configuration file must define:
+Each parameter in the JSON5 configuration file must define:
     - "type": The type of validation to apply (e.g., "numeric", "boolean", "mappedError").
+    - "prefix": A string that prepends the warning message should it be raised (e.g., "MC", "AMS", ...)
     - Rules specific to the type (e.g., "min", "max" for "numeric"; "valid" for "categorical"; "typical" for "mappedError").
     
 
@@ -76,6 +77,7 @@ Example Configuration
 ----------------------
 {
     "hotPressure": {
+        "prefix": "CL",
         "type": "numeric",
         "min": 0.8,
         "max": 2.5
@@ -202,19 +204,28 @@ class ParameterMonitor:
         """
         if param_name not in self.parameter_limits:
             # If there's no config for this parameter, log & return
-            return self.__log(f'No Value Limits found for param: {param_name} ({param_value:.2f})')
+            return self.__log(f'No Value Limits found for param: {param_name} ({param_value})')
         
         rules = self.parameter_limits[param_name]
         param_type = rules.get('type', 'numeric')  # fallback to numeric if unspecified
 
-        warning_msg = self._validate_value(param_name, param_value, param_type, rules)
-        if warning_msg:
-            # A warning message indicates the value is invalid or out of range
-            parameter_warning = ParameterWarning(param_name, param_value, warning_msg)
-            self.create_warning(parameter_warning)
-        else: 
+        # Make warning text
+        warning_text = self._validate_value(param_name, param_value, param_type, rules)
+        prefix = self.__get_prefix(rules)
+
+        # Check to see if there was a warning returned
+        if warning_text == VALID_RETURN_STR:
             # If it's valid, clear any existing warning
             self.clear_warning(param_name)
+            return
+
+        # Add the prefix to warning_msg
+        warning_msg = prefix + warning_text
+
+        # A warning message indicates the value is invalid or out of range
+        parameter_warning = ParameterWarning(param_name, param_value, warning_msg)
+        self.create_warning(parameter_warning)
+
 
 
     def _validate_value(
@@ -265,7 +276,7 @@ class ParameterMonitor:
         min_val = rules.get('min', float('-inf'))
         max_val = rules.get('max', float('inf'))
 
-        if param_value <= min_val or param_value >= max_val:
+        if param_value < min_val or param_value > max_val:
             return (f"{param_name} ({param_value}) is out of range: [{min_val}, {max_val}]")
         return VALID_RETURN_STR
     
@@ -488,14 +499,24 @@ class ParameterMonitor:
                         f"that exists in its 'codes' dictionary. This is not allowed.")
                     self.__log(msg, DataLogger.LogSeverity.ERROR)
                     raise ValueError(msg)
+                if typical is None:
+                    msg = (f"Parameter '{param_name}' has no 'typical' value")
+                    self.__log(msg, DataLogger.LogSeverity.ERROR)
+                    raise ValueError(msg)
                 
         # Log File Read
         self.__log('Successfully loaded valuelimits.json.')
         return config
         
-    
-    
-        
+    def __get_prefix(self, rules: dict) -> str:
+        """"Returns the prefix for a given parameter limit (if it exists)"""
+        prefix = rules.get("prefix")
+
+        if prefix is not None:
+            return prefix + " "
+        else:
+            return ""
+
 
     def __log(self, msg: str, severity=DataLogger.LogSeverity.DEBUG):
         """Shorthand logging method."""
@@ -542,33 +563,36 @@ if __name__ == "__main__":
     }
     """
     # Parse JSON into a dictionary
-    value_limits = json5.loads(json_config)
+    # value_limits = json5.loads(json_config)
 
     # Initialize the ParameterMonitor
     logger = DataLogger('ValueMonitor_Test')
-    value_monitor = ParameterMonitor(value_limits, logger)
+    value_monitor = ParameterMonitor('Backend/config/valuelimits.json5', logger)
 
-    print("Loaded parameter limits:")
-    print(json5.dumps(value_monitor.parameter_limits, indent=4))
+    # print("Loaded parameter limits:")
+    # print(json5.dumps(value_monitor.parameter_limits, indent=4))
 
-    # Example test data
+    # Example test data (MC)
+    # test_data = {
+    #     "FAULT" : 7,
+    #     "BrakeSignal": 100.001,
+    #     "DriveEnable": False,
+    #     "CANMapVersion": 24,
+    #     "FOC_Id": -1
+    # }
+
+    # Example test data (AMS)
     test_data = {
-        "hotPressure": 2.6,               # numeric, out of range
-        "isBrakeApplied": True,           # boolean, expected = false => warning
-        "gearSelection": "X",             # categorical, invalid => warning
-        "batteryCellTemperatures": [25, 48, 52],  # array, last element out of range
-        "lastServiceDate": "2025-05-01T12:00:00",  # timestamp, after the allowed date
-        "deviceErrorCode": 0x2            # mappedError, not typical => warning
+        "Pack_Current": 520,               # numeric, out of range (exceeds max of 500)
+        "Pack_Inst_Voltage": 450,          # numeric, within range (0-500)
+        "Pack_SOC": -5,                    # numeric, out of range (below min of 0)
+        "Relay_State": False,              # boolean, matches the expected value (False)
+        "Pack_DCL": 480,                   # numeric, within range (0-500)
+        "High_Temperature": 85,            # numeric, out of range (exceeds max of 80)
+        "Low_Temperature": -50,            # numeric, out of range (below min of -40)
     }
 
     # Validate each parameter
     print("\nValidating parameters...")
     for param_name, param_value in test_data.items():
         value_monitor.check_value(param_name, param_value)
-
-    # Print out warnings
-    # print("\nActive Warnings:")
-    # for warning in value_monitor.get_warnings():
-    #     print(warning.getMsg())
-
-    value_monitor.check_value('deviceErrorCode', 0x0)
