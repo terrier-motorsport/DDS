@@ -223,7 +223,7 @@ class DDS_IO:
         ]
         # Refer to the voltage divider circuit for the NTC_M12s
         supply_voltage = 5
-        fixed_resistor = 3200
+        fixed_resistor = 1000
         NTC_M12_value_mapper = ExponentialValueMapper(
             resistance_values=resistance_values,
             output_values=temperature_values,

@@ -439,8 +439,6 @@ class ADXL343(I2CDevice):
         time.sleep(0.5)
 
         # Start data collection thread
-        # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
-        self.status = self.Status.ACTIVE
         self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
@@ -534,6 +532,8 @@ class ADXL343(I2CDevice):
         """
         Start the data collection in a separate thread.
         """
+        # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
+        self.status = self.Status.ACTIVE
 
         # Make thread
         sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
