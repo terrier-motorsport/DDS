@@ -54,7 +54,7 @@ class DDS_IO:
         self.log = DataLogger('DDS_Log')
         self.debug = debug
         self.demo_mode = demo_mode
-        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
+        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
 
         self.__log('Starting Dash Display System Backend...')
 
@@ -87,14 +87,21 @@ class DDS_IO:
                 return
 
 
-    def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
-        '''Gets a single parameter from a specified device.'''
+    def get_device_data(self, device_key: str, parameter: str, caller: str="DDS_IO") -> Union[str, float, int, None]:
+        '''
+        Gets a single parameter from a specified device.
+
+        Parameters:
+            device_key `(str)`: The key of the device in the device list
+            parameter `(str)`: The key of the parameter that you are requesting
+            caller `(str)`: The name of the entity calling this function. Used for logging purposes.
+        '''
 
         device = self.__get_device(device_key)
 
         # If the device is None, we can return early
         if device is None:
-            self.__log(f'Device {device_key} not found. (Data Req: {parameter})', DataLogger.LogSeverity.WARNING)
+            self.__log(f'Device {device_key} not found. (Data Req: {parameter})', DataLogger.LogSeverity.DEBUG, caller)
 
             if self.demo_mode:
                 return random.random() * 100
@@ -129,7 +136,7 @@ class DDS_IO:
 
     def get_warnings(self) -> List[str]:
         '''Returns a list of active warnings'''
-        warnings = self.parameter_monitor.get_warnings()
+        warnings = self.parameter_monitor.get_warnings_as_str()
 
         if not self.demo_mode:
             return warnings
@@ -361,9 +368,9 @@ class DDS_IO:
             self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))
 
     
-    def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
+    def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO, name="DDS_IO"):
         self.log.writeLog(
-            loggerName='DDS_IO',
+            loggerName=name,
             msg=msg,
             severity=severity)
 
