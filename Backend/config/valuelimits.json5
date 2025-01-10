@@ -1,0 +1,375 @@
+{
+    // ==================================================
+    //
+    //               Motor Controller (MC)
+    //
+    // ==================================================
+
+    "AC_Current": {    /* The motor current. The sign of this value represents whether the motor is running (positive) current or regenerating (negative) current. [Apk] */ 
+        "type": "numeric",
+        "min": 0,
+        "max": 200
+    },
+    "DC_Current": {    /* Current on DC side. The sign of this value represents whether the motor is running (positive) current or regenerating (negative) current. [Adc] */ 
+        "type": "numeric",
+        "min": 0,
+        "max": 200
+    },
+    "ControllerTemp": { /* Temperature of the inverter semiconductors. [°C] */ 
+        "type": "numeric",
+        "min": 0,
+        "max": 100
+    },
+    "MotorTemp": {      /* Temperature of the motor measured by the inverter. [°C] */ 
+        "type": "numeric",
+        "min": 0,
+        "max": 100
+    },
+    "FAULT": {
+        "prefix": "MC",
+        "type": "mappedError",
+        "codes": {
+            "1": "Overvoltage", // ------------------------------ Input voltage exceeded the maximum allowable limit
+            "2": "Undervoltage", // ----------------------------- Input voltage dropped below the minimum allowable limit
+            "3": "DRV", // -------------------------------------- Error in the transistor or its driving circuit
+            "4": "ABS. Overcurrent", // ------------------------- AC current exceeded the absolute maximum limit
+            "5": "CTLR Overtemp.", // --------------------------- Controller's temperature surpassed the maximum threshold
+            "6": "Motor Overtemp.", // -------------------------- Motor's temperature surpassed the maximum threshold
+            "7": "Sensor wire fault", // ------------------------ An issue with the sensor differential signals (wiring problem)
+            "8": "Sensor general fault", // --------------------- General error in sensor signal processing
+            "9": "CAN Command error", // ------------------------ Invalid parameter received in a CAN message
+            "10": "Analog input error" // ----------------------- Redundant output is out of the expected range
+        },
+        "typical": 0
+    },
+    "FOC_Id": { /* FOC algorithm component Id. [Apk] */
+        "prefix": "MC",
+        "type": "numeric",
+        "min": 0,
+        "max": 200
+    },
+    "FOC_Iq": { /* FOC algorithm component Iq. [Apk] */
+        "prefix": "MC",
+        "type": "numeric",
+        "min": 0,
+        "max": 200
+    },
+    "ThrottleSignal": { /* Throttle signal derived from analog inputs or CAN2. [%] */
+        "type": "numeric",
+        "min": 0,
+        "max": 100
+    },
+    "BrakeSignal": { /* Brake signal derived from analog inputs or CAN2. [%] */
+        "type": "numeric",
+        "min": 0,
+        "max": 100
+    },
+    "DigitalIn1": { /* Digital input 1: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalIn2": { /* Digital input 2: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalIn3": { /* Digital input 3: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalIn4": { /* Digital input 4: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalOut1": { /* Digital output 1: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalOut2": { /* Digital output 2: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalOut3": { /* Digital output 3: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DigitalOut4": { /* Digital output 4: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "CapacitorTempLimit": { /* Capacitor temperature limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DCCurrentLimit": { /* DC current limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "DriveEnableLimit": { /* Drive enable limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "IGBTAccelerationTempLimit": { /* IGBT acceleration temperature limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "IGBTTempLimit": { /* IGBT temperature limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "InputVoltageLimit": { /* Input voltage limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "MotorAccelTempLimit": { /* Motor acceleration temperature limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "MotorTempLimit": { /* Motor temperature limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "RPMMinLimit": { /* RPM min limit: 1 = Active, 0 = Inactive */
+        "type": "boolean",
+        "expected": false
+    },
+    "RPMMaxLimit": { /* RPM max limit: 1 = Active, 0 = Inactive */
+        "type": "boolean",
+        "expected": false
+    },
+    "PowerLimit": { /* Power limit: 1 = Active, 0 = Inactive */
+        "prefix": "MC",
+        "type": "boolean",
+        "expected": false
+    },
+    "CANMapVersion": { /* Indicates the CAN map version */
+        "prefix": "MC",
+        "type": "numeric",
+        "min": 24,
+        "max": 24
+    },
+    // ----- THESE ARE ALL SENT SIGNALS -> I'M PRETTY SURE WE DON'T NEED LIMITS ON IT. -----
+    // "ACCurrent": { /* Target motor AC current (peak). [Apk] */
+    //     "type": "numeric",
+    //     "min": -200,
+    //     "max": 200
+    // },
+    // "TargetBrakeCurrent": { /* Targets the brake current of the motor. [Apk] */
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 200
+    // },
+    // "TargetERPM": { /* Target motor ERPM (direction-sensitive). [ERPM] */
+    //     "type": "numeric",
+    //     "min": -50000,
+    //     "max": 50000
+    // },
+    // "TargetPosition": { /* Desired motor position in degrees. [°] */
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 3600
+    // },
+    // "TargetRelACCurrent": { /* Relative AC current. [%] */
+    //     "type": "numeric",
+    //     "min": -100,
+    //     "max": 100
+    // },
+    // "TargetRelBrakeACCurrent": { /* Relative brake current. [%] */
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 100
+    // },
+    // "MaxACCurrent": { /* Maximum allowable AC current. [Apk] */
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 200
+    // },
+    // "MaxBrakeCurrent": { /* Maximum allowable brake current. [Apk] */
+    //     "type": "numeric",
+    //     "min": -200,
+    //     "max": 0
+    // },
+    // "SetMaxDCCurrent": { /* Maximum allowable DC current. [A] */
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 200
+    // },
+    // "SetMaxBrakeDCCurrent": { /* Maximum allowable brake DC current. [%] */
+    //     "type": "numeric",
+    //     "min": -100,
+    //     "max": 0
+    // }
+
+    // ==================================================
+    //
+    //        Accumulator Management System (AMS)
+    //
+    // ==================================================
+
+    "Pack_Current": { /* Current flowing through the pack [Amps] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 0,
+        "max": 200
+    },
+    "Pack_Inst_Voltage": { /* Instantaneous pack voltage [Volts] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 0,
+        "max": 300
+    },
+    "Pack_SOC": { /* State of charge of the pack [Percent] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 0,
+        "max": 100
+    },
+    "Relay_State": { /* State of the relay (ON/OFF) */
+        "prefix": "AMS",
+        "type": "boolean",
+        "expected": true 
+    },
+    "Pack_DCL": { /* Discharge current limit [Amps] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 200,
+        "max": 200
+    },
+    "Pack_CCL": { /* Charge current limit [Amps] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 200,
+        "max": 200
+    },
+    "High_Temperature": { /* Highest temperature of the pack [Celsius] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 0,
+        "max": 60  // Adjust based on pack specifications
+    },
+    "Low_Temperature": { /* Lowest temperature of the pack [Celsius] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": -40,
+        "max": 60
+    },
+    // I'M PRETTY SURE I DID THESE SIGNALS WRONG, SO THEY ARE COMMENTED FOR NOW
+    // "Requested_Battery_Mode": { /* Desired operating mode for the battery */
+    //     "prefix": "AMS",
+    //     "type": "categorical",
+    //     "valid": ["CHARGE", "DISCHARGE", "IDLE", "PRECHARGE"]  // Example valid states; adjust based on system
+    // },
+    // "Requested_Fan_Speed": { /* Requested speed of the fan */
+    //     "prefix": "AMS",
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 100
+    // },
+    // "Max_Discharge_Current_Limit": { /* Maximum allowable discharge current [Amps] */
+    //     "prefix": "AMS",
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 500
+    // },
+    // "Max_Charge_Current_Limit": { /* Maximum allowable charge current [Amps] */
+    //     "prefix": "AMS",
+    //     "type": "numeric",
+    //     "min": 0,
+    //     "max": 500
+    // },
+    // "Precharge_Request": { /* Request to enable/disable precharge [ON/OFF] */
+    //     "prefix": "AMS",
+    //     "type": "boolean",
+    //     "expected": true  // Example: Precharge is expected to be ON; adjust if needed
+    // },
+    // "CANBUS_HVIL_Signal": { /* High voltage interlock signal */
+    //     "prefix": "AMS",
+    //     "type": "boolean",
+    //     "expected": true  // Example: Signal expected to be active; adjust if needed
+    // },
+    "Input_Supply_Voltage": { /* Voltage supplied to the system [Volts] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 12,
+        "max": 24
+    },
+    // "Current_ADC1": { /* Current measurement from ADC1 */
+    //     "prefix": "AMS",
+    //     "type": "numeric",
+    //     "min": -500,
+    //     "max": 500
+    // },
+    // "Current_ADC2": { /* Current measurement from ADC2 */
+    //     "prefix": "AMS",
+    //     "type": "numeric",
+    //     "min": -500,
+    //     "max": 500
+    // },
+    // TODO: IMPLEMENT
+    // "DTC_Flags_1": { /* Diagnostic trouble code flags (set 1) */
+    //     "prefix": "AMS",
+    //     "type": "array",
+    //     "min": 0,
+    //     "max": 1
+    // },
+    // "DTC_Flags_2": { /* Diagnostic trouble code flags (set 2) */
+    //     "prefix": "AMS",
+    //     "type": "array",
+    //     "min": 0,
+    //     "max": 1
+    // },
+    "Maximum_Pack_Voltage": { /* Maximum allowable pack voltage [Volts] */
+        "prefix": "AMS",
+        "type": "numeric",
+        "min": 0,
+        "max": 200
+    },
+    // "DTC_P0A08_Charger_Safety_Relay_Fault": { /* Charger safety relay fault indication */
+    //     "prefix": "AMS",
+    //     "type": "boolean",
+    //     "expected": false  // Example: Fault is expected to be inactive
+    // },
+
+    // ==================================================
+    //
+    //                 Cooling Loop (CL)
+    //
+    // ==================================================
+
+    "hotPressure": {
+        "prefix": "CL",
+        "min": 0.8, 
+        "max": 2.5
+        },
+    "hotTemperature": {
+        "prefix": "CL",
+        "min": 30, 
+        "max": 110
+        },
+    "coldPressure": {
+        "prefix": "CL",
+        "min": 0.8, 
+        "max": 2.5
+        },
+    "coldTemperature": {
+        "prefix": "CL",
+        "min": -20, 
+        "max": 60
+        },
+
+}

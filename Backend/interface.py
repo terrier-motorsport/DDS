@@ -123,7 +123,7 @@ class Interface:
         self.sensorProtocol = sensorProtocol
         self.name = name
         self.log = logger
-        self.status = self.Status.NOT_INITIALIZED
+        self.__status = self.Status.NOT_INITIALIZED
 
         # Init cache
         self.cached_values = {}
@@ -154,7 +154,7 @@ class Interface:
         """
         
         # Set status to active
-        self.status = self.Status.ACTIVE
+        self.__status = self.Status.ACTIVE
 
         # Log device initialization
         self._log(f'Initialized {self.sensorProtocol.name} device {self.name} successfully.')
@@ -222,6 +222,27 @@ class Interface:
             List[str]: A list of all parameter names in the cached values dictionary.
         """
         return list(self.cached_values.keys())
+    
+
+    def change_status(self, new_status: Status):
+        """
+        Changes the Interface's status to the one specified.
+        Logs if there is a change in status.
+
+        Parameters:
+            new_status (Status): The status to switch the device to.
+        """
+
+        # Return early if there is no change in status
+        if self.__status == new_status:
+            return
+        
+        # Log the change in status
+        self._log(f"{self.name} changed from {self.__status.name} to {new_status.name}.")
+
+        # Change the status
+        self.__status = new_status
+        
         
 
     # ===== CACHING METHODS =====
@@ -285,6 +306,15 @@ class Interface:
         """Shorthand logging method."""
         self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
 
+
+    # ===== GETTER/SETTER METHODS ====
+    @property
+    def status(self):                    # Status Getter
+        return self.__status
+    
+    @status.setter
+    def status(self, value: Status):     # Status Setter
+        self.change_status(value)
 
     # ===== HELPER METHODS ====
     @staticmethod
@@ -564,3 +594,14 @@ class CANInterface(Interface):
             check=True,
             timeout=3
         )
+
+
+if __name__ == "__main__":
+
+    logger = DataLogger('InterfaceTest')
+
+    test = Interface('testInterface', InterfaceProtocol.I2C, logger)
+
+    print(test.status)
+    test.status = test.Status.DISABLED
+    print(test.status)

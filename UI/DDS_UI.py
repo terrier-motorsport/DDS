@@ -238,7 +238,7 @@ class Battery (FloatLayout):
 
         # Example value source function for demonstration
         def get_pack_state_of_charge():
-            soc = self.io.get_device_data('canInterface','Pack_SOC')
+            soc = self.io.get_device_data('canInterface','Pack_SOC',"BatteryWidget")
             if soc is not None:
                 return soc
             else:
@@ -246,7 +246,7 @@ class Battery (FloatLayout):
         
         # Example value source function for demonstration
         def get_cell_high_temperature():
-            highTemp = self.io.get_device_data('canInterface','High_Temperature')  
+            highTemp = self.io.get_device_data('canInterface','High_Temperature',"BatteryWidget")  
             if highTemp is not None:
                 return highTemp
             else:
@@ -254,7 +254,7 @@ class Battery (FloatLayout):
         
         # Example value source function for demonstration
         def get_pack_current():
-            current = self.io.get_device_data('canInterface','Pack_Current')
+            current = self.io.get_device_data('canInterface','Pack_Current',"BatteryWidget")
             if current is not None:
                 return current
             else:
@@ -359,14 +359,14 @@ class Center(FloatLayout):
         self.io = io
 
         def get_speed():
-            erpm = self.io.get_device_data('canInterface','ERPM')
+            erpm = self.io.get_device_data('canInterface','ERPM',"CenterWidget")
             if erpm is not None:
                 return erpm*5
             else:
                 return -1
         
         def get_rpm():
-            erpm = self.io.get_device_data('canInterface','ERPM')
+            erpm = self.io.get_device_data('canInterface','ERPM',"CenterWidget")
             if erpm is not None:
                 return erpm*10
             else:
