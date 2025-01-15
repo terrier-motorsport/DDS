@@ -155,7 +155,7 @@ class DataLogger:
         debugLogFileHandler.setLevel(logging.DEBUG)        # Log anything to the file >= DEBUG
 
         streamHandler = logging.StreamHandler()            
-        streamHandler.setLevel(logging.DEBUG)              # Log anything to the console >= DEBUG
+        streamHandler.setLevel(logging.INFO)              # Log anything to the console >= DEBUG
 
         # Write to the logging config
         logging.basicConfig(

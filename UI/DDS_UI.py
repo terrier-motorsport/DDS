@@ -4,7 +4,7 @@
 
 # Notes for Members:
     # Check you're using Python 3.2 (minimum) and that you've got pip
-    # Have you installed Kivy and OpenCV?
+    # Have you installed requirements.txt? (run pip install -r requirements.txt)
     # Do NOT run further that Python 3.12, kivy does not have 3.13 support yet as of 11/16
 
 # This disables kivy logs (interferes with Backend logs)
@@ -25,6 +25,9 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
+from kivy.uix.button import Button
+
+from UI.diagnostic_screen import DiagnosticScreen
 from Backend.DDS_IO import DDS_IO
 
 
@@ -298,51 +301,134 @@ class Battery (FloatLayout):
 #################################
 
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from kivy.core.window import Window
 
-# Creates widget with warnings 
-class Warnings (FloatLayout):
+class Warnings(FloatLayout):
     def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
 
         self.io = io
 
-        # rectangle dimensions
+        # Rectangle dimensions
         rect_height = 700
         rect_width = 550
 
-        # rectangle color
+        # Rectangle color
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
 
-        # how round the corners are 
+        # How round the corners are
         corner_radius = 20
 
-
-        # Establishes light blue rectangle 
+        # Establish the rectangle
         self.right_rect = Widget(size_hint=(None, None), size=(rect_width, rect_height))
         self.right_rect.pos = (Window.width - 130, (Window.height - rect_height) / 2)  # 5px from right, vertically centered
         with self.right_rect.canvas.before:
             RoundedRectangle(pos=self.right_rect.pos, size=self.right_rect.size, radius=[corner_radius], color=rect_color)
         self.add_widget(self.right_rect)
 
-        
-        # Temporary source to mock values 
-        def get_warnings() -> List[ParameterWarning]:
-            return io.get_warnings()
-            
+        # Scrolling layout constrained to the rectangle
+        layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        # Make sure the height is dynamically adjusted
+        layout.bind(minimum_height=layout.setter('height'))
 
-        # If warning flag set to true, display a warning! 
-        warnings = get_warnings()
-        startPosY = 500
+        # Temporary source to mock values
+        warnings = io.get_warnings()
+        # [
+        #     "Short warning",
+        #     "This is a much longer warning message that will likely span multiple lines in the UI",
+        #     "Another long message that needs to wrap and dynamically adjust the height of its label.",
+        #     "Small",
+        #     "More warnings to demonstrate dynamic height handling.",
+        # ]
+
+
+        # Add buttons as an example
         for warning in warnings:
-            self.warningLabel = Label(
+            btn = Button(text=warning, size_hint_y=None, height=40)
+            label = Label(
                 text=warning,
-                font_size='20sp',
-                pos=(1550, startPosY), 
-                color=(1, 0, 0, 1) 
+                font_size="20sp",
+                size_hint=(1, None),  # Fixed width, dynamic height
+                halign="left",  # Align text to the left
+                valign="middle",  # Align text vertically to the middle
+                color=(0.8, 0, 0, 1),  # White text
+                bold=True
             )
-            self.right_rect.add_widget(self.warningLabel)
-            startPosY += 100
+            # Enable text wrapping
+            label.text_size = (layout.width * 5, None)
 
+            # Dynamically adjust height based on content
+            label.bind(
+                texture_size=lambda instance, value: setattr(
+                    instance, 'height', value[1] + 10  # Add padding
+                )
+            )
+            layout.add_widget(label)
+
+        # Create the ScrollView and constrain it to the rectangle
+        scrollView = ScrollView(
+            size_hint=(None, None),  # Disable automatic size adjustments
+            size=(self.right_rect.size[0] - 20, self.right_rect.size[1] - 20),  # Match rectangle's dimensions with padding
+            pos=(self.right_rect.pos[0] + 10, self.right_rect.pos[1] + 10)  # Match rectangle's position with padding
+        )
+        scrollView.add_widget(layout)
+
+        # Add the ScrollView to the rectangle
+        self.add_widget(scrollView)
+
+
+        # # Create a ScrollView to contain the warnings
+        # scroll_view = ScrollView(size_hint=(None, None), size=(rect_width - 40, rect_height - 40))
+        # scroll_view.pos = (self.right_rect.pos[0] + 20, self.right_rect.pos[1] + 20)  # Add padding
+
+        # # Create a BoxLayout inside the ScrollView for the warnings
+        # layout = BoxLayout(
+        #     padding=10,
+        #     orientation="vertical",  # Stack labels vertically
+        #     size_hint=(None, None),
+        #     width=scroll_view.width,  # Match width to ScrollView
+        # )
+
+        # # Dynamically calculate height based on content
+        # layout.bind(
+        #     minimum_height=lambda instance, value: setattr(
+        #         layout, 'height', max(value, rect_height)  # Ensure layout is at least as tall as rect_height
+        #     )
+        # )
+
+        # # Add each warning as a Label to the layout
+        # for warning in warnings:
+        #     label = Label(
+        #         text=warning,
+        #         font_size="20sp",
+        #         size_hint=(1, None),  # Allow fixed width and dynamic height
+        #         halign="left",
+        #         valign="middle",
+        #         color=(1, 0, 0, 1),
+        #         bold=True
+        #     )
+        #     # Enable text wrapping and alignment
+        #     label.text_size = (layout.width - 20, None)  # Set the width for text wrapping
+
+        #     # Bind the texture_size to dynamically adjust the height of the label
+        #     label.bind(
+        #         texture_size=lambda instance, value: setattr(
+        #             instance, 'height', value[1] + 10  # Adjust height based on text and add padding
+        #         )
+        #     )
+
+        #     # Add the widget to the layout
+        #     layout.add_widget(label)
+
+        # # Add the layout to the ScrollView
+        # scroll_view.add_widget(layout)
+
+        # # Add the ScrollView to the right rectangle
+        # self.add_widget(scroll_view)
             
 
 #################################
@@ -406,26 +492,59 @@ class Center(FloatLayout):
 #################################
 
 
-class MainLayout (FloatLayout):
+class MainLayout(FloatLayout):
 
     def __init__(self, io: DDS_IO, **kwargs):
         super().__init__(**kwargs)
+        self.io = io
+
+        self.racingScreen = FloatLayout()
         
         # Set the orientation of layout
-        self.orientation = 'horizontal'
+        self.racingScreen.orientation = 'horizontal'
 
         # Create an instance of the Battery class and add it to the layout
-        self.left_instance = Battery(io)
-        self.add_widget(self.left_instance)
+        left_instance = Battery(io)
+        self.racingScreen.add_widget(left_instance)
 
         # Create an instance of the Center class and add it to the layout
-        self.center_instance = Center(io)
-        self.add_widget(self.center_instance)
+        center_instance = Center(io)
+        self.racingScreen.add_widget(center_instance)
 
         # Create an instance of the Warnings class and add it to the layout
-        self.right_instance = Warnings(io)
-        self.add_widget(self.right_instance)
+        right_instance = Warnings(io)
+        self.racingScreen.add_widget(right_instance)
 
+        # Create a button to enable the diagnostic screen
+        diagnostic_button = Button(
+            text="Diagnostics",
+            size_hint=(None, None),
+            size=(250, 100),
+            pos_hint={'right': 1, 'top': 1},  # Top-right corner
+        )
+        # Bind the button to the method to enable the diagnostic screen
+        diagnostic_button.bind(on_release=self.show_diagnostic_screen)
+        self.racingScreen.add_widget(diagnostic_button)
+
+        # Add racing screen to layout
+        self.add_widget(self.racingScreen)
+
+
+    def show_diagnostic_screen(self, instance):
+        """
+        This method is triggered when the diagnostic button is pressed.
+        """
+        self.clear_widgets()
+        self.add_widget(DiagnosticScreen(io=self.io, navigate_to_racing=self.show_racing_screen))
+        print("Diagnostics screen enabled")  # Placeholder action
+
+    def show_racing_screen(self, instance):
+        """
+        This method is triggered when the racing button is pressed.
+        """
+
+        self.clear_widgets()
+        self.add_widget(self.racingScreen)
 
 # full app 
 class MyApp(App):
@@ -461,4 +580,4 @@ class MyApp(App):
 
 # Runs the app
 if __name__ == "__main__":
-    MyApp().run()
+    MyApp(io=DDS_IO(debug=False, demo_mode=True)).run()

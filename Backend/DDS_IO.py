@@ -118,6 +118,8 @@ class DDS_IO:
                 return 'DIS'
             elif device.status is Interface.Status.ERROR:
                 return 'ERR'
+            elif device.status is Interface.Status.NOT_INITIALIZED:
+                return 'NIN'
         
         # Fetch data from device
         data = device.get_data(parameter)
@@ -126,8 +128,8 @@ class DDS_IO:
         if data is None:
             self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
 
-            if self.demo_mode:
-                return random.random()
+            # if self.demo_mode:
+            #     return random.random()
             return None
         
         # Return the data
@@ -137,16 +139,41 @@ class DDS_IO:
     def get_warnings(self) -> List[str]:
         '''Returns a list of active warnings'''
         warnings = self.parameter_monitor.get_warnings_as_str()
+        print(f'{warnings}, {self.demo_mode}')
 
         if not self.demo_mode:
             return warnings
         else:
             warnings = [
-                ParameterWarning('RPM', 9324, 0, 9000).getMsg(),
-                ParameterWarning('Mike', 1, 0, 0.5).getMsg(),
-                ParameterWarning('Anna', 2398, 100, 2397).getMsg(),
+                ParameterWarning('RPM', 9324, 'RPM is out of range').getMsg(),
+                ParameterWarning('Mike', 1, 'THIS IS A SUPER DUPER LOOPER LONG MESSAGE').getMsg(),
+                ParameterWarning('Anna', 2398, 'Anna is out of range').getMsg(),
             ]
             return warnings
+        
+
+    def get_device_names(self) -> List[str]:
+        '''
+        Returns a list of devices.
+        If there are no devices, returns a single string with an error message.
+        '''
+
+        # if len(self.devices) == 0:
+        #     return ['There are no available devices']
+        device_names = []
+        for device_name, device in self.devices.items():
+            device_names.append(device_name)
+        return device_names
+    
+
+    def get_device_parameters(self, param_name: str) -> List[str]:
+        '''
+        Returns a list of parameters for a specified device.
+        '''
+        device_params = []
+        for param_name in self.devices[param_name].get_all_param_names():
+            device_params.append(param_name)
+        return device_params
 
 
     def __get_device(self, deviceKey : str) -> Interface:
@@ -185,6 +212,21 @@ class DDS_IO:
 
         # Update the IO one time to wake all interface (like ADS 1015)
         self.update()
+
+        # Add dummy devices if we are in demo mode.
+        if self.demo_mode:
+            self.devices = {
+                "Mike": Interface('Mike', InterfaceProtocol.I2C, self.log),
+                "Anna": Interface('Anna', InterfaceProtocol.CAN, self.log)
+            }
+            for device_name, device in self.devices.items():
+                if device_name == "Mike":
+                    device.cached_values["sample_data One (1)"] = 203949.1324
+                    device.cached_values["Two"] = "i like chocolate chip cookies"
+                    device.cached_values["thre three threee"] = "i HATE chocolate chip cookies which dont have chocolate chips"
+                if device_name == "Anna":
+                    device.cached_values["other signal"] = "yum i love chocolate chip cookies"
+                device.change_status(Interface.Status.ACTIVE)
 
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')
