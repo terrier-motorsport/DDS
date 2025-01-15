@@ -1,6 +1,6 @@
 # Draft DDS Display for Terrier Motorsport
     # Anna LaPrade (alaprade@bu.edu)
-    # UI/UX Design by Anna LaPrade (alaprade@bu.edu)
+    # UI/UX Design by Anna LaPrade (alaprade@bu.edu)     
 
 # Notes for Members:
     # Check you're using Python 3.2 (minimum) and that you've got pip
@@ -49,24 +49,22 @@ kivy.require('2.3.0')
 # Takes in a source (likely a csv file) and a position on the screen
 # Uses the source to display battery percentage and what color that percentage should be
 class OutlineColorChangingLabel_Battery(Label):
-    def __init__(self, value_source, position, **kwargs):
+    def __init__(self, value_source, **kwargs):
         super(OutlineColorChangingLabel_Battery, self).__init__(**kwargs)
-        # postition on screen
-        self.pos = position
-
-        # source of data
+        
+        # Source of data
         self.value_source = value_source
 
-        # value from data to be displayed 
+        # Value from data to be displayed
         self.value = self.value_source()
 
         # Black outline, for legibility
-        self.outline_color = [0, 0, 0, 1] 
+        self.outline_color = [0, 0, 0, 1]
 
-        # Outline width 
+        # Outline width
         self.outline_width = 4
 
-        # Update color as data is red 
+        # Update color as data is read
         self.update_color()
 
         # Schedule updates for outline and color
@@ -77,15 +75,12 @@ class OutlineColorChangingLabel_Battery(Label):
         self.update_outline()
 
     def update_outline(self):
-        # Ensure the outline is only drawn on the label, not the parent
         if not self.canvas:
             return
-        self.canvas.before.clear()  # Clear the previous outline (if any) from the label's canvas
+        self.canvas.before.clear()  # Clear the previous outline (if any)
         with self.canvas.before:
             Color(*self.outline_color)
-            
 
-    # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
         self.text = f"{self.value:.2f}%"
@@ -104,15 +99,15 @@ class OutlineColorChangingLabel_Battery(Label):
 # Takes in a source (likely a csv file) and a position on the screen
 # Uses the source to display battery temperature and what color that should be
 class OutlineColorChangingLabel_BatteryTemp(Label):
-    def __init__(self, value_source, position, **kwargs):
+    def __init__(self, value_source, position=None, **kwargs):
         super(OutlineColorChangingLabel_BatteryTemp, self).__init__(**kwargs)
-        # postition on screen
-        self.pos = position
+        
+        
 
-        # source of data
+        # Source of data
         self.value_source = value_source
 
-        # value from data to be displayed 
+        # Value from data to be displayed 
         self.value = self.value_source()
 
         # Black outline, for legibility
@@ -121,7 +116,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
         # Outline width 
         self.outline_width = 4
 
-        # Update color as data is red 
+        # Update color as data is read 
         self.update_color()
 
         # Schedule updates for outline and color
@@ -156,14 +151,14 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
 
 
 
+
 # Enables color changing text for battery discharge rate
 # Takes in a source (likely a csv file) and a position on the screen
 # Uses the source to display battery temperature and what color that should be
 class OutlineColorChangingLabel_BatteryDischarge(Label):
-    def __init__(self, value_source, position, **kwargs):
+    def __init__(self, value_source, **kwargs):
         super(OutlineColorChangingLabel_BatteryDischarge, self).__init__(**kwargs)
-        # postition on screen
-        self.pos = position
+        
 
         # source of data
         self.value_source = value_source
@@ -228,10 +223,6 @@ class Battery (FloatLayout):
         super().__init__(**kwargs)
 
         self.io = io
-
-        # rectangle dimensions
-        rect_height = 700
-        rect_width = 550
     
         # Rectangle color (light blue)
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
@@ -265,25 +256,68 @@ class Battery (FloatLayout):
 
         
         # Creates a float layout within the box
-        self.left_rect = FloatLayout(size_hint=(None, None), size=(rect_width, rect_height))
-        self.left_rect.pos = (30, (Window.height - rect_height) / 2)  # 5px from left, vertically centered
-        with self.left_rect.canvas.before:
-            RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos, radius=[corner_radius], color=rect_color)
+        self.left_rect = FloatLayout(size_hint=(0.25, 0.6))  # 40% width, 80% height of parent
+        self.left_rect.pos_hint = {"x": 0.05, "center_y": 0.5}  # 5% from left, vertically centered
+
+        # Draw the white rectangle around the left_rect
+        def draw_white_rectangle(*args):
+            self.left_rect.canvas.before.clear()  # Clear previous drawings
+            with self.left_rect.canvas.before:
+                Color(rect_color)  # White color (RGBA)
+                RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos)
+
+        # Bind the drawing function to the size and position changes
+        self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
+
+        # Initially call the draw function
+        draw_white_rectangle()
+
+        # Add the widget to the parent
         self.add_widget(self.left_rect)
+
+
+       
+
+        
+
 
         # Add content to the battery
         # Percentage label
-        self.battery_label = OutlineColorChangingLabel_Battery(value_source=get_pack_state_of_charge, text=f"{get_pack_state_of_charge():.2f}%", font_size='40sp', position=((30), (rect_height/2)+130))
-        
+        self.battery_label = OutlineColorChangingLabel_Battery(
+            value_source=get_pack_state_of_charge,
+            text=f"{get_pack_state_of_charge():.2f}%",
+            font_size='40sp',
+            size_hint=(0.8, 0.1),
+            pos_hint={"center_x": 0.5, "top": 0.9}
+        )
+
         # Percentage icon (TO BE CHANGED)
-        self.battery_icon = OutlineColorChangingLabel_Battery(value_source=get_pack_state_of_charge, text="*ICON*", font_size='70sp', position=((30), (rect_height/2)-30))
-        
+        self.battery_icon = OutlineColorChangingLabel_Battery(
+            value_source=get_pack_state_of_charge,
+            text="*ICON*",
+            font_size='70sp',
+            size_hint=(0.8, 0.2),
+            pos_hint={"center_x": 0.5, "center_y": 0.6}
+        )
+
         # Temperature
-        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=get_cell_high_temperature, text=f"{get_cell_high_temperature():.2f} ºF", font_size='30sp', position=((130), (rect_height/2)-200))
-        
+        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(
+            value_source=get_cell_high_temperature,
+            text=f"{get_cell_high_temperature():.2f} ºF",
+            font_size='30sp',
+            size_hint=(0.8, 0.1),
+            pos_hint={"center_x": 0.5, "center_y": 0.4}
+        )
+
         # Discharge rate 
-        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=get_pack_current, text=f"{get_cell_high_temperature():.2f} Amps", font_size='30sp', position=((170), (rect_height/2)-350))
-        
+        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(
+            value_source=get_pack_current,
+            text=f"{get_pack_current():.2f} Amps",
+            font_size='30sp',
+            size_hint=(0.8, 0.1),
+            pos_hint={"center_x": 0.5, "center_y": 0.2}
+        )
+    
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(self.battery_label)
@@ -323,11 +357,24 @@ class Warnings(FloatLayout):
         # How round the corners are
         corner_radius = 20
 
-        # Establish the rectangle
-        self.right_rect = Widget(size_hint=(None, None), size=(rect_width, rect_height))
-        self.right_rect.pos = (Window.width - 130, (Window.height - rect_height) / 2)  # 5px from right, vertically centered
-        with self.right_rect.canvas.before:
-            RoundedRectangle(pos=self.right_rect.pos, size=self.right_rect.size, radius=[corner_radius], color=rect_color)
+        # Establish the rectangle using FloatLayout
+        self.right_rect = FloatLayout(size_hint=(0.25, 0.6))  # 25% width, 60% height of parent
+        self.right_rect.pos_hint = {"right": 0.95, "center_y": 0.5}  # 5% from right, vertically centered
+
+        # Draw the right rectangle
+        def draw_right_rectangle(*args):
+            self.right_rect.canvas.before.clear()  # Clear previous drawings
+            with self.right_rect.canvas.before:
+                Color(rect_color)  # Desired color
+                RoundedRectangle(size=self.right_rect.size, pos=self.right_rect.pos, radius=[corner_radius])
+
+        # Bind the drawing function to the size and position changes
+        self.right_rect.bind(size=draw_right_rectangle, pos=draw_right_rectangle)
+
+        # Initially call the draw function
+        draw_right_rectangle()
+
+        # Add the widget to the parent
         self.add_widget(self.right_rect)
 
         # Scrolling layout constrained to the rectangle
@@ -348,7 +395,6 @@ class Warnings(FloatLayout):
 
         # Add buttons as an example
         for warning in warnings:
-            btn = Button(text=warning, size_hint_y=None, height=40)
             label = Label(
                 text=warning,
                 font_size="20sp",
@@ -359,7 +405,7 @@ class Warnings(FloatLayout):
                 bold=True
             )
             # Enable text wrapping
-            label.text_size = (layout.width * 5, None)
+            label.text_size = (self.right_rect.size[0] - 20, None)
 
             # Dynamically adjust height based on content
             label.bind(
@@ -372,7 +418,7 @@ class Warnings(FloatLayout):
         # Create the ScrollView and constrain it to the rectangle
         scrollView = ScrollView(
             size_hint=(None, None),  # Disable automatic size adjustments
-            size=(self.right_rect.size[0] - 20, self.right_rect.size[1] - 20),  # Match rectangle's dimensions with padding
+            size=(self.right_rect.size[0] , self.right_rect.size[1] - 20),  # Match rectangle's dimensions with padding
             pos=(self.right_rect.pos[0] + 10, self.right_rect.pos[1] + 10)  # Match rectangle's position with padding
         )
         scrollView.add_widget(layout)
@@ -459,15 +505,15 @@ class Center(FloatLayout):
                 return -1
 
         # Use FloatLayout for layout behavior
-        self.center_block = FloatLayout(size_hint=(None, None), size=(Window.width - 210, Window.height))
-        self.center_block.pos = (100, 0)
+        self.center_block = FloatLayout(size_hint=(0.9, 1))
+        self.center_block.pos_hint = {"x": 0.0977, "y": 0}
         self.add_widget(self.center_block)
 
         # Create a label to display the speed value
         self.speed_label = Label(
             text=f"{get_speed():.2f}",
-            font_size='140sp',
-            pos_hint={'center_x': 0.675, 'center_y': 0.60}
+            font_size='100sp',
+            pos_hint={'center_x': 0.45, 'center_y': 0.60}
         )
         self.center_block.add_widget(self.speed_label)
 
@@ -475,8 +521,8 @@ class Center(FloatLayout):
          # Create a label to display the rpm value
         self.rpm_label = Label(
             text=f"{get_rpm():.2f} RPM",
-            font_size='70sp',
-            pos_hint={'center_x': 0.675, 'center_y': 0.25}
+            font_size='50sp',
+            pos_hint={'center_x': 0.45, 'center_y': 0.40}
         )
         self.center_block.add_widget(self.rpm_label)
 
