@@ -4,14 +4,14 @@
         # With the 2024-2025 season, we have no i2c M3200.
         # (This page was a mistake, but probably still works)
 
-from Backend.interface import I2CDevice, InterfaceProtocol, Interface
+from Backend.interface import I2CInterface, InterfaceProtocol, Interface
 from Backend.data_logger import DataLogger
 import smbus # type: ignore
 import time
 
 
 
-class M3200PressureSensorI2C(I2CDevice):
+class M3200PressureSensorI2C(I2CInterface):
     """
     M3200 Pressure Sensor on an I2C interface with caching functionality.
     """

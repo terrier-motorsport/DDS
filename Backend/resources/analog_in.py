@@ -3,7 +3,7 @@
     # NOTE: To be used by the ADS classes.
 
 from typing import Union
-from scipy.interpolate import interp1d
+import numpy as np
 
 class ValueMapper:
     """
@@ -92,7 +92,7 @@ class ExponentialValueMapper:
         self.resistance_values, self.output_values = zip(*sorted_data)
 
         # Create the interpolation function for resistance-to-output mapping
-        self.interpolator = interp1d(self.resistance_values, self.output_values, fill_value="extrapolate")
+        self.interpolator = lambda x: np.interp(x, self.resistance_values, self.output_values)
 
         # Calc min and max voltage
         self.min_voltage, self.max_voltage = self.__calculate_min_max_voltage()

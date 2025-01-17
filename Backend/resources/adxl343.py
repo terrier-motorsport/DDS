@@ -2,7 +2,7 @@
 # Code by Jackson Justus (jackjust@bu.edu)
 # Additional Code by Mohamed Amine Mzoughi (https://github.com/embeddedmz/ADXL343/blob/master/adxl343.py)
 
-from Backend.interface import I2CDevice
+from Backend.interface import I2CInterface
 from Backend.data_logger import DataLogger
 from Backend.resources.internal_device import InternalDevice
 from typing import List
@@ -381,7 +381,7 @@ class InternalADXL343(InternalDevice):
 
 
 
-class ADXL343(I2CDevice):
+class ADXL343(I2CInterface):
     """
     # DDS ADXL 343 CLASS
     Accelerometer on an I2C interface with caching functionality.

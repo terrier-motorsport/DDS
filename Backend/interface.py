@@ -3,7 +3,9 @@
 
 from enum import Enum
 from Backend.data_logger import DataLogger
+from Backend.device import Device
 from typing import Union, List
+from abc import ABC, abstractmethod
 
 import can
 import cantools
@@ -36,7 +38,7 @@ class InterfaceProtocol(Enum):
 
 
 # ===== Parent class for all interfaces =====
-class Interface:
+class Interface(ABC):
 
     '''
     The Interface class serves as a base class for defining and interacting with various device interfaces, such as CAN, I2C, etc. 
@@ -87,13 +89,26 @@ class Interface:
         NOT_INITIALIZED = 4
 
 
-    # Class variables
+    # Cache variables
     CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
     cached_values: dict              # Dictionary to store cached values
     last_cache_update: float         # Time since last cache update
 
+    # Class variables
+    interfaceProtocol: InterfaceProtocol
+    name: str
+    log: DataLogger
+    __status: Status
 
-    def __init__(self, name: str, sensorProtocol: InterfaceProtocol, logger: DataLogger):
+    # Device variables
+    devices: List[Device]
+
+
+    def __init__(self, 
+                 name: str,
+                 devices: List[Device],
+                 interfaceProtocol: InterfaceProtocol, 
+                 logger: DataLogger):
         '''
         Initializes an interface device with the given parameters.
 
@@ -120,21 +135,24 @@ class Interface:
         '''
         
         # Class variables
-        self.sensorProtocol = sensorProtocol
+        self.interfaceProtocol = interfaceProtocol
         self.name = name
         self.log = logger
         self.__status = self.Status.NOT_INITIALIZED
 
+        # Device variables
+        self.devices = devices
+
         # Init cache
         self.cached_values = {}
-
-        # Init cache timeout
         self.last_cache_update = time.time()
 
         # Log device creation
-        self._log(f'Created {self.sensorProtocol.name} device {self.name}.')
+        self._log(f'Created {self.interfaceProtocol.name} device {self.name}.')
 
 
+    # ===== ABSTRACT METHODS =====
+    @abstractmethod
     def initialize(self):
         """
         Initializes the device by setting its status to active and logging the successful initialization.
@@ -157,44 +175,25 @@ class Interface:
         self.__status = self.Status.ACTIVE
 
         # Log device initialization
-        self._log(f'Initialized {self.sensorProtocol.name} device {self.name} successfully.')
+        self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
 
 
+    @abstractmethod
     def update(self):
         """
-        Intended to be overridden by child classes to update the `cached_values` dictionary 
+        Updates the `cached_values` dictionary 
         with the latest sensor readings.
-
-        If not overridden, logs an error message.
-
-        Subclasses should implement their own data retrieval and caching logic.
         """
-        self._log("The 'update' method has not been properly overridden in the child class.", 
-                  self.log.LogSeverity.ERROR)
-
-
-    # ===== GETTER METHODS =====
-    def get_name(self) -> str:
+    
+    @abstractmethod
+    def close_connection(self):
         """
-        Retrieves the name of the interface.
-
-        Returns:
-            str: The name of the interface.
+        Closes the respective interface
         """
-        return self.name
 
 
-    def get_protocol(self) -> InterfaceProtocol:
-        """
-        Retrieves the protocol of the current interface.
-
-        Returns:
-            InterfaceProtocol: The protocol associated with the interface (e.g., CAN, I2C, etc.).
-        """
-        return self.sensorProtocol
-
-
-    def get_data(self, key: str) -> Union[str, float, int]:
+    # ===== MAIN METHODS =====
+    def get_data(self, key: str) -> Union[str, float, int, None]:
         """
         Retrieves the most recent cached data associated with the provided key.
 
@@ -207,11 +206,13 @@ class Interface:
         """
 
         # Check if the key exists in the cache
-        if key in self.cached_values:
-            return self.cached_values[key]
-        else:
-            self._log(f"No cached data found for key: {key}", self.log.LogSeverity.WARNING)
-            return None
+        if not key in self.cached_values:
+            return self._log(f"No data found for key: {key}", self.log.LogSeverity.WARNING)
+        elif self.cached_values[key] is None:
+            return self._log(f"No cached data found for key: {key}", self.log.LogSeverity.DEBUG)
+
+        # Return the cached data
+        return self.cached_values[key]
 
 
     def get_all_param_names(self) -> List[str]:
@@ -262,12 +263,10 @@ class Interface:
         # Update the current time
         current_time = time.time()
 
-        # Check if the cache has expired
+        # Clear the cache if it has expired
         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-            # Clear the cache & log event
-            self.cached_values.clear()
-            self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
-
+            self._clear_cache()
+            
 
     def _reset_last_cache_update_timer(self):
         """
@@ -283,6 +282,18 @@ class Interface:
             to ensure the timer reflects the most recent update.
         """
         self.last_cache_update = time.time()
+    
+    
+    def _clear_cache(self):
+        '''
+        Clears the cached values by changing the values to None.
+        The keys are left unchanged.
+        '''
+        # Change all values to None 
+        empty_cache = {key: None for key in self.cached_values}
+        self.cached_values = empty_cache
+
+        self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
     # ===== OTHER METHODS =====
@@ -336,15 +347,18 @@ class Interface:
 
 
 
-# ===== I2CDevice class for DDS' I2C Backend =====
-class I2CDevice(Interface):
+# ===== I2CInterface class for DDS' I2C Backend =====
+class I2CInterface(Interface):
     """
-    Represents an I2C device in the DDS (Data Display System) backend.
+    Represents an I2C Interface in the DDS (Data Display System) backend.
+
+    Each I2C Interface contains at least one device, 
+    which it will collect data from periodically and add the data to the cached_values.
 
     This class serves as a base for I2C devices, providing fundamental functionality 
     for I2C communication. Each device communicates through a unique address and 
     responds to specific commands. It is likely that each I2C device will have a 
-    dedicated subclass that implements device-specific behavior, including custom 
+    dedicated device class that implements device-specific behavior, including custom 
     decoding functions.
 
     Attributes:
@@ -352,16 +366,15 @@ class I2CDevice(Interface):
         logger (DataLogger): Logger used for logging messages and events.
     """
     
-    def __init__(self, name: str, logger: DataLogger):
-        """
-        Initializes an I2CDevice instance.
 
-        Parameters:
-            name (str): The name of the I2C device.
-            logger (DataLogger): Logger for logging device events and messages.
-        """
-        # Initialize the parent class (Interface)
-        super().__init__(name, InterfaceProtocol.I2C, logger=logger)
+    def __init__(self, name: str, devices: List[Device], logger: DataLogger):
+        super().__init__(name, devices, InterfaceProtocol.I2C, logger)
+
+    def initialize(self):
+        return super().initialize()
+    
+    def update(self):
+        return super().update()
 
 
     def close_connection(self):
@@ -596,12 +609,28 @@ class CANInterface(Interface):
         )
 
 
+from Backend.resources.ads_1015 import ADS_1015
+from Backend.resources.analog_in import Analog_In, ValueMapper
+import smbus2
+
 if __name__ == "__main__":
 
     logger = DataLogger('InterfaceTest')
+    i2cBus = smbus2.SMBus(2)
 
-    test = Interface('testInterface', InterfaceProtocol.I2C, logger)
 
-    print(test.status)
-    test.status = test.Status.DISABLED
-    print(test.status)
+    m3200_pressure_mapper = ValueMapper(
+        voltage_range=[0.5, 4.5], 
+        output_range=[0, 17])
+    
+    test = I2CInterface(
+        'testInterface',
+        [
+            ADS_1015('ADC1',logger,i2cBus,[
+                Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
+                Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
+                Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
+                Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
+        ]),
+            Device()
+        ],logger)
