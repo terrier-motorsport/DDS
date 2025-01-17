@@ -174,8 +174,8 @@ class Interface(ABC):
         Should be called as often as possible.
         """
         if self.__status != self.InterfaceStatus.ACTIVE:
-            DeviceNotActiveException(f"Cannot update {self.name}: Device is not active.")
-            raise 
+            raise DeviceNotActiveException(f"Cannot update {self.name}: Device is not active.")
+             
     
     @abstractmethod
     def close_connection(self):
