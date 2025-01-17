@@ -153,8 +153,6 @@ class Interface(ABC):
         self._log(f'Created {self.interfaceProtocol.name} Interface {self.name}.')
 
 
-    # ===== ABSTRACT METHODS =====
-    @abstractmethod
     def initialize(self):
         """
         Initializes each device on the interface.
@@ -172,6 +170,7 @@ class Interface(ABC):
         self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
 
 
+
     @abstractmethod
     def update(self):
         """
@@ -182,8 +181,12 @@ class Interface(ABC):
         """
         if self.__status != self.InterfaceStatus.ACTIVE:
             raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
+        
+        for key, device in self.devices.items():
+            device.update()
              
-    
+
+    # ===== ABSTRACT METHODS =====
     @abstractmethod
     def close_connection(self):
         """
@@ -346,11 +349,9 @@ class I2CInterface(Interface):
     def __init__(self, name: str, devices: List[Device], logger: DataLogger):
         super().__init__(name, devices, InterfaceProtocol.I2C, logger)
 
+
     def initialize(self):
         return super().initialize()
-    
-    def update(self):
-        return super().update()
 
 
     def close_connection(self):
