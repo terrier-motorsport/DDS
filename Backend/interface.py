@@ -578,7 +578,7 @@ if __name__ == "__main__":
 
     logger = DataLogger('InterfaceTest')
     i2cBus = smbus2.SMBus(2)
-    canBus = can.Bus('can0')
+    canBus = can.Bus(interface='can0')
 
 
     # Setting up a test i2c interface
