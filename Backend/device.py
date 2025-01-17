@@ -15,9 +15,9 @@ class Device(ABC):
         # Initialize
         pass
 
-    @abstractmethod
-    def testMethod(self):
-        pass
+    # @abstractmethod
+    # def testMethod(self):
+    #     pass
 
 # class testThing(Device):
 #     pass
