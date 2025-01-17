@@ -632,5 +632,10 @@ if __name__ == "__main__":
                 Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
                 Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
         ]),
-            Device()
+            ADS_1015('ADC1',logger,i2cBus,[
+                Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
+                Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
+                Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
+                Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
+        ]),
         ],logger)
