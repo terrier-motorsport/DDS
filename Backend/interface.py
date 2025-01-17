@@ -203,7 +203,7 @@ class Interface(ABC):
         """
 
         # Verify device exists
-        if not device_key in self.devices:
+        if not any(device.name == device_key for device in self.devices):
             return self._log(f"No device found for key: {device_key}", self.log.LogSeverity.WARNING)
         
         # Get the data
@@ -596,7 +596,7 @@ if __name__ == "__main__":
         voltage_range=[0.5, 4.5], 
         output_range=[0, 17])
     i2cinterface = I2CInterface(
-        'testInterface',
+        'I2C Interface',
         devices=[
             ADS_1015('ADC1',logger,i2cBus,[
                 Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
