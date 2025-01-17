@@ -4,7 +4,7 @@
 from enum import Enum
 from Backend.data_logger import DataLogger
 from Backend.device import Device
-from typing import Union, List
+from typing import Dict, Union, List
 from abc import ABC, abstractmethod
 
 import can
@@ -100,7 +100,7 @@ class Interface(ABC):
     __status: InterfaceStatus
 
     # Device variables
-    devices: List[Device]
+    devices: Dict[str, Device]
 
 
     def __init__(self, 
@@ -140,10 +140,12 @@ class Interface(ABC):
         self.__status = self.InterfaceStatus.NOT_INITIALIZED
 
         # Set & Verify that devices have unique names
-        self.devices = devices
         device_names = [device.name for device in self.devices]
         if len(device_names) != len(set(device_names)):
             raise ValueError(f"Duplicate device names found: {device_names}")
+        # Convert List (input) into dict (self.devices)
+        for device in devices:
+            self.devices[device.name] = device
 
 
         # Log Interface creation
