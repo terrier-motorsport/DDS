@@ -44,7 +44,7 @@ class Device(ABC):
         # Init Class variables
         self.name = name
         self.log = logger
-        self.status = self.DeviceStatus.NOT_INITIALIZED
+        self.__status = self.DeviceStatus.NOT_INITIALIZED
 
         # Init cache
         self.cached_values = {}
