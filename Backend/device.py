@@ -127,6 +127,9 @@ class Device(ABC):
         self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
     
 
+
+    
+
     # ===== GETTER/SETTER METHODS ====
     @property
     def status(self) -> DeviceStatus:          # Status Getter

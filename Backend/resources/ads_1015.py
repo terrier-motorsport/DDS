@@ -190,7 +190,7 @@ class ADS_1015(Device):
         else:
             # The value is in the output range, so we clamp & return it.
             # This prevents things like negative pressures when the loop is unpresurized
-            clamped_voltage = self.clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
+            clamped_voltage = self.__clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
             analog_in.voltage = clamped_voltage
             return analog_in
       
@@ -203,6 +203,11 @@ class ADS_1015(Device):
 
         # Create the thread & start running
         sensor_thread.start()
+
+
+    def __clamp(value, min_value, max_value):
+        """Clamps a value between a minimum and maximum."""
+        return max(min_value, min(value, max_value))
 
 
 # Example usage
