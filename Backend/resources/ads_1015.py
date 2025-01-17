@@ -68,7 +68,7 @@ class ADS_1015(Device):
 
         # Start data collection thread
         # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
-        self.__status = self.Status.ACTIVE
+        self.__status = self.DeviceStatus.ACTIVE
         self.__start_threaded_data_collection()
 
         # Wait for thread to collect data
@@ -132,7 +132,7 @@ class ADS_1015(Device):
         Thread function to continuously fetch sensor data.
         """
 
-        while self.__status is self.Status.ACTIVE:
+        while self.__status is self.DeviceStatus.ACTIVE:
             try:
                 voltages = self.__fetch_sensor_data()
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
