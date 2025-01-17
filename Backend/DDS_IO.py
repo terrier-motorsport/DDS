@@ -122,7 +122,7 @@ class DDS_IO:
                 return 'NIN'
         
         # Fetch data from device
-        data = device.get_data(parameter)
+        data = device.get_data_from_device(parameter)
 
         # If the data is None, we can return early
         if data is None:

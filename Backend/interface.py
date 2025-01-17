@@ -185,26 +185,28 @@ class Interface(ABC):
 
 
     # ===== MAIN METHODS =====
-    def get_data(self, key: str) -> Union[str, float, int, None]:
+    def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:
         """
         Retrieves the most recent cached data associated with the provided key.
 
         Parameters:
-            key (str): The key for which the associated cached data is to be retrieved.
+            device_key (str): The key for the device where the data exists.
+            data_key (str): The key for the data being retrieved.
 
         Returns:
             Union[str, float, int, None]: The cached value corresponding to the key if it exists,
                                         otherwise None. The value type can be str, float, or int.
         """
 
-        # Check if the key exists in the cache
-        if not key in self.cached_values:
-            return self._log(f"No data found for key: {key}", self.log.LogSeverity.WARNING)
-        elif self.cached_values[key] is None:
-            return self._log(f"No cached data found for key: {key}", self.log.LogSeverity.DEBUG)
+        # Verify device exists
+        if not device_key in self.devices:
+            return self._log(f"No device found for key: {device_key}", self.log.LogSeverity.WARNING)
+        
+        # Get the data
+        data = self.devices[device_key].get_data(data_key)
 
-        # Return the cached data
-        return self.cached_values[key]
+        # Return the data
+        return data
 
 
     def get_all_param_names(self) -> List[str]:
@@ -288,9 +290,10 @@ class Interface(ABC):
 
     # ===== GETTER/SETTER METHODS ====
     @property
-    def status(self):                    # Status Getter
+    def status(self):                             # Status Getter
         return self.__status
     
+
     @status.setter
     def status(self, value: InterfaceStatus):     # Status Setter
         self.change_status(value)
@@ -302,16 +305,13 @@ class Interface(ABC):
             raise ValueError("Value out of range")
         return (value - min_value) / (max_value - min_value)
     
+
     @staticmethod
     def percentage_to_map(percentage, min_value : int, max_value : int) -> float:
         if percentage < 0.0 or percentage > 1.0:
             raise ValueError("Percentage out of range")
         return percentage * (max_value - min_value) + min_value
     
-    @staticmethod
-    def clamp(value, min_value, max_value):
-        """Clamps a value between a minimum and maximum."""
-        return max(min_value, min(value, max_value))
 
 
 
@@ -613,7 +613,7 @@ if __name__ == "__main__":
 
     i2cinterface.update()
 
-    print(i2cinterface.get_data)
+    print(i2cinterface.get_data_from_device())
     
     
 

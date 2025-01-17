@@ -140,9 +140,9 @@ class TestADXL343(unittest.TestCase):
                 self.adxl.update()
 
                 # Verify that the cached values match the dummy data
-                self.assertEqual(self.adxl.get_data('x'), 0.12)
-                self.assertEqual(self.adxl.get_data('y'), 0.98)
-                self.assertEqual(self.adxl.get_data('z'), -0.21)
+                self.assertEqual(self.adxl.get_data_from_device('x'), 0.12)
+                self.assertEqual(self.adxl.get_data_from_device('y'), 0.98)
+                self.assertEqual(self.adxl.get_data_from_device('z'), -0.21)
 
                 # Telemetry logging should be called
                 mock_log_telemetry.assert_has_calls([
@@ -305,9 +305,9 @@ class TestADXL343(unittest.TestCase):
             self.adxl.update()
 
             # Verify that the cached values match the dummy data
-            self.assertEqual(self.adxl.get_data('x'), 0.15)
-            self.assertEqual(self.adxl.get_data('y'), -0.45)
-            self.assertEqual(self.adxl.get_data('z'), 0.85)
+            self.assertEqual(self.adxl.get_data_from_device('x'), 0.15)
+            self.assertEqual(self.adxl.get_data_from_device('y'), -0.45)
+            self.assertEqual(self.adxl.get_data_from_device('z'), 0.85)
         
 # This allows running the tests directly (e.g., `python test_adxl343.py`)
 if __name__ == "__main__":

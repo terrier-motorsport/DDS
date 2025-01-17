@@ -1,6 +1,7 @@
 # Device Abstract Base Class for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
+from typing import Union
 from Backend.data_logger import DataLogger
 from abc import ABC, abstractmethod
 import time
@@ -62,7 +63,8 @@ class Device(ABC):
         '''
         pass
 
-
+    
+    @abstractmethod
     def update(self):
         '''
         Updates the device by reading data from it,
@@ -72,6 +74,29 @@ class Device(ABC):
 
 
     # ===== CACHING METHODS =====
+    def get_data(self, data_key: str) -> Union[str, float, int, None]:
+        '''
+        This method verifies that the data at the specified key exists,
+        and if it does, return it.
+
+        If it doesn't exist, log a message and return None.
+
+        Parameters:
+            data_key (str): The key of the data being requested.
+
+        Returns:
+            Union[str, float, int, None]: The data at the specified key.
+        '''
+        
+        # Verify data exists, and return it if so
+        if not data_key in self.cached_values:
+            # This happens if this data has never existed
+            return self._log(f"No data found for key: {data_key}", self.log.LogSeverity.WARNING)
+        elif self.cached_values[data_key] is None:
+            # This happens if the data doesn't currently exist
+            return self._log(f"No cached data found for key: {data_key}", self.log.LogSeverity.DEBUG)
+        return self.cached_values[data_key]
+
     def _update_cache_timeout(self):
         """
         Checks if the cache has expired due to lack of new data and clears it if necessary.

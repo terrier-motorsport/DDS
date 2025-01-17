@@ -84,7 +84,7 @@ class M3200PressureSensorI2C(I2CInterface):
         self._log_telemetry("temperature", temperature)
 
 
-    def get_data(self, key: str):
+    def get_data_from_device(self, key: str):
         """
         Retrieve the most recent data associated with the key from the cache.
         """
