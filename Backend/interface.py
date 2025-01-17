@@ -162,7 +162,7 @@ class Interface(ABC):
         Must be called before data can be collected by devices.
         """
 
-        for device in self.devices:
+        for key, device in self.devices.items():
             device.initialize()
         
         # Set status to active
