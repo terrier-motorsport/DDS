@@ -140,7 +140,7 @@ class Interface(ABC):
         self.__status = self.InterfaceStatus.NOT_INITIALIZED
 
         # Set & Verify that devices have unique names
-        device_names = [device.name for device in self.devices]
+        device_names = [device.name for device in devices]
         if len(device_names) != len(set(device_names)):
             raise ValueError(f"Duplicate device names found: {device_names}")
         # Convert List (input) into dict (self.devices)
