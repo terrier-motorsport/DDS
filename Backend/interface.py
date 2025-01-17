@@ -36,7 +36,7 @@ class InterfaceProtocol(Enum):
     I2C = 3     # DONE
 
 # Exception for device not being active
-class DeviceNotActiveException(Exception):
+class InterfaceNotActiveException(Exception):
     """Raised when an operation is attempted on a device that is not active."""
     pass
 
@@ -174,7 +174,7 @@ class Interface(ABC):
         Should be called as often as possible.
         """
         if self.__status != self.InterfaceStatus.ACTIVE:
-            raise DeviceNotActiveException(f"Cannot update {self.name}: Device is not active.")
+            raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
              
     
     @abstractmethod
@@ -609,6 +609,7 @@ if __name__ == "__main__":
         ],
         logger=logger)
 
+    i2cinterface.initialize()
 
     i2cinterface.update()
 
