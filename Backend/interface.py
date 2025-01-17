@@ -170,8 +170,6 @@ class Interface(ABC):
         self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
 
 
-
-    @abstractmethod
     def update(self):
         """
         Updates the `cached_values` dictionary 
