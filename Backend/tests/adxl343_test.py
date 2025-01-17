@@ -249,7 +249,7 @@ class TestADXL343(unittest.TestCase):
         Test that if __fetch_sensor_data raises an error, we log the error and continue.
         """
         from Backend.interface import Interface
-        self.adxl.status = Interface.Status.ACTIVE
+        self.adxl.status = Interface.InterfaceStatus.ACTIVE
 
         # Force an Exception to be raised
         with patch.object(self.adxl, '_ADXL343__fetch_sensor_data', side_effect=Exception("Fake error")), \
@@ -260,7 +260,7 @@ class TestADXL343(unittest.TestCase):
             time.sleep(0.1)
 
             # Stop the worker
-            self.adxl.status = Interface.Status.ERROR
+            self.adxl.status = Interface.InterfaceStatus.ERROR
             worker_thread.join(timeout=1.0)
 
             # We should have logged the error at least once

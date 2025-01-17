@@ -74,7 +74,7 @@ class Interface(ABC):
         The class maintains a `cached_values` dictionary that stores the most recent sensor data.
     '''
 
-    class Status(Enum):
+    class InterfaceStatus(Enum):
         '''
         This keeps track of the state of the interface.
         
@@ -89,16 +89,11 @@ class Interface(ABC):
         NOT_INITIALIZED = 4
 
 
-    # Cache variables
-    CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
-    cached_values: dict              # Dictionary to store cached values
-    last_cache_update: float         # Time since last cache update
-
     # Class variables
     interfaceProtocol: InterfaceProtocol
     name: str
     log: DataLogger
-    __status: Status
+    __status: InterfaceStatus
 
     # Device variables
     devices: List[Device]
@@ -138,41 +133,29 @@ class Interface(ABC):
         self.interfaceProtocol = interfaceProtocol
         self.name = name
         self.log = logger
-        self.__status = self.Status.NOT_INITIALIZED
+        self.__status = self.InterfaceStatus.NOT_INITIALIZED
 
         # Device variables
         self.devices = devices
 
-        # Init cache
-        self.cached_values = {}
-        self.last_cache_update = time.time()
-
-        # Log device creation
-        self._log(f'Created {self.interfaceProtocol.name} device {self.name}.')
+        # Log Interface creation
+        self._log(f'Created {self.interfaceProtocol.name} Interface {self.name}.')
 
 
     # ===== ABSTRACT METHODS =====
     @abstractmethod
     def initialize(self):
         """
-        Initializes the device by setting its status to active and logging the successful initialization.
+        Initializes each device on the interface.
 
-        This method is intended to be overridden by child classes to implement the specific initialization 
-        logic for different devices. If there is an error with the physical devices, it may raise an error.
-
-        Child classes must provide their own implementation of this method. After completing their specific 
-        initialization tasks, child classes should call this method to update the status and log the successful 
-        initialization.
-
-        Example:
-            class MyDevice(Device):
-                def initialize(self):
-                    # Perform custom initialization
-                    super().initialize()  # Call the parent class method once initialization is complete
+        Must be called before data can be collected by devices.
         """
+
+        for device in self.devices:
+            device.initialize()
         
         # Set status to active
-        self.__status = self.Status.ACTIVE
+        self.__status = self.InterfaceStatus.ACTIVE
 
         # Log device initialization
         self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
@@ -183,6 +166,8 @@ class Interface(ABC):
         """
         Updates the `cached_values` dictionary 
         with the latest sensor readings.
+
+        Should be called as often as possible.
         """
     
     @abstractmethod
@@ -225,7 +210,7 @@ class Interface(ABC):
         return list(self.cached_values.keys())
     
 
-    def change_status(self, new_status: Status):
+    def change_status(self, new_status: InterfaceStatus):
         """
         Changes the Interface's status to the one specified.
         Logs if there is a change in status.
@@ -243,60 +228,36 @@ class Interface(ABC):
 
         # Change the status
         self.__status = new_status
-        
-        
-
-    # ===== CACHING METHODS =====
-    def _update_cache_timeout(self):
-        """
-        Checks if the cache has expired due to lack of new data and clears it if necessary.
-
-        This method should be called when no new data is found. It compares the current 
-        time with the time of the last cache update. If the time difference exceeds the 
-        cache timeout threshold, the cache is cleared to ensure outdated data is removed.
-        """
-
-        # Return early if the cache is already empty
-        if not self.cached_values:
-            return
-
-        # Update the current time
-        current_time = time.time()
-
-        # Clear the cache if it has expired
-        if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-            self._clear_cache()
-            
-
-    def _reset_last_cache_update_timer(self):
-        """
-        Resets the timer that tracks the last time the cache was updated.
-
-        This method should be called every time the cache is updated. It updates the 
-        `last_cache_update` attribute to the current time (in seconds since the epoch), 
-        ensuring that the elapsed time can be tracked accurately for cache validation.
-
-        Notes:
-            - The `last_cache_update` attribute is used to monitor the time since the last 
-            cache update, and this method must be invoked each time the cache is modified 
-            to ensure the timer reflects the most recent update.
-        """
-        self.last_cache_update = time.time()
-    
-    
-    def _clear_cache(self):
-        '''
-        Clears the cached values by changing the values to None.
-        The keys are left unchanged.
-        '''
-        # Change all values to None 
-        empty_cache = {key: None for key in self.cached_values}
-        self.cached_values = empty_cache
-
-        self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
 
 
     # ===== OTHER METHODS =====
+    def _initialize_device(self, device: Device):
+        """
+        Safely initializes a given device, 
+        handling all errors that could possibly be raised during the inialization.
+        """
+
+        self._log(f'Initializing {device.name} Device on {self.name} ({self.interfaceProtocol.name})')
+
+        # Initalize Device 
+        try:
+            # Initialize the device
+            device.initialize()
+
+            # Try reading the first peice of data
+            device.update()
+        except Exception as e:
+            # Log the error
+            self._log(f'Was unable to intialize device {device.name}: {e}.', DataLogger.LogSeverity.CRITICAL)
+
+            # Change device status to error
+            device.status = Device.DeviceStatus.ERROR
+            return
+
+        # ===== FINISHED ===== 
+        self._log(f'Finished initializing {device.name}!')
+
+
     def _log_telemetry(self, param_name: str, value, units: str):
         """
         Logs telemetry data to the telemetry file.
@@ -324,7 +285,7 @@ class Interface(ABC):
         return self.__status
     
     @status.setter
-    def status(self, value: Status):     # Status Setter
+    def status(self, value: InterfaceStatus):     # Status Setter
         self.change_status(value)
 
     # ===== HELPER METHODS ====
@@ -619,23 +580,32 @@ if __name__ == "__main__":
     i2cBus = smbus2.SMBus(2)
 
 
+    # Setting up a test i2c interface
     m3200_pressure_mapper = ValueMapper(
         voltage_range=[0.5, 4.5], 
         output_range=[0, 17])
-    
-    test = I2CInterface(
+    i2cinterface = I2CInterface(
         'testInterface',
-        [
+        devices=[
             ADS_1015('ADC1',logger,i2cBus,[
                 Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
                 Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
                 Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
                 Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
-        ]),
+            ]),
             ADS_1015('ADC1',logger,i2cBus,[
                 Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
                 Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
                 Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
                 Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
-        ]),
-        ],logger)
+            ]),
+        ],
+        logger=logger)
+
+
+    i2cinterface.update()
+
+    print(i2cinterface.get_data)
+    
+    
+

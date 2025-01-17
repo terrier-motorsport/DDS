@@ -498,7 +498,7 @@ class ADXL343(I2CInterface):
         Thread function to continuously fetch sensor data.
         """
 
-        while self.status is self.Status.ACTIVE:
+        while self.status is self.InterfaceStatus.ACTIVE:
             try:
                 accelerations = self.__fetch_sensor_data()
                 self.data_queue.put(accelerations)  # Put data in the queue for the main program
@@ -533,7 +533,7 @@ class ADXL343(I2CInterface):
         Start the data collection in a separate thread.
         """
         # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
-        self.status = self.Status.ACTIVE
+        self.status = self.InterfaceStatus.ACTIVE
 
         # Make thread
         sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)

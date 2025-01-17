@@ -69,21 +69,21 @@ class DDS_IO:
 
             status = device_object.status
 
-            if status is Interface.Status.ACTIVE:
+            if status is Interface.InterfaceStatus.ACTIVE:
                 try:
                     device_object.update()
                     self.__monitor_device_parameters(device_object)
                 except Exception as e:
                     self.__log(f'Failed to update {device_name}. {e}')
-                    device_object.status = Interface.Status.ERROR
+                    device_object.status = Interface.InterfaceStatus.ERROR
             
-            elif status is Interface.Status.ERROR:
+            elif status is Interface.InterfaceStatus.ERROR:
                 try:
                     device_object.initialize()
                 except Exception as e:
                     return
 
-            elif device_object.status is Interface.Status.DISABLED:
+            elif device_object.status is Interface.InterfaceStatus.DISABLED:
                 return
 
 
@@ -108,17 +108,17 @@ class DDS_IO:
             return
         
         # If the device is not active, we can return early
-        if device.status is not Interface.Status.ACTIVE:
+        if device.status is not Interface.InterfaceStatus.ACTIVE:
 
             # Log the error
             self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {parameter}', DataLogger.LogSeverity.WARNING)
 
             # Return a value that represents the current stat of the device
-            if device.status is Interface.Status.DISABLED:
+            if device.status is Interface.InterfaceStatus.DISABLED:
                 return 'DIS'
-            elif device.status is Interface.Status.ERROR:
+            elif device.status is Interface.InterfaceStatus.ERROR:
                 return 'ERR'
-            elif device.status is Interface.Status.NOT_INITIALIZED:
+            elif device.status is Interface.InterfaceStatus.NOT_INITIALIZED:
                 return 'NIN'
         
         # Fetch data from device
@@ -226,7 +226,7 @@ class DDS_IO:
                     device.cached_values["thre three threee"] = "i HATE chocolate chip cookies which dont have chocolate chips"
                 if device_name == "Anna":
                     device.cached_values["other signal"] = "yum i love chocolate chip cookies"
-                device.change_status(Interface.Status.ACTIVE)
+                device.change_status(Interface.InterfaceStatus.ACTIVE)
 
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')
@@ -373,7 +373,7 @@ class DDS_IO:
                 self.__log(f'Make sure {device.name} is properly wired and shows up on i2cdetect!')
 
         # Mark the device as having an error
-        self.devices[device.name].status = Interface.Status.ERROR
+        self.devices[device.name].status = Interface.InterfaceStatus.ERROR
 
 
     def __failed_to_init_protocol(self, protocol: InterfaceProtocol, exception: Exception):
