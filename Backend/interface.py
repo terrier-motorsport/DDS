@@ -144,6 +144,7 @@ class Interface(ABC):
         if len(device_names) != len(set(device_names)):
             raise ValueError(f"Duplicate device names found: {device_names}")
         # Convert List (input) into dict (self.devices)
+        self.devices = {}
         for device in devices:
             self.devices[device.name] = device
 
