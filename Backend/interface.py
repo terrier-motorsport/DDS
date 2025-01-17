@@ -139,8 +139,12 @@ class Interface(ABC):
         self.log = logger
         self.__status = self.InterfaceStatus.NOT_INITIALIZED
 
-        # Device variables
+        # Set & Verify that devices have unique names
         self.devices = devices
+        device_names = [device.name for device in self.devices]
+        if len(device_names) != len(set(device_names)):
+            raise ValueError(f"Duplicate device names found: {device_names}")
+
 
         # Log Interface creation
         self._log(f'Created {self.interfaceProtocol.name} Interface {self.name}.')
@@ -613,7 +617,7 @@ if __name__ == "__main__":
 
     i2cinterface.update()
 
-    print(i2cinterface.get_data_from_device())
+    print(i2cinterface.get_data_from_device("ADC1", "hotPressure"))
     
     
 
