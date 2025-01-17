@@ -87,7 +87,7 @@ class Device(ABC):
         Returns:
             Union[str, float, int, None]: The data at the specified key.
         '''
-        
+
         # Verify data exists, and return it if so
         if not data_key in self.cached_values:
             # This happens if this data has never existed
@@ -147,6 +147,21 @@ class Device(ABC):
 
 
     # ===== HELPER METHODS =====
+    def _log_telemetry(self, param_name: str, value, units: str):
+        """
+        Logs telemetry data to the telemetry file.
+
+        Parameters:
+            param_name (str): The name of the parameter being logged.
+            value (Any): The value of the parameter.
+            units (str): The units of the parameter's value.
+        """
+        self.log.writeTelemetry(
+            device_name=self.name, 
+            param_name=param_name,
+            value=value,
+            units=units)
+
     def _log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         """Shorthand logging method."""
         self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
