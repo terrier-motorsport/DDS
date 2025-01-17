@@ -205,7 +205,7 @@ class ADS_1015(Device):
         sensor_thread.start()
 
 
-    def __clamp(value, min_value, max_value):
+    def __clamp(self, value, min_value, max_value):
         """Clamps a value between a minimum and maximum."""
         return max(min_value, min(value, max_value))
 
