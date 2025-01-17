@@ -1,7 +1,7 @@
 # Device Abstract Base Class for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from typing import Union
+from typing import List, Union
 from Backend.data_logger import DataLogger
 from abc import ABC, abstractmethod
 import time
@@ -71,6 +71,15 @@ class Device(ABC):
         and storing it into the cached values.
         '''
         pass
+
+    def get_all_param_names(self) -> List[str]:
+        """
+        Returns all parameter names (keys) from the cached values dictionary.
+
+        Returns:
+            List[str]: A list of all parameter names in the cached values dictionary.
+        """
+        return list(self.cached_values.keys())
 
 
     # ===== CACHING METHODS =====

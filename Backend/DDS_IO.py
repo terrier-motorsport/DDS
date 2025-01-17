@@ -171,7 +171,7 @@ class DDS_IO:
         Returns a list of parameters for a specified device.
         '''
         device_params = []
-        for param_name in self.devices[param_name].get_all_param_names():
+        for param_name in self.devices[param_name].get_all_param_names_for_device():
             device_params.append(param_name)
         return device_params
 
@@ -404,7 +404,7 @@ class DDS_IO:
         This function retrieves all parameter names from the device's cached values and checks each parameter's value
         against the defined limits using the ParameterMonitor. If a parameter value is out of range, a warning is raised.
         """
-        param_names = device.get_all_param_names()
+        param_names = device.get_all_param_names_for_device()
 
         for param_name in param_names:
             self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))

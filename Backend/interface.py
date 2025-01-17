@@ -217,36 +217,15 @@ class Interface(ABC):
         # Return the data
         return data
 
-
-    def get_all_param_names(self) -> List[str]:
+    def get_all_device_names(self) -> List[str]:
         """
-        Returns all parameter names (keys) from the cached values dictionary.
+        Retrieves a list of all device names managed by this interface.
 
         Returns:
-            List[str]: A list of all parameter names in the cached values dictionary.
+            List[str]: A list containing the names of all devices owned by the interface.
         """
-        return list(self.cached_values.keys())
+        return list(self.devices.keys())
     
-
-    def change_status(self, new_status: InterfaceStatus):
-        """
-        Changes the Interface's status to the one specified.
-        Logs if there is a change in status.
-
-        Parameters:
-            new_status (Status): The status to switch the device to.
-        """
-
-        # Return early if there is no change in status
-        if self.__status == new_status:
-            return
-        
-        # Log the change in status
-        self._log(f"{self.name} changed from {self.__status.name} to {new_status.name}.")
-
-        # Change the status
-        self.__status = new_status
-
 
     # ===== OTHER METHODS =====
     def _initialize_device(self, device: Device):
@@ -307,20 +286,25 @@ class Interface(ABC):
     def status(self, value: InterfaceStatus):     # Status Setter
         self.change_status(value)
 
-    # ===== HELPER METHODS ====
-    @staticmethod
-    def map_to_percentage(value : int, min_value : int, max_value : int) -> float:
-        if value < min_value or value > max_value:
-            raise ValueError("Value out of range")
-        return (value - min_value) / (max_value - min_value)
-    
 
-    @staticmethod
-    def percentage_to_map(percentage, min_value : int, max_value : int) -> float:
-        if percentage < 0.0 or percentage > 1.0:
-            raise ValueError("Percentage out of range")
-        return percentage * (max_value - min_value) + min_value
-    
+    def change_status(self, new_status: InterfaceStatus):
+        """
+        Changes the Interface's status to the one specified.
+        Logs if there is a change in status.
+
+        Parameters:
+            new_status (Status): The status to switch the device to.
+        """
+
+        # Return early if there is no change in status
+        if self.__status == new_status:
+            return
+        
+        # Log the change in status
+        self._log(f"{self.name} changed from {self.__status.name} to {new_status.name}.")
+
+        # Change the status
+        self.__status = new_status
 
 
 
