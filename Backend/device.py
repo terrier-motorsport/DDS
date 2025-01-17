@@ -133,7 +133,7 @@ class Device(ABC):
         return self.__status
     
     @status.setter
-    def __status(self, value: DeviceStatus):     # Status Setter
+    def status(self, value: DeviceStatus):     # Status Setter
 
         # Return early if there is no change in status
         if self.__status == value:
