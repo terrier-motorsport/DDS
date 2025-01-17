@@ -35,6 +35,10 @@ class InterfaceProtocol(Enum):
     CAN = 1     # DONE
     I2C = 3     # DONE
 
+# Exception for device not being active
+class DeviceNotActiveException(Exception):
+    """Raised when an operation is attempted on a device that is not active."""
+    pass
 
 
 # ===== Parent class for all interfaces =====
@@ -169,6 +173,9 @@ class Interface(ABC):
 
         Should be called as often as possible.
         """
+        if self.__status != self.InterfaceStatus.ACTIVE:
+            DeviceNotActiveException(f"Cannot update {self.name}: Device is not active.")
+            raise 
     
     @abstractmethod
     def close_connection(self):
