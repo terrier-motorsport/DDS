@@ -206,8 +206,9 @@ class Interface(ABC):
         """
 
         # Verify device exists
-        if not any(device.name == device_key for device in self.devices):
-            return self._log(f"No device found for key: {device_key}", self.log.LogSeverity.WARNING)
+        if device_key not in self.devices:
+            self._log(f"No device found for key: {device_key}", self.log.LogSeverity.WARNING)
+            return None
         
         # Get the data
         data = self.devices[device_key].get_data(data_key)
