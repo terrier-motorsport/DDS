@@ -28,7 +28,7 @@ class Device(ABC):
 
     # Class variables
     name: str
-    status: DeviceStatus
+    __status: DeviceStatus
 
     # Cache variables
     CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
@@ -44,7 +44,7 @@ class Device(ABC):
         # Init Class variables
         self.name = name
         self.log = logger
-        self.status = self.DeviceStatus.NOT_INITIALIZED
+        self.__status = self.DeviceStatus.NOT_INITIALIZED
 
         # Init cache
         self.cached_values = {}
@@ -130,20 +130,20 @@ class Device(ABC):
     # ===== GETTER/SETTER METHODS ====
     @property
     def status(self) -> DeviceStatus:          # Status Getter
-        return self.status
+        return self.__status
     
     @status.setter
-    def status(self, value: DeviceStatus):     # Status Setter
+    def __status(self, value: DeviceStatus):     # Status Setter
 
         # Return early if there is no change in status
-        if self.status == value:
+        if self.__status == value:
             return
         
         # Log the change in status
-        self._log(f"{self.name} changed from {self.status.name} to {value.name}.")
+        self._log(f"{self.name} changed from {self.__status.name} to {value.name}.")
 
         # Change the status
-        self.status = value
+        self.__status = value
 
 
 
