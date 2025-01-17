@@ -33,7 +33,7 @@ class ADS_1015(Device):
     def __init__(self, name: str, logger: DataLogger, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
 
         # Initialize super class (I2CDevice)
-        super().__init__(name, logger=logger)
+        super().__init__()
 
         # Init I2C bus
         self.bus = i2c_bus
