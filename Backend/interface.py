@@ -614,8 +614,10 @@ if __name__ == "__main__":
     )
 
     i2cinterface.initialize()
-
     i2cinterface.update()
+
+    caninterface.initialize()
+    caninterface.update()
 
     print(i2cinterface.get_data_from_device("ADC1", "hotPressure"))
     
