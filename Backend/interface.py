@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 import can
 import cantools
 import cantools.database
+from smbus2 import SMBus
 import subprocess
 import time
 
@@ -328,8 +329,9 @@ class I2CInterface(Interface):
     """
     
 
-    def __init__(self, name: str, devices: List[Device], logger: DataLogger):
+    def __init__(self, name: str, i2c_bus: SMBus, devices: List[Device], logger: DataLogger):
         super().__init__(name, devices, InterfaceProtocol.I2C, logger)
+        self.bus = i2c_bus
 
 
     def initialize(self):
@@ -369,7 +371,7 @@ class CANInterface(Interface):
     TIMEOUT = 0.0001  
     
 
-    def __init__(self, name: str, can_bus: can.BusABC, database_path: str, logger: DataLogger):
+    def __init__(self, name: str, can_bus: can.BusABC, devices: List[Device], logger: DataLogger):
         """
         Initializes a CANInterface instance.
 
@@ -381,15 +383,13 @@ class CANInterface(Interface):
         """
         
         # Initialize the parent class (Interface)
-        super().__init__(name, InterfaceProtocol.CAN, logger=logger)
+        super().__init__(name, devices, InterfaceProtocol.CAN, logger=logger)
 
-        # Set up the database path and load the CAN database
-        self.database_path = database_path
+        # Initialize the database
         self.db = cantools.database.Database()
-        self.add_database(self.database_path)
 
         # Set up the CAN bus interface
-        self.can_bus = can_bus
+        self.bus = can_bus
 
         
     def initialize(self):
@@ -402,7 +402,7 @@ class CANInterface(Interface):
         """
         
         # Extract the CAN interface name from the channel info (e.g., "socketcan channel 'can0'")
-        channel_info = self.can_bus.channel_info
+        channel_info = self.bus.channel_info
         start = channel_info.find("'") + 1
         end = channel_info.find("'", start)
 
@@ -470,7 +470,7 @@ class CANInterface(Interface):
 
     def close_connection(self):
         '''Closes the connection to the CAN Bus'''
-        self.can_bus.shutdown()
+        self.bus.shutdown()
         
 
     def __log_decoded_data(self, message: can.Message, data: dict):
@@ -516,7 +516,7 @@ class CANInterface(Interface):
         """
 
         # Read a single frame of CAN data
-        return self.can_bus.recv(self.TIMEOUT)
+        return self.bus.recv(self.TIMEOUT)
         
     
     def __decode_can_msg(self, msg: can.Message) -> dict:
@@ -569,6 +569,7 @@ class CANInterface(Interface):
 
 
 from Backend.resources.ads_1015 import ADS_1015
+from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.analog_in import Analog_In, ValueMapper
 import smbus2
 
@@ -576,6 +577,7 @@ if __name__ == "__main__":
 
     logger = DataLogger('InterfaceTest')
     i2cBus = smbus2.SMBus(2)
+    canBus = can.Bus(0)
 
 
     # Setting up a test i2c interface
@@ -599,6 +601,17 @@ if __name__ == "__main__":
             ]),
         ],
         logger=logger)
+    
+    # Make a test CAN interface
+    caninterface = CANInterface(
+        name='CAN Interface',
+        can_bus=canBus,
+        devices=[
+            DTI_HV_500(logger)
+        ],
+        logger=logger
+
+    )
 
     i2cinterface.initialize()
 

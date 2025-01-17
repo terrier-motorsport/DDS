@@ -61,7 +61,7 @@ class Device(ABC):
         Raises:
             ...
         '''
-        pass
+        raise NotImplementedError(f'Initialize function for {self.name} doesn\'t exist')
 
     
     @abstractmethod
@@ -70,7 +70,7 @@ class Device(ABC):
         Updates the device by reading data from it,
         and storing it into the cached values.
         '''
-        pass
+        raise NotImplementedError(f'Update function for {self.name} doesn\'t exist')
 
     def get_all_param_names(self) -> List[str]:
         """
