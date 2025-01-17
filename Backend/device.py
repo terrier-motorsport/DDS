@@ -8,7 +8,7 @@ class Device(ABC):
     This class provides standard methods which each Device
     object that the DDS uses should override.
     '''
-    
+
 
     @abstractmethod
     def initialize(self):
@@ -19,9 +19,9 @@ class Device(ABC):
     def testMethod(self):
         pass
 
-class testThing(Device):
-    pass
+# class testThing(Device):
+#     pass
 
-if __name__ == "__main__":
-    thing = testThing()
-    # thing.testMethod()
+# if __name__ == "__main__":
+#     thing = testThing()
+#     # thing.testMethod()
