@@ -539,7 +539,8 @@ class CANInterface(Interface):
             return None
 
 
-    def __init_can_network(self, can_interface: str):
+    @staticmethod
+    def __init_can_network(can_interface: str, logger: DataLogger):
         """
         Initializes the specified CAN network interface.
 
@@ -550,7 +551,7 @@ class CANInterface(Interface):
         """
 
         # Log a warning to indicate the initialization attempt
-        self._log(f"CAN Bus not found... Attempting to open one on {can_interface}.", DataLogger.LogSeverity.WARNING)
+        logger.writeLog('CAN', f"CAN Bus not found... Attempting to open one on {can_interface}.", DataLogger.LogSeverity.WARNING)
 
 
         # Bring up the CAN interface with the specified bitrate
@@ -577,7 +578,7 @@ if __name__ == "__main__":
 
     logger = DataLogger('InterfaceTest')
     i2cBus = smbus2.SMBus(2)
-    canBus = can.Bus(0)
+    canBus = can.Bus('can0')
 
 
     # Setting up a test i2c interface
@@ -588,16 +589,16 @@ if __name__ == "__main__":
         'I2C Interface',
         devices=[
             ADS_1015('ADC1',logger,i2cBus,[
-                Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
+                Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),         #ADC1(A0)
                 Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
-                Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
+                Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),        #ADC1(A2)
                 Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
             ]),
             ADS_1015('ADC2',logger,i2cBus,[
-                Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),           #ADC1(A0)
-                Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
-                Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),          #ADC1(A2)
-                Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
+                Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),         #ADC2(A0)
+                Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC2(A1)
+                Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),        #ADC2(A2)
+                Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC2(A3)
             ]),
         ],
         logger=logger)
@@ -608,6 +609,7 @@ if __name__ == "__main__":
         can_bus=canBus,
         devices=[
             DTI_HV_500(logger)
+
         ],
         logger=logger
 
