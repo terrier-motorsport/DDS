@@ -111,56 +111,25 @@ BO_ 1719 MSGID_0X6B7: 8 BMS
 BO_ 2550589428 MSGID_0X1806E7F4: 8 BMS
  SG_ Maximum_Pack_Voltage : 7|16@0+ (0.1,0) [0|0] "Volts"  Third_Party_Device
  SG_ Pack_CCL : 23|16@0+ (0.1,0) [0|0] "Amps"  Third_Party_Device
- SG_ Blank : 32|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 33|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 34|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 35|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 36|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 37|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 38|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
+ SG_ Blank : 32|7@0+ (1.0,0) [0|1] ""  Third_Party_Device
  SG_ DTC_P0A08_Charger_Safety_Rly_Flt : 39|1@0+ (1,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 47|8@0+ (0.1,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
  SG_ Blank : 38|31@0+ (1,0) [0|0] ""  Third_Party_Device
 
 BO_ 2550588916 MSGID_0X1806E5F4: 8 BMS
  SG_ Maximum_Pack_Voltage : 7|16@0+ (0.1,0) [0|0] "Volts"  Third_Party_Device
  SG_ Pack_CCL : 23|16@0+ (0.1,0) [0|0] "Amps"  Third_Party_Device
- SG_ Blank : 32|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 33|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 34|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 35|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 36|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 37|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 38|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
+ SG_ Blank : 32|7@0+ (1.0,0) [0|1] ""  Third_Party_Device
  SG_ DTC_P0A08_Charger_Safety_Rly_Flt : 39|1@0+ (1,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 47|8@0+ (0.1,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
  SG_ Blank : 38|31@0+ (1,0) [0|0] ""  Third_Party_Device
 
 BO_ 2550589940 MSGID_0X1806E9F4: 8 BMS
  SG_ Maximum_Pack_Voltage : 7|16@0+ (0.1,0) [0|0] "Volts"  Third_Party_Device
  SG_ Pack_CCL : 23|16@0+ (0.1,0) [0|0] "Amps"  Third_Party_Device
- SG_ Blank : 32|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 33|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 34|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 35|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 36|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 37|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 38|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
+ SG_ Blank : 32|7@0+ (1.0,0) [0|1] ""  Third_Party_Device
  SG_ DTC_P0A08_Charger_Safety_Rly_Flt : 39|1@0+ (1,0) [0|1] ""  Third_Party_Device
- SG_ Blank : 47|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
  SG_ Blank : 38|31@0+ (1,0) [0|0] ""  Third_Party_Device
 
 BO_ 2566869221 MSGID_0X18FF50E5: 8 Third_Party_Device
- SG_ Blank : 7|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 15|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 23|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 31|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 39|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 47|8@0+ (1.0,0) [0|0] ""  BMS
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  BMS
  SG_ Blank : 7|64@0+ (1,0) [0|0] ""  BMS
 
 CM_ BO_ 1720 "This ID Transmits at 1000 ms.";
