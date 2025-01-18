@@ -446,7 +446,7 @@ class CANInterface(Interface):
         if not message:
             # Update the cache timeout of devices.
             for name, device in self.devices.items():
-                device.update()
+                device.update(message)
             return
 
         # Decode the received CAN message to extract relevant data.
