@@ -225,7 +225,7 @@ class CANDevice(Device):
 
     db: cantools.database.Database
 
-    def __init__(self, name, dbc_filepath: str, logger):
+    def __init__(self, name, dbc_filepath: str, logger: DataLogger):
         self.db = cantools.database.load_file(dbc_filepath)
         super().__init__(name, logger)
     
