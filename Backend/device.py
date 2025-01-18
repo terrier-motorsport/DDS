@@ -61,7 +61,15 @@ class Device(ABC):
         Raises:
             ...
         '''
-        raise NotImplementedError(f'Initialize function for {self.name} doesn\'t exist')
+        # Check if the method is being called on the base class
+        if type(self) is Device:
+            raise NotImplementedError(
+                f"The 'initialize' method for {self.name} must be implemented in a subclass."
+            )
+
+        # If called by a subclass, proceed with initialization
+        self._log(f'{self.name} initialized successfully!')
+        self.__status = self.DeviceStatus.ACTIVE
 
     
     @abstractmethod
@@ -80,7 +88,7 @@ class Device(ABC):
             List[str]: A list of all parameter names in the cached values dictionary.
         """
         return list(self.cached_values.keys())
-
+    
 
     # ===== CACHING METHODS =====
     def get_data(self, data_key: str) -> Union[str, float, int, None]:
