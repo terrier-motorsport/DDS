@@ -6,8 +6,8 @@ from Backend.resources.analog_in import Analog_In
 from Backend.device import Device
 from typing import List
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
+from smbus2 import SMBus
 import time
-import smbus2
 import threading
 import queue
 
@@ -30,23 +30,20 @@ class ADS_1015(Device):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logger: DataLogger, i2c_bus: smbus2.SMBus, inputs : List[Analog_In]):
+    def __init__(self, name: str, logger: DataLogger, inputs : List[Analog_In]):
 
         # Initialize super class (Device)
         super().__init__(name, logger)
 
-        # Init I2C bus
-        self.bus = i2c_bus
-        self.last_retrieval_time = time.time()  # Time of the last successful data retrieval
-
-        # Init virtual analog inputs
+        # Init class variables
         self.inputs = inputs
-
-        # Init threading things
         self.data_queue = queue.Queue()  # Queue to hold sensor data
 
 
-    def initialize(self):
+    def initialize(self, i2c_bus: SMBus):
+
+        # Save bus
+        self.bus = i2c_bus
 
         # Make ADS object
         self.ads = ADS1015(i2c_dev=self.bus)

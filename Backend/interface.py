@@ -329,9 +329,9 @@ class I2CInterface(Interface):
     """
     
 
-    def __init__(self, name: str, i2c_bus: SMBus, devices: List[Device], logger: DataLogger):
+    def __init__(self, name: str, i2c_channel: str, devices: List[Device], logger: DataLogger):
         super().__init__(name, devices, InterfaceProtocol.I2C, logger)
-        self.bus = i2c_bus
+        self.channel = i2c_channel
 
 
     def initialize(self):
@@ -343,7 +343,7 @@ class I2CInterface(Interface):
         Closes the I2C connection.
         """
         # Close the I2C bus connection
-        self.bus.close()
+        self.channel.close()
 
 
 
@@ -581,14 +581,15 @@ if __name__ == "__main__":
         output_range=[0, 17])
     i2cinterface = I2CInterface(
         'I2C Interface',
+        i2c_channel=2,
         devices=[
-            ADS_1015('ADC1',logger,i2cBus,[
+            ADS_1015('ADC1',logger,[
                 Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),         #ADC1(A0)
                 Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC1(A1)
                 Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),        #ADC1(A2)
                 Analog_In('coldTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1)       #ADC1(A3)
             ]),
-            ADS_1015('ADC2',logger,i2cBus,[
+            ADS_1015('ADC2',logger,[
                 Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),         #ADC2(A0)
                 Analog_In('hotTemperature', '°C', mapper=m3200_pressure_mapper, tolerance=0.1),       #ADC2(A1)
                 Analog_In('coldPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),        #ADC2(A2)

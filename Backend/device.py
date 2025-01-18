@@ -54,7 +54,7 @@ class Device(ABC):
 
 
     @abstractmethod
-    def initialize(self):
+    def initialize(self, bus):
         '''
         Initializes the device.
 
