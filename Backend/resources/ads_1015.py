@@ -72,7 +72,7 @@ class ADS_1015(Device):
         time.sleep(0.5)
 
         # Complete the initialization
-        super().initialize()
+        super().initialize(bus)
 
 
     def update(self):
