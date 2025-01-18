@@ -154,7 +154,7 @@ class Interface(ABC):
         self._log(f'Created {self.interfaceProtocol.name} Interface {self.name}.')
 
 
-    def initialize(self):
+    def initialize(self, bus):
         """
         Initializes each device on the interface.
 
@@ -162,7 +162,7 @@ class Interface(ABC):
         """
 
         for key, device in self.devices.items():
-            device.initialize()
+            device.initialize(bus=bus)
         
         # Set status to active
         self.__status = self.InterfaceStatus.ACTIVE
@@ -335,7 +335,8 @@ class I2CInterface(Interface):
 
 
     def initialize(self):
-        return super().initialize()
+        self.bus = SMBus(2)
+        return super().initialize(self.bus)
 
 
     def close_connection(self):
