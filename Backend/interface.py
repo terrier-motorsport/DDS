@@ -46,6 +46,7 @@ class InterfaceNotActiveException(Exception):
 class Interface(ABC):
 
     '''
+    OUTDATED. TODO: UPDATE THIS DOC
     The Interface class serves as a base class for defining and interacting with various device interfaces, such as CAN, I2C, etc. 
 
     The core functionality provided by this class is common to all interfaces, including methods for updating and retrieving data, handling cache, 
@@ -432,10 +433,6 @@ class CANInterface(Interface):
         # The CAN Interface differs from other interfaces, because the interface itself reads the message,
         # not the devices. As a result, we kinda have to some strange things.
 
-        # This will call update in all the devices on this interface.
-        # It will also make sure the devices are active, but thats kinda irrelevant
-        # super().update()
-
         # Get data from the CAN Bus
         # This can raise a CanOperationError, but because this is a interface-level failure,
         # we can let it propogate through to the DDS_IO which will handle it.
@@ -471,17 +468,6 @@ class CANInterface(Interface):
         if not updated_device:
             self._log(f"No device found for message ID {message.arbitration_id}.", DataLogger.LogSeverity.WARNING)
             self._log_telemetry('UnknownCanMessage',f'{message.arbitration_id} {message.bitrate_switch} {message.channel} {message.data} {message.dlc}')
-                
-        
-        data = self.__decode_can_msg(message)
-        if not data:
-            return
-
-        # Reset the last cache update timer 
-        self._reset_last_cache_update_timer()
-
-        # Log the decoded data
-        self.__log_decoded_data(message, data)
 
         # Update or add all decoded values to the cached values dictionary.
         for signal_name, value in data.items():

@@ -2,13 +2,16 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 import random
-from Backend.interface import Interface, CANInterface, InterfaceProtocol
+from Backend.interface import Interface, CANInterface, I2CInterface, InterfaceProtocol
 from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
 from Backend.resources.adxl343 import ADXL343
+from Backend.resources.dtihv500 import DTI_HV_500
+from Backend.resources.orionbms2 import Orion_BMS_2
 from typing import Union, Dict, List
+import Backend.config.device_config
 import smbus2
 import can
 
@@ -32,8 +35,7 @@ class DDS_IO:
 
 
     # ===== Devices that the DDS Talks to =====
-    devices: Dict[str, Interface]
-
+    interfaces: Dict[str, Interface]
 
 
     # ===== Class Variables =====
@@ -55,17 +57,18 @@ class DDS_IO:
         self.debug = debug
         self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
+        self.interfaces = {}
 
         self.__log('Starting Dash Display System Backend...')
 
-        self.__initialize_devices()
+        self.__initialize_io()
 
 
     def update(self):
         '''Updates all sensors. Should be called as often as possible.'''
 
         # Update all enabled devices
-        for device_name,device_object in self.devices.items():
+        for device_name,device_object in self.interfaces.items():
 
             status = device_object.status
 
@@ -161,7 +164,7 @@ class DDS_IO:
         # if len(self.devices) == 0:
         #     return ['There are no available devices']
         device_names = []
-        for device_name, device in self.devices.items():
+        for device_name, device in self.interfaces.items():
             device_names.append(device_name)
         return device_names
     
@@ -171,7 +174,7 @@ class DDS_IO:
         Returns a list of parameters for a specified device.
         '''
         device_params = []
-        for param_name in self.devices[param_name].get_all_param_names_for_device():
+        for param_name in self.interfaces[param_name].get_all_param_names_for_device():
             device_params.append(param_name)
         return device_params
 
@@ -180,46 +183,66 @@ class DDS_IO:
         ''' Gets a device at a specified key.
         This may return a None value.'''
 
-        return self.devices.get(deviceKey)
+        return self.interfaces.get(deviceKey)
     
 
-    def __initialize_devices(self):
+    def __initialize_io(self):
 
         '''Initializes all sensors & interfaces for the DDS'''
-
         self.__log('Initializing IO Devices')
-
-        # Create empty devices list
-        self.devices = {}
 
 
         # ===== Init CAN =====
         if self.CAN_ENABLED:
-            self.__initialize_CAN()
-
+            self.__log(f"Starting CAN bus on {self.CAN_BUS}")
+            canInterface = CANInterface(
+                name='CANInterface',
+                can_channel=self.CAN_BUS,
+                devices=[
+                    Orion_BMS_2('Backend/candatabase/Orion_BMS2_CANBUSv5.dbc'),
+                    DTI_HV_500('Backend/candatabase/DTI_HV_500_CANBUSv3.dbc')
+                ],
+                logger=self.log
+            )
+            self.__safe_initialize_interface(canInterface)
+            self.__log("Finished initializing all CAN devices!")
         else:
-            # CANBus Disabled
+            # CAN Disabled
             self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
 
         # ===== Init i2c ===== 
         if self.I2C_ENABLED:
-            self.__initialize_i2c()
-
+            self.__log(f'Starting i2c bus on {self.I2C_BUS}')
+            i2cInterface = I2CInterface(
+                'I2CInterface',
+                i2c_channel=self.I2C_BUS,
+                devices=[
+                    # See the referenced package for details about devices.
+                    Backend.config.device_config.define_ADC1(self.log),
+                    Backend.config.device_config.define_ADC2(self.log),
+                    Backend.config.device_config.define_chassis_MPU_6050(self.log),
+                    Backend.config.device_config.define_top_MPU_6050(self.log),
+                    Backend.config.device_config.define_wheel_MPU_6050(self.log),
+                ]
+            )
+            self.__safe_initialize_interface(i2cInterface)
+            self.__log('Finished initializing all i2c devices!')
         else:
             # i2c Disabled
             self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
-        # Update the IO one time to wake all interface (like ADS 1015)
+        # ===== FIN INIT =====
+        # Update the IO one time to wake all interface
         self.update()
 
         # Add dummy devices if we are in demo mode.
         if self.demo_mode:
-            self.devices = {
+            self.interfaces = {
                 "Mike": Interface('Mike', InterfaceProtocol.I2C, self.log),
                 "Anna": Interface('Anna', InterfaceProtocol.CAN, self.log)
             }
-            for device_name, device in self.devices.items():
+            for device_name, device in self.interfaces.items():
                 if device_name == "Mike":
                     device.cached_values["sample_data One (1)"] = 203949.1324
                     device.cached_values["Two"] = "i like chocolate chip cookies"
@@ -231,149 +254,60 @@ class DDS_IO:
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')
         
-        for device_name, device_object in self.devices.items():
+        for device_name, device_object in self.interfaces.items():
             self.__log(f'{device_name}: {device_object.status.name}')
 
 
-    def __initialize_i2c(self):
-
-        '''Initializes the i2c Bus & all the devices on it.'''
-
-        self.__log(f'Starting i2c bus on {self.I2C_BUS}')
-
-        # ===== Initalize i2c Bus ===== 
-        try:
-            self.i2c_bus = smbus2.SMBus(bus=self.I2C_BUS)
-        except Exception as e:
-            self.__failed_to_init_protocol(InterfaceProtocol.I2C, e)
-            return
-
-
-        # ===== Init cooling loop inputs & ADS ===== 
-        M3200_value_mapper = ValueMapper(
-            voltage_range=[0.5, 4.5], 
-            output_range=[0, 17])
-
-        # Define constants for NTC_M12 value mapping
-        resistance_values = [
-            45313, 26114, 15462, 9397, 5896, 3792, 2500,
-            1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
-        ]
-        temperature_values = [
-            -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
-            60, 70, 80, 90, 100, 110, 120, 130
-        ]
-        # Refer to the voltage divider circuit for the NTC_M12s
-        supply_voltage = 5
-        fixed_resistor = 1000
-        NTC_M12_value_mapper = ExponentialValueMapper(
-            resistance_values=resistance_values,
-            output_values=temperature_values,
-            supply_voltage=supply_voltage,
-            fixed_resistor=fixed_resistor
-        )
-
-        coolingLoopDeviceName = 'coolingLoopSensors'
-
-        coolingLoopDevice = ADS_1015(coolingLoopDeviceName, logger=self.log, i2c_bus=self.i2c_bus, inputs = [
-            Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
-            Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
-            Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
-            Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
-        ])
-
-        self.__safe_initialize_device(coolingLoopDevice)
-
-        # ===== Init accelerometer ===== 
-
-        accelerometerDeviceName = 'frontAccelerometer'
-        accelerometerI2CAddr = 0x1D
-
-        accelerometer = ADXL343(accelerometerDeviceName, self.log, self.i2c_bus, accelerometerI2CAddr)
-        self.__safe_initialize_device(accelerometer)
-
-        # ===== FINISHED ===== 
-        self.__log('Finished initializing all i2c devices!')
-    
-
-    def __initialize_CAN(self):
+    def __safe_initialize_interface(self, interface: Interface) -> bool:
         """
-        Initializes the CANBus interface and sets up connected devices.
-        """
-
-        self.__log(f"Starting CAN bus on {self.CAN_BUS}")
-
-        # Step 1: Attempt to initialize the CAN bus
-        
-        try:
-            self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
-        except OSError as e:
-            # Log failure and disable the CAN interface if network setup fails
-            self.__failed_to_init_protocol(InterfaceProtocol.CAN, e)
-            return
-
-        # Step 3: Set up the CAN interface with the database
-        canDevice = CANInterface(
-            name="MC & AMS", 
-            can_channel=self.can_bus, 
-            database_path="Backend/candatabase/CANDatabaseDTI500v2.dbc", 
-            logger=self.log
-        )
-        # Add the AMS-specific DBC file to the CAN interface
-        canDevice.add_database("Backend/candatabase/Orion_CANBUSv4.dbc")
-
-        # Step 4: Initialize the CAN device safely
-        self.__safe_initialize_device(canDevice)
-
-        # Step 5: Log completion of CAN initialization
-        self.__log("Finished initializing all CAN devices!")
-
-    
-    def __safe_initialize_device(self, device: Interface) -> bool:
-        """
-        Safely initialize an instance of a Interface child class, and add it to the devices dict.
+        This method takes care of initializing the given interface, with error handling.
         
         Parameters:
-            cls (Type[Interface]): The child class to instantiate.
-            *args: Positional arguments for the child class constructor.
-            **kwargs: Keyword arguments for the child class constructor.
+            interface (Interface): The child class to instantiate.
         
         Returns:
             bool: The result of the device being successfully initialized
         """
 
-        # Add the device to the devices dict:
-        self.devices[device.name] = device
+        # Add the interface to the interfaces dict:
+        self.interfaces[interface.name] = interface
 
         try:
-            # Attempt to initalize the device
-            device.initialize()
+            # Attempt to initalize the interface
+            interface.initialize()
 
-            # Check if the device can read data
-            device.update()
+            # Check if the interface can read data
+            interface.update()
 
         except Exception as e:
-            self.__failed_to_init_device(device=device, exception=e)
+            self.__failed_to_init_interface(interface=interface, e=e)
             return False
         return True      
 
 
-    def __failed_to_init_device(self, device: Interface, exception: Exception):
+    def __failed_to_init_interface(self, interface: Interface, e: Exception):
         '''
-        This logs an error when a device (ex. MC) is unable to be intialized.
-        This is usually caused by hardware being configured incorrectly.
-        The device is set to the ERROR state and the DDS_IO will continously attempt to inialize the device.
+        This method takes care of handling the failed initialization
+        The interface is set to the ERROR state and the DDS_IO will 
+        continously attempt to inialize the interface.
+
+        Parameters:
+            interface (Interface): The interface that failed being initialized.
+            e (Exception): The exception raised during initialization.
+
+
         '''
 
         # Log the error
-        self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception}', DataLogger.LogSeverity.CRITICAL)
+        self.__log(f'{interface.interfaceProtocol.name} {interface.name} Initialization Error: {e}', 
+                   DataLogger.LogSeverity.CRITICAL)
 
-        if isinstance(exception, OSError):
-            if exception.errno == 121:
-                self.__log(f'Make sure {device.name} is properly wired and shows up on i2cdetect!')
+        if isinstance(e, OSError):
+            if e.errno == 121:
+                self.__log(f'Make sure {interface.name} is properly wired and shows up on i2cdetect!')
 
         # Mark the device as having an error
-        self.devices[device.name].status = Interface.InterfaceStatus.ERROR
+        self.interfaces[interface.name].status = Interface.InterfaceStatus.ERROR
 
 
     def __failed_to_init_protocol(self, protocol: InterfaceProtocol, exception: Exception):

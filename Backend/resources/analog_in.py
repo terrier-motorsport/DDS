@@ -195,9 +195,6 @@ class Analog_In:
         else:
             return False
         
-        
-
-    
 
 
 
