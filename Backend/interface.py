@@ -403,17 +403,20 @@ class CANInterface(Interface):
         
         # Start the can bus
         # self.__start_can_network()
-        self.bus = can.interface.Bus(self.channel, interface='socketcan')
+        
 
         try:
+            # Init the CAN Bus
+            self.bus = can.interface.Bus(self.channel, interface='socketcan')
+
             # Attempt to fetch a CAN message to verify connection
             self.__fetch_can_message()
         except can.CanOperationError:
             # If fetching the message fails, try to initialize the CAN network
             self.__start_can_network(self.channel)
-            
+        
         # Finish the initialization process
-        super().initialize()
+        super().initialize(self.bus)
 
     
     def update(self):
@@ -572,8 +575,8 @@ import smbus2
 if __name__ == "__main__":
 
     logger = DataLogger('InterfaceTest')
-    i2cBus = smbus2.SMBus(2)
-    canBus = can.interface.Bus('can0', interface="socketcan")
+    i2c_channel = 2
+    can_channel = 'can0'
 
 
     # Setting up a test i2c interface
@@ -582,7 +585,7 @@ if __name__ == "__main__":
         output_range=[0, 17])
     i2cinterface = I2CInterface(
         'I2C Interface',
-        i2c_channel=2,
+        i2c_channel=i2c_channel,
         devices=[
             ADS_1015('ADC1',logger,[
                 Analog_In('hotPressure', 'bar', mapper=m3200_pressure_mapper, tolerance=0.1),         #ADC1(A0)
@@ -602,7 +605,7 @@ if __name__ == "__main__":
     # Make a test CAN interface
     caninterface = CANInterface(
         name='CAN Interface',
-        can_channel='can0',
+        can_channel=can_channel,
         devices=[
             DTI_HV_500(logger)
 
