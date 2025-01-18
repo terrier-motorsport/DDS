@@ -229,7 +229,7 @@ class Interface(ABC):
     
 
     # ===== OTHER METHODS =====
-    def _initialize_device(self, device: Device):
+    def _initialize_device(self, device: Device, bus):
         """
         Safely initializes a given device, 
         handling all errors that could possibly be raised during the inialization.
@@ -240,7 +240,7 @@ class Interface(ABC):
         # Initalize Device 
         try:
             # Initialize the device
-            device.initialize()
+            device.initialize(bus)
 
             # Try reading the first peice of data
             device.update()
