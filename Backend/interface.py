@@ -444,8 +444,9 @@ class CANInterface(Interface):
         # Check if the message is valid; if not, update cache timeout and return early.
         # This means no messages were received, and we don't need to continue the update process.
         if not message:
-            # TODO: UPDATE CACHE TIMEOUT HERE
-            self._update_cache_timeout()
+            # Update the cache timeout of devices.
+            for name, device in self.devices.items():
+                device.update()
             return
 
         # Decode the received CAN message to extract relevant data.
@@ -523,7 +524,7 @@ class CANInterface(Interface):
             # If there is no message recieved, we need to let the devices know that,
             # so they need to know to clear the cache if it's expired.
             for name, device in self.devices.items():
-                device.__update_cache_timeout()
+                super()
 
         return msg
 

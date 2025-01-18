@@ -242,6 +242,12 @@ class CANDevice(Device):
 
         # Decode message
         decoded_msg = self.__decode_and_log_can_message(message)
+    
+
+    def update_with_no_new_data(self):
+        # Update cache
+        super().update(new_data_exists=False)
+
 
         
     def add_database(self, filename: str):
