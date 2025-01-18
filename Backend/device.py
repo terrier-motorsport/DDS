@@ -237,8 +237,10 @@ class CANDevice(Device):
         Because CANDevices are a little special, we pass in a can message to the update call.
         '''
 
-        # Update cache
-        super().update(new_data_exists=True)
+        # Return early if no new data.
+        if message is None:
+            super().update(new_data_exists=False)
+            return
 
         # Decode message
         decoded_msg = self.__decode_and_log_can_message(message)
