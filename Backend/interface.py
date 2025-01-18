@@ -434,7 +434,7 @@ class CANInterface(Interface):
 
         # This will call update in all the devices on this interface.
         # It will also make sure the devices are active, but thats kinda irrelevant
-        super().update()
+        # super().update()
 
         # Get data from the CAN Bus
         # This can raise a CanOperationError, but because this is a interface-level failure,
