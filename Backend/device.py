@@ -77,20 +77,10 @@ class Device(ABC):
         '''
         Updates the device by reading data from it,
         and storing it into the cached values.
-
-        When called from children, updates the cache
         '''
-        # Check if the method is being called on the base class
-        if type(self) is Device:
-            raise NotImplementedError(
+        raise NotImplementedError(
                 f'Update function for {self.name} doesn\'t exist'
             )
-        
-        # If called by a subclass, update caching functions.
-        if new_data_exists:
-            self.__reset_last_cache_update_timer()
-        else:
-            self.__update_cache_timeout()
 
     def get_all_param_names(self) -> List[str]:
         """
@@ -125,44 +115,31 @@ class Device(ABC):
             # This happens if the data doesn't currently exist
             return self._log(f"No cached data found for key: {data_key}", self.log.LogSeverity.DEBUG)
         return self.cached_values[data_key]
-
-
-    def __update_cache_timeout(self):
-        """
-        Checks if the cache has expired due to lack of new data and clears it if necessary.
-
-        This method should be called when no new data is found. It compares the current 
-        time with the time of the last cache update. If the time difference exceeds the 
-        cache timeout threshold, the cache is cleared to ensure outdated data is removed.
-        """
-
-        # Return early if the cache is already empty
-        if not self.cached_values:
-            return
-
-        # Update the current time
-        current_time = time.time()
-
-        # Clear the cache if it has expired
-        if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-            self.__clear_cache()
-            
-
-    def __reset_last_cache_update_timer(self):
-        """
-        Resets the timer that tracks the last time the cache was updated.
-
-        This method should be called every time the cache is updated. It updates the 
-        `last_cache_update` attribute to the current time (in seconds since the epoch), 
-        ensuring that the elapsed time can be tracked accurately for cache validation.
-
-        Notes:
-            - The `last_cache_update` attribute is used to monitor the time since the last 
-            cache update, and this method must be invoked each time the cache is modified 
-            to ensure the timer reflects the most recent update.
-        """
-        self.last_cache_update = time.time()
     
+
+    def _update_cache(self, new_data_exists: bool):
+        '''
+        Checks if the cache has expired due to lack of new data and clears it if necessary.
+        Should be called once every update() frame.
+
+        Parameters:
+            new_data_exists (bool): True if the most recent data collected is unique.
+        '''
+        # Update caching functions
+        if new_data_exists:
+            self.last_cache_update = time.time()
+        else:
+            # Return early if the cache is already empty
+            if not self.cached_values:
+                return
+
+            # Update the current time
+            current_time = time.time()
+
+            # Clear the cache if it has expired
+            if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+                self.__clear_cache()
+
     
     def __clear_cache(self):
         '''
@@ -239,7 +216,7 @@ class CANDevice(Device):
 
         # Return early if no new data.
         if message is None:
-            super().update(new_data_exists=False)
+            self._update_cache(new_data_exists=False)
             return
 
         # Decode message
@@ -248,7 +225,7 @@ class CANDevice(Device):
 
     def update_with_no_new_data(self):
         # Update cache
-        super().update(new_data_exists=False)
+        self._update_cache(new_data_exists=False)
 
 
         
