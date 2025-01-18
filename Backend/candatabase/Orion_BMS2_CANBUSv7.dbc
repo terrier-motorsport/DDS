@@ -100,9 +100,7 @@ BO_ 1718 MSGID_0X6B6: 8 BMS
  SG_ DTC_Flags_1 : 7|16@0+ (1.0,0) [0|0] ""  Third_Party_Device
  SG_ DTC_Flags_2 : 23|16@0+ (1.0,0) [0|0] ""  Third_Party_Device
  SG_ Rolling_Counter : 39|8@0+ (1.0,0) [0|0] "Num"  Third_Party_Device
- SG_ Blank : 47|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 63|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ Blank : 47|24@0+ (1.0,0) [0|0] ""  Third_Party_Device
 
 BO_ 1719 MSGID_0X6B7: 8 BMS
  SG_ Pack_Amphours : 7|16@0+ (0.1,0) [0|0] "Amphours"  Third_Party_Device
