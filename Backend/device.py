@@ -73,7 +73,7 @@ class Device(ABC):
 
     
     @abstractmethod
-    def update(self, new_data_exists: bool):
+    def update(self):
         '''
         Updates the device by reading data from it,
         and storing it into the cached values.
@@ -81,6 +81,8 @@ class Device(ABC):
         raise NotImplementedError(
                 f'Update function for {self.name} doesn\'t exist'
             )
+
+
 
     def get_all_param_names(self) -> List[str]:
         """

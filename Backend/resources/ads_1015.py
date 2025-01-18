@@ -86,9 +86,10 @@ class ADS_1015(Device):
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
         if voltages is None or any(value is None for value in voltages):
-            # Update the cache
-            super().update(new_data_exists=False)
+            # Update the cache with no new data
+            self._update_cache(new_data_exists=False)
             return
+        self._update_cache(new_data_exists=True)
 
         # For each voltage collected & input object
         for input_obj, voltage in zip(self.inputs, voltages):
