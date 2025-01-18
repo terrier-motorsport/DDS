@@ -176,6 +176,8 @@ class Interface(ABC):
         Updates the `cached_values` dictionary 
         with the latest sensor readings.
 
+        Logs telemetry with the data.
+
         Should be called as often as possible.
         """
         if self.__status != self.InterfaceStatus.ACTIVE:
@@ -347,6 +349,7 @@ class I2CInterface(Interface):
         self.channel.close()
 
 
+from Backend.device import CANDevice
 
 # ===== CANInterface class for DDS' CAN Backend =====
 class CANInterface(Interface):
@@ -370,9 +373,11 @@ class CANInterface(Interface):
 
     # 0.1 ms timeout for reading CAN Bus
     TIMEOUT = 0.0001  
+
+    devices: Dict[str, CANDevice]
     
 
-    def __init__(self, name: str, can_channel: str, devices: List[Device], logger: DataLogger):
+    def __init__(self, name: str, can_channel: str, devices: List[CANDevice], logger: DataLogger):
         """
         Initializes a CANInterface instance.
 
@@ -423,15 +428,50 @@ class CANInterface(Interface):
         """
         Reads data from the CAN bus, logs telemetry, decodes messages, and updates the cached values.
         """
+
+        # The CAN Interface differs from other interfaces, because the interface itself reads the message,
+        # not the devices. As a result, we kinda have to some strange things.
+
+        # This will call update in all the devices on this interface.
+        # It will also make sure the devices are active, but thats kinda irrelevant
+        super().update()
+
         # Get data from the CAN Bus
+        # This can raise a CanOperationError, but because this is a interface-level failure,
+        # we can let it propogate through to the DDS_IO which will handle it.
         message = self.__fetch_can_message()
 
         # Check if the message is valid; if not, update cache timeout and return early.
         # This means no messages were received, and we don't need to continue the update process.
-        if not self.__is_valid_message(message):
+        if not message:
+            # TODO: UPDATE CACHE TIMEOUT HERE
+            self._update_cache_timeout()
             return
 
         # Decode the received CAN message to extract relevant data.
+        updated_device = None  # Flag to track if device.update() was called
+        for name, device in self.devices.items():
+            try: 
+                # Check if the message corresponds to the device's database
+                device.db.get_message_by_frame_id(message.arbitration_id)
+            except KeyError as e:
+                # This is raised if the message doens't exist in the database.
+                # If it this does happen, then the device that is being iterated 
+                # doesn't have an database for the message.
+                continue
+
+            # If we get to this point, the device has a database for the received message.
+            # Call update on the device and mark it as updated
+            device.update(message)
+            updated_device = device.name  # Save the name of the updated device
+            break  # Exit the loop since the device has been updated
+
+        # Check the final condition
+        if not updated_device:
+            self._log(f"No device found for message ID {message.arbitration_id}.", DataLogger.LogSeverity.WARNING)
+            self._log_telemetry('UnknownCanMessage',f'{message.arbitration_id} {message.bitrate_switch} {message.channel} {message.data} {message.dlc}')
+                
+        
         data = self.__decode_can_msg(message)
         if not data:
             return
@@ -445,21 +485,6 @@ class CANInterface(Interface):
         # Update or add all decoded values to the cached values dictionary.
         for signal_name, value in data.items():
             self.cached_values[signal_name] = value
-        
-
-    def add_database(self, filename: str):
-        """
-        Adds a DBC file to the CAN database.
-
-        Parameters:
-            filename (str): Path to the DBC file to be added.
-        """
-        try:
-            self.db.add_dbc_file(filename)
-            self._log(severity=self.log.LogSeverity.INFO, msg=f"Loaded DBC file: {filename}")
-        except Exception as e:
-            self._log(severity=self.log.LogSeverity.ERROR, msg=f"Failed to load DBC file {filename}: {e}")
-            raise
 
 
     def get_avail_signals(self, messageName : str) -> can.Message:
@@ -472,31 +497,7 @@ class CANInterface(Interface):
         self.bus.shutdown()
         
 
-    def __log_decoded_data(self, message: can.Message, data: dict):
-        """
-        Logs the decoded CAN data along with their respective units.
-        """
-        for signal_name, value in data.items():
-
-            # Get the units for the signal
-            cantools_message = self.db.get_message_by_frame_id(message.arbitration_id)
-            cantools_signal = cantools_message.get_signal_by_name(signal_name)
-            unit = cantools_signal.unit
-
-            # Write the data to the log file 
-            super()._log_telemetry(signal_name, value, units=unit)
-        
-
-    def __is_valid_message(self, message):
-        """
-        Checks if the message is valid; updates the cache timeout and returns False if not.
-        """
-        if not message:
-            self._update_cache_timeout()
-            return False
-        return True
-
-
+    # ===== CAN Specific Stuff =====
     def __fetch_can_message(self) -> can.Message:
         """
         Fetches a single CAN message from the CAN Bus.
@@ -510,32 +511,21 @@ class CANInterface(Interface):
                                             during the operation (e.g., network not open).
         
         Notes:
-            - This function relies on the `self.can_bus.recv` method to receive the CAN message.
             - The `CAN_TIMEOUT` is the maximum time allowed to wait for a message before returning `None`.
         """
 
         # Read a single frame of CAN data
-        return self.bus.recv(self.TIMEOUT)
-        
-    
-    def __decode_can_msg(self, msg: can.Message) -> dict:
-        """
-        Decodes the given CAN message using the stored CAN Databases.
+        # If a CanOperationError is raised, that is an interface-level error.
+        # Therefore, it will be handled by the DDS_IO
+        msg = self.bus.recv(self.TIMEOUT)
 
-        Parameters:
-            msg (can.Message): The CAN message to decode.
+        if msg is None:
+            # If there is no message recieved, we need to let the devices know that,
+            # so they need to know to clear the cache if it's expired.
+            for name, device in self.devices.items():
+                device.__update_cache_timeout()
 
-        Returns:
-            dict: A dictionary with the decoded message data, or `None` if no database entry is found.
-        """
-
-        try:
-            # Decode the CAN message using the database
-            return self.db.decode_message(msg.arbitration_id, msg.data)
-        except KeyError:
-            # Log a warning if no database entry matches the arbitration ID
-            self._log(f"No database entry found for {msg}", self.log.LogSeverity.WARNING)
-            return None
+        return msg
 
 
     def __start_can_network(self, can_channel: str):

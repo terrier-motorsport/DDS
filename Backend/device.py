@@ -1,7 +1,7 @@
 # Device Abstract Base Class for Terrier Motorsport's DDS
     # Code by Jackson Justus (jackjust@bu.edu)
 
-from typing import List, Union
+from typing import Dict, List, Union
 from Backend.data_logger import DataLogger
 from abc import ABC, abstractmethod
 import time
@@ -67,18 +67,30 @@ class Device(ABC):
                 f"The 'initialize' method for {self.name} must be implemented in a subclass."
             )
 
-        # If called by a subclass, proceed with initialization
+        # If called by a subclass, complete initialization
         self._log(f'{self.name} initialized successfully!')
         self.__status = self.DeviceStatus.ACTIVE
 
     
     @abstractmethod
-    def update(self):
+    def update(self, new_data_exists: bool):
         '''
         Updates the device by reading data from it,
         and storing it into the cached values.
+
+        When called from children, updates the cache
         '''
-        raise NotImplementedError(f'Update function for {self.name} doesn\'t exist')
+        # Check if the method is being called on the base class
+        if type(self) is Device:
+            raise NotImplementedError(
+                f'Update function for {self.name} doesn\'t exist'
+            )
+        
+        # If called by a subclass, update caching functions.
+        if new_data_exists:
+            self.__reset_last_cache_update_timer()
+        else:
+            self.__update_cache_timeout()
 
     def get_all_param_names(self) -> List[str]:
         """
@@ -114,7 +126,8 @@ class Device(ABC):
             return self._log(f"No cached data found for key: {data_key}", self.log.LogSeverity.DEBUG)
         return self.cached_values[data_key]
 
-    def _update_cache_timeout(self):
+
+    def __update_cache_timeout(self):
         """
         Checks if the cache has expired due to lack of new data and clears it if necessary.
 
@@ -132,10 +145,10 @@ class Device(ABC):
 
         # Clear the cache if it has expired
         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-            self._clear_cache()
+            self.__clear_cache()
             
 
-    def _reset_last_cache_update_timer(self):
+    def __reset_last_cache_update_timer(self):
         """
         Resets the timer that tracks the last time the cache was updated.
 
@@ -151,7 +164,7 @@ class Device(ABC):
         self.last_cache_update = time.time()
     
     
-    def _clear_cache(self):
+    def __clear_cache(self):
         '''
         Clears the cached values by changing the values to None.
         The keys are left unchanged.
@@ -206,11 +219,95 @@ class Device(ABC):
         self.__status = value
 
 
+import can
+import cantools.database
+class CANDevice(Device):
+
+    db: cantools.database.Database
+
+    def __init__(self, name, dbc_filepath: str, logger):
+        self.db = cantools.database.load_file(dbc_filepath)
+        super().__init__(name, logger)
+    
+
+    def update(self, message: can.Message):
+        '''
+        This update function overrides the update function from Device.
+
+        Because CANDevices are a little special, we pass in a can message to the update call.
+        '''
+
+        # Update cache
+        super().update(new_data_exists=True)
+
+        # Decode message
+        decoded_msg = self.__decode_and_log_can_message(message)
+
+        
+    def add_database(self, filename: str):
+        """
+        Adds a DBC file to the device's CAN database.
+
+        Parameters:
+            filename (str): Path to the DBC file to be added.
+        """
+        try:
+            self.db.add_dbc_file(filename)
+            self._log(f"Loaded DBC file: {filename}", self.log.LogSeverity.INFO)
+        except Exception as e:
+            self._log(f"Failed to load DBC file {filename}: {e}", self.log.LogSeverity.ERROR)
+            raise
 
 
-# class testThing(Device):
-#     pass
+    def get_all_param_names(self) -> List[str]:
+        '''
+        Gets all of the signals listed in the device's CAN Database.
+        CAN's parameters can be seen by the database, not by the cached values.
 
-# if __name__ == "__main__":
-#     thing = testThing()
-#     # thing.testMethod()
+        Returns:
+            List[str]: The names of every signal in the database.
+        '''
+        super().get_all_param_names
+
+        param_names: List[str]
+        for message in self.db.messages:
+            param_names.append(message.name)
+        
+        return param_names
+        
+
+    def __decode_and_log_can_message(self, msg: can.Message) -> Dict[str, float]:
+        """
+        Decodes & Logs the decoded CAN data using the stored CAN Database
+
+        Parameters:
+            msg (can.Message): The raw CAN message to decode.
+
+        Returns:
+            Dict: representing each signal and it's value from the CAN Bus
+        """
+
+        # Decoding the message
+        decoded_msg: Dict[str, float]
+        try:
+            # Decode the CAN message using the database
+            decoded_msg = self.db.decode_message(msg.arbitration_id, msg.data)
+        except KeyError:
+            # Log a warning if no database entry matches the arbitration ID
+            self._log(f"No database entry found for CAN msg: {msg}", self.log.LogSeverity.ERROR)
+            return None
+        
+        # Logging the message
+        for signal_name, value in decoded_msg.items():
+
+            # Get the units for the signal
+            cantools_message = self.db.get_message_by_frame_id(msg.arbitration_id)
+            cantools_signal = cantools_message.get_signal_by_name(signal_name)
+            unit = cantools_signal.unit
+
+            # Write the data to the log file 
+            self._log_telemetry(signal_name, value, units=unit)
+        
+        # Return the decoded data
+        return decoded_msg
+

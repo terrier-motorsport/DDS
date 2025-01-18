@@ -88,7 +88,7 @@ class ADS_1015(Device):
         if voltages is None or any(value is None for value in voltages):
 
             # If no new values are discovered, we check to see if the cache has expired.
-            self._update_cache_timeout()
+            self.__update_cache_timeout()
             return
 
         # For each voltage collected & input object
@@ -109,7 +109,7 @@ class ADS_1015(Device):
             self._log_telemetry(key, data, units)
 
         # Reset the timeout timer
-        self._reset_last_cache_update_timer() 
+        self.__reset_last_cache_update_timer() 
 
 
     def __get_data_from_thread(self) -> List[float]:
@@ -133,7 +133,7 @@ class ADS_1015(Device):
             try:
                 voltages = self.__fetch_sensor_data()
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
-                self._reset_last_cache_update_timer()
+                self.__reset_last_cache_update_timer()
             except Exception as e:
                 self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
 
