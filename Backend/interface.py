@@ -602,7 +602,7 @@ if __name__ == "__main__":
     # Make a test CAN interface
     caninterface = CANInterface(
         name='CAN Interface',
-        can_channel=canBus,
+        can_channel='can0',
         devices=[
             DTI_HV_500(logger)
 
