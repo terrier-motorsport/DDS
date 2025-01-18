@@ -86,9 +86,8 @@ class ADS_1015(Device):
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.
         if voltages is None or any(value is None for value in voltages):
-
-            # If no new values are discovered, we check to see if the cache has expired.
-            self.__update_cache_timeout()
+            # Update the cache
+            super().update(new_data_exists=False)
             return
 
         # For each voltage collected & input object
@@ -108,8 +107,7 @@ class ADS_1015(Device):
             # Log the data
             self._log_telemetry(key, data, units)
 
-        # Reset the timeout timer
-        super().update()
+        
 
 
     def __get_data_from_thread(self) -> List[float]:
