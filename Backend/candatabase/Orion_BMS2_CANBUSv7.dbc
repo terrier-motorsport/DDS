@@ -51,53 +51,6 @@ BO_ 1721 MSGID_0X6B9: 8 BMS
 
 BO_ 2147486266 MSGID_0XA3A: 8 BMS
  SG_ Pack_DCL : 7|16@0- (0.1,0) [0|0] "Amps"  Third_Party_Device
- SG_ Constant_1 : 16|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 17|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 18|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 19|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 20|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 21|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 22|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 23|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 24|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 25|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 26|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 27|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 28|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 29|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 30|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 31|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 32|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 33|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 34|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 35|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 36|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 37|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 38|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 39|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 40|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 41|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 42|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 43|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 44|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 45|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 46|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 47|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 48|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 49|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 50|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 51|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 52|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 53|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 54|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 55|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 56|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 57|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 58|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 59|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 60|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 61|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
- SG_ Constant_1 : 62|1@1+ (1.0,0) [0|1] ""  Third_Party_Device
  SG_ Constant_1 : 23|48@0+ (1,0) [0|1] ""  Third_Party_Device
 
 BO_ 1712 MSGID_0X6B0: 8 BMS
