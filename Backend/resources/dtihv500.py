@@ -12,8 +12,8 @@ class DTI_HV_500(Device):
     def __init__(self, logger):
         super().__init__('DTI HV 500', logger)
 
-    def initialize(self):
-        return super().initialize()
+    def initialize(self, bus):
+        return super().initialize(bus)
     
     def update(self):
         return super().update()
