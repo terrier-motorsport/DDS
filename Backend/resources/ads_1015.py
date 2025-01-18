@@ -109,7 +109,7 @@ class ADS_1015(Device):
             self._log_telemetry(key, data, units)
 
         # Reset the timeout timer
-        self.__reset_last_cache_update_timer() 
+        super().update()
 
 
     def __get_data_from_thread(self) -> List[float]:
