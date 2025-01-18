@@ -132,7 +132,6 @@ class ADS_1015(Device):
             try:
                 voltages = self.__fetch_sensor_data()
                 self.data_queue.put(voltages)  # Put data in the queue for the main program
-                self.__reset_last_cache_update_timer()
             except Exception as e:
                 self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
 
