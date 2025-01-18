@@ -80,8 +80,7 @@ BO_ 1715 MSGID_0X6B3: 8 BMS
  SG_ Low_Thermistor_ID : 31|8@0+ (1.0,0) [0|0] "ID"  Third_Party_Device
  SG_ High_Temperature : 39|8@0+ (1.0,0) [0|0] "Celsius"  Third_Party_Device
  SG_ High_Thermistor_ID : 47|8@0+ (1.0,0) [0|0] "ID"  Third_Party_Device
- SG_ Blank : 55|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
- SG_ Blank : 63|8@0+ (1.0,0) [0|0] ""  Third_Party_Device
+ SG_ Blank : 55|16@0+ (1.0,0) [0|0] ""  Third_Party_Device
 
 BO_ 1716 MSGID_0X6B4: 8 BMS
  SG_ Avg_Cell_Voltage : 7|16@0+ (1.0E-4,0) [0|0] "Volts"  Third_Party_Device
