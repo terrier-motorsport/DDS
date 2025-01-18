@@ -315,7 +315,7 @@ class DDS_IO:
         # Step 3: Set up the CAN interface with the database
         canDevice = CANInterface(
             name="MC & AMS", 
-            can_bus=self.can_bus, 
+            can_channel=self.can_bus, 
             database_path="Backend/candatabase/CANDatabaseDTI500v2.dbc", 
             logger=self.log
         )

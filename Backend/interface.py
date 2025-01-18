@@ -371,7 +371,7 @@ class CANInterface(Interface):
     TIMEOUT = 0.0001  
     
 
-    def __init__(self, name: str, can_bus: can.BusABC, devices: List[Device], logger: DataLogger):
+    def __init__(self, name: str, can_channel: str, devices: List[Device], logger: DataLogger):
         """
         Initializes a CANInterface instance.
 
@@ -388,8 +388,7 @@ class CANInterface(Interface):
         # Initialize the database
         self.db = cantools.database.Database()
 
-        # Set up the CAN bus interface
-        self.bus = can_bus
+        self.channel = can_channel
 
         
     def initialize(self):
@@ -401,20 +400,16 @@ class CANInterface(Interface):
         Any failure in this process may raise an error.
         """
         
-        # Extract the CAN interface name from the channel info (e.g., "socketcan channel 'can0'")
-        channel_info = self.bus.channel_info
-        start = channel_info.find("'") + 1
-        end = channel_info.find("'", start)
-
-        # Get the interface name (e.g., 'can0')
-        interface_name = channel_info[start:end]
+        # Start the can bus
+        # self.__start_can_network()
+        self.bus = can.interface.Bus(self.channel, interface='socketcan')
 
         try:
             # Attempt to fetch a CAN message to verify connection
             self.__fetch_can_message()
         except can.CanOperationError:
             # If fetching the message fails, try to initialize the CAN network
-            self.__init_can_network(interface_name)
+            self.__start_can_network(self.channel)
             
         # Finish the initialization process
         super().initialize()
@@ -539,31 +534,30 @@ class CANInterface(Interface):
             return None
 
 
-    @staticmethod
-    def __init_can_network(can_interface: str, logger: DataLogger):
+    def __start_can_network(self, can_channel: str):
         """
-        Initializes the specified CAN network interface.
+        Initializes the CAN network on the OS level.
 
         Configures the CAN interface by setting its bitrate and transmit queue length at the OS level.
 
+        
         Parameters:
             can_interface (str): The name of the CAN interface (e.g., "can0").
         """
 
         # Log a warning to indicate the initialization attempt
-        logger.writeLog('CAN', f"CAN Bus not found... Attempting to open one on {can_interface}.", DataLogger.LogSeverity.WARNING)
-
+        self._log(f"CAN Network not found... Attempting to open one on {can_channel}.", DataLogger.LogSeverity.WARNING)
 
         # Bring up the CAN interface with the specified bitrate
         subprocess.run(
-            ["sudo", "ip", "link", "set", can_interface, "up", "type", "can", "bitrate", "1000000"],
+            ["sudo", "ip", "link", "set", can_channel, "up", "type", "can", "bitrate", "250000"],
             check=True,
             timeout=3
         )
 
         # Set the transmit queue length for the CAN interface
         subprocess.run(
-            ["sudo", "ifconfig", can_interface, "txqueuelen", "65536"],
+            ["sudo", "ifconfig", can_channel, "txqueuelen", "65536"],
             check=True,
             timeout=3
         )
@@ -606,7 +600,7 @@ if __name__ == "__main__":
     # Make a test CAN interface
     caninterface = CANInterface(
         name='CAN Interface',
-        can_bus=canBus,
+        can_channel=canBus,
         devices=[
             DTI_HV_500(logger)
 
