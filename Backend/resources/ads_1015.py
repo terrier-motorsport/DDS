@@ -40,10 +40,10 @@ class ADS_1015(Device):
         self.data_queue = queue.Queue()  # Queue to hold sensor data
 
 
-    def initialize(self, i2c_bus: SMBus):
+    def initialize(self, bus: SMBus):
 
         # Save bus
-        self.bus = i2c_bus
+        self.bus = bus
 
         # Make ADS object
         self.ads = ADS1015(i2c_dev=self.bus)
