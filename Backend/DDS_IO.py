@@ -199,7 +199,7 @@ class DDS_IO:
                 name='CANInterface',
                 can_channel=self.CAN_BUS,
                 devices=[
-                    Orion_BMS_2('Backend/candatabase/Orion_BMS2_CANBUSv5.dbc', self.log),
+                    Orion_BMS_2('Backend/candatabase/Orion_BMS2_CANBUSv6.dbc', self.log),
                     DTI_HV_500('Backend/candatabase/DTI_HV_500_CANBUSv3.dbc', self.log)
                 ],
                 logger=self.log
