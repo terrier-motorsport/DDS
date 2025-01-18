@@ -597,7 +597,7 @@ if __name__ == "__main__":
         name='CAN Interface',
         can_channel=can_channel,
         devices=[
-            DTI_HV_500(logger)
+            DTI_HV_500()
 
         ],
         logger=logger
