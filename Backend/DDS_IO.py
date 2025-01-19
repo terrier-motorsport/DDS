@@ -68,25 +68,25 @@ class DDS_IO:
         '''Updates all sensors. Should be called as often as possible.'''
 
         # Update all enabled devices
-        for device_name,device_object in self.interfaces.items():
+        for interface_name, interface_object in self.interfaces.items():
 
-            status = device_object.status
+            status = interface_object.status
 
             if status is Interface.InterfaceStatus.ACTIVE:
                 try:
-                    device_object.update()
-                    self.__monitor_device_parameters(device_object)
+                    interface_object.update()
+                    self.__monitor_device_parameters(interface_object)
                 except Exception as e:
-                    self.__log(f'Failed to update {device_name}. {e}')
-                    device_object.status = Interface.InterfaceStatus.ERROR
+                    self.__log(f'Failed to update {interface_name}. {e}')
+                    interface_object.status = Interface.InterfaceStatus.ERROR
             
             elif status is Interface.InterfaceStatus.ERROR:
                 try:
-                    device_object.initialize()
+                    interface_object.initialize()
                 except Exception as e:
                     return
 
-            elif device_object.status is Interface.InterfaceStatus.DISABLED:
+            elif interface_object.status is Interface.InterfaceStatus.DISABLED:
                 return
 
 
@@ -328,22 +328,6 @@ class DDS_IO:
         elif protocol is InterfaceProtocol.CAN:
             self.CAN_ENABLED = False
             self.__log('Make sure you are running the DDS w/ sudo to init CAN Correctly.')
-
-    
-    def __monitor_device_parameters(self, device: Interface):
-        """
-        Monitors the parameters of a given device and checks if their values are within the defined limits.
-
-        Parameters:
-            device (Interface): The device whose parameters are to be monitored.
-
-        This function retrieves all parameter names from the device's cached values and checks each parameter's value
-        against the defined limits using the ParameterMonitor. If a parameter value is out of range, a warning is raised.
-        """
-        param_names = device.get_all_param_names_for_device()
-
-        for param_name in param_names:
-            self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO, name="DDS_IO"):

@@ -186,6 +186,7 @@ class Interface(ABC):
         
         for key, device in self.devices.items():
             device.update()
+            self.__monitor_device_parameters(device)
              
 
     # ===== ABSTRACT METHODS =====
@@ -257,6 +258,22 @@ class Interface(ABC):
 
         # ===== FINISHED ===== 
         self._log(f'Finished initializing {device.name}!')
+
+
+    def __monitor_device_parameters(self, device: Device):
+        """
+        Monitors the parameters of a given device and checks if their values are within the defined limits.
+
+        Parameters:
+            device (Interface): The device whose parameters are to be monitored.
+
+        This function retrieves all parameter names from the device's cached values and checks each parameter's value
+        against the defined limits using the ParameterMonitor. If a parameter value is out of range, a warning is raised.
+        """
+        param_names = device.get_all_param_names()
+
+        for param_name in param_names:
+            self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))
 
 
     def _log_telemetry(self, param_name: str, value, units: str):
