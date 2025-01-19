@@ -224,7 +224,8 @@ class DDS_IO:
                     Backend.config.device_config.define_chassis_MPU_6050(self.log),
                     Backend.config.device_config.define_top_MPU_6050(self.log),
                     Backend.config.device_config.define_wheel_MPU_6050(self.log),
-                ]
+                ],
+                logger=self.log
             )
             self.__safe_initialize_interface(i2cInterface)
             self.__log('Finished initializing all i2c devices!')

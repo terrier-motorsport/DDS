@@ -223,12 +223,15 @@ class CANDevice(Device):
 
         # Decode message
         decoded_msg = self.__decode_and_log_can_message(message)
+
+        # Update or add all decoded values to the cached values dictionary.
+        for name, data in decoded_msg.items():
+            self.cached_values[name] = data
     
 
     def update_with_no_new_data(self):
         # Update cache
         self._update_cache(new_data_exists=False)
-
 
         
     def add_database(self, filename: str):

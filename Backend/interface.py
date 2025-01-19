@@ -469,10 +469,6 @@ class CANInterface(Interface):
             self._log(f"No device found for message ID {message.arbitration_id}.", DataLogger.LogSeverity.WARNING)
             self._log_telemetry('UnknownCanMessage',f'{message.arbitration_id} {message.bitrate_switch} {message.channel} {message.data} {message.dlc}')
 
-        # Update or add all decoded values to the cached values dictionary.
-        for signal_name, value in data.items():
-            self.cached_values[signal_name] = value
-
 
     def get_avail_signals(self, messageName : str) -> can.Message:
         '''Returns the avalable CAN signals from the database with the specified message name'''
