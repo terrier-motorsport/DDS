@@ -221,9 +221,10 @@ class DDS_IO:
                     # See the referenced package for details about devices.
                     Backend.config.device_config.define_ADC1(self.log),
                     Backend.config.device_config.define_ADC2(self.log),
-                    Backend.config.device_config.define_chassis_MPU_6050(self.log),
-                    Backend.config.device_config.define_top_MPU_6050(self.log),
-                    Backend.config.device_config.define_wheel_MPU_6050(self.log),
+                    # TODO: Implement
+                    # Backend.config.device_config.define_chassis_MPU_6050(self.log),
+                    # Backend.config.device_config.define_top_MPU_6050(self.log),
+                    # Backend.config.device_config.define_wheel_MPU_6050(self.log),
                 ],
                 logger=self.log
             )
