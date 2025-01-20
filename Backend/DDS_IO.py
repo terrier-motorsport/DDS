@@ -170,7 +170,7 @@ class DDS_IO:
 
         # ===== Init CAN =====
         if self.CAN_ENABLED:
-            self.__log(f"Starting CAN bus on {self.CAN_BUS}")
+            self.__log(f"Starting CANInterface on {self.CAN_BUS}")
             canInterface = CANInterface(
                 name='CANInterface',
                 can_channel=self.CAN_BUS,
@@ -190,7 +190,7 @@ class DDS_IO:
 
         # ===== Init i2c ===== 
         if self.I2C_ENABLED:
-            self.__log(f'Starting i2c bus on {self.I2C_BUS}')
+            self.__log(f'Starting I2CInterface bus on {self.I2C_BUS}')
             i2cInterface = I2CInterface(
                 'I2CInterface',
                 i2c_channel=self.I2C_BUS,
