@@ -52,7 +52,6 @@ class Device(ABC):
         self.last_cache_update = time.time()
 
 
-
     @abstractmethod
     def initialize(self, bus):
         '''
@@ -171,6 +170,7 @@ class Device(ABC):
             value=value,
             units=units)
 
+
     def _log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         """Shorthand logging method."""
         self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
@@ -213,7 +213,7 @@ class CANDevice(Device):
         super().__init__(name, logger)
     
 
-    def update(self, message: can.Message):
+    def update(self, msg: can.Message):
         '''
         This update function overrides the update function from Device.
 
@@ -221,67 +221,12 @@ class CANDevice(Device):
         '''
 
         # Return early if no new data.
-        if message is None:
+        if msg is None:
             self._update_cache(new_data_exists=False)
             return
 
         # Decode message
-        decoded_msg = self.__decode_and_log_can_message(message)
-
-        # Update or add all decoded values to the cached values dictionary.
-        for name, data in decoded_msg.items():
-            self.cached_values[name] = data
-    
-
-    def update_with_no_new_data(self):
-        # Update cache
-        self._update_cache(new_data_exists=False)
-
-        
-    def add_database(self, filename: str):
-        """
-        Adds a DBC file to the device's CAN database.
-
-        Parameters:
-            filename (str): Path to the DBC file to be added.
-        """
-        try:
-            self.db.add_dbc_file(filename)
-            self._log(f"Loaded DBC file: {filename}", self.log.LogSeverity.INFO)
-        except Exception as e:
-            self._log(f"Failed to load DBC file {filename}: {e}", self.log.LogSeverity.ERROR)
-            raise
-
-
-    def get_all_param_names(self) -> List[str]:
-        '''
-        Gets all of the signals listed in the device's CAN Database.
-        CAN's parameters can be seen by the database, not by the cached values.
-
-        Returns:
-            List[str]: The names of every signal in the database.
-        '''
-        super().get_all_param_names
-
-        param_names: List[str]
-        for message in self.db.messages:
-            param_names.append(message.name)
-        
-        return param_names
-        
-
-    def __decode_and_log_can_message(self, msg: can.Message) -> Dict[str, float]:
-        """
-        Decodes & Logs the decoded CAN data using the stored CAN Database
-
-        Parameters:
-            msg (can.Message): The raw CAN message to decode.
-
-        Returns:
-            Dict: representing each signal and it's value from the CAN Bus
-        """
-
-        # Decoding the message
+                # Decoding the message
         decoded_msg: Dict[str, float]
         try:
             # Decode the CAN message using the database
@@ -301,7 +246,30 @@ class CANDevice(Device):
 
             # Write the data to the log file 
             self._log_telemetry(signal_name, value, units=unit)
-        
-        # Return the decoded data
-        return decoded_msg
 
+        # Update or add all decoded values to the cached values dictionary.
+        for name, data in decoded_msg.items():
+            self.cached_values[name] = data
+    
+
+    # def update_with_no_new_data(self):
+    #     # Update cache
+    #     self._update_cache(new_data_exists=False)
+
+
+    def get_all_param_names(self) -> List[str]:
+        '''
+        Gets all of the signals listed in the device's CAN Database.
+        This is overloaded because CAN's parameters are defined by the database, not by the cached values.
+
+        Returns:
+            List[str]: The names of every signal in the database.
+        '''
+        param_names: List[str] = []  # Initialize the list
+
+        # Iterate through all messages in the database
+        for message in self.db.messages:
+            for signal in message.signals:
+                param_names.append(signal.name)  # Add signal names to the list
+
+        return param_names

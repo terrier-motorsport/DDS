@@ -317,8 +317,6 @@ if __name__ == '__main__':
     while True:
         io.update()
 
-
-
         # Measure the current time and calculate the delta time for this loop iteration
         current_time = time.time()
         delta_time = current_time - last_loop_time
