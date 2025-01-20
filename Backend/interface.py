@@ -3,7 +3,7 @@
 
 from enum import Enum
 from Backend.data_logger import DataLogger
-from Backend.device import Device
+from Backend.device import Device, CANDevice, I2CDevice
 from Backend.value_monitor import ParameterMonitor
 from typing import Dict, Union, List
 from abc import ABC, abstractmethod
@@ -17,9 +17,6 @@ import time
 
 
 """
-The purpose of this file is to provide an abstract base class for creating interfaces to different devices 
-in the DDS (Data Display System) for Terrier Motorsport.
-
 This base class outlines the essential functionality required by all interface devices, which is to manage 
 device initialization, periodic data updates, data caching, and logging. Specific device classes (e.g., 
 I2C pressure/temperature sensors) can inherit from this base class and implement device-specific logic for 
@@ -29,13 +26,12 @@ and focus on implementing the unique features of their respective devices.
 This approach allows for easy scalability and maintainability as new types of devices are added to the system, 
 ensuring that common functionality (caching, logging, status management) is reused across devices while 
 still allowing for device-specific logic.
-
 """
 
 # Enums for types of protocols
 class InterfaceProtocol(Enum):
-    CAN = 1     # DONE
-    I2C = 3     # DONE
+    CAN = 1
+    I2C = 3
 
 # Exception for device not being active
 class InterfaceNotActiveException(Exception):
@@ -47,28 +43,24 @@ class InterfaceNotActiveException(Exception):
 class Interface(ABC):
 
     '''
-    OUTDATED. TODO: UPDATE THIS DOC
-    The Interface class serves as a base class for defining and interacting with various device interfaces, such as CAN, I2C, etc. 
+    The purpose of this file is to provide an abstract base class for creating interfaces.
+    An interface as defined as an object which interfaces with a data transmission protocol (Ex. CAN)
+    and contains devices on that protocol.
 
-    The core functionality provided by this class is common to all interfaces, including methods for updating and retrieving data, handling cache, 
-    managing the status of the device, and logging messages. Child classes representing specific types of interfaces should inherit from this class 
-    and implement or override certain methods to tailor the behavior for the specific interface they represent.
+    Abstract Description:
+        The core functionality provided by this class is common to all interfaces, including methods for updating and retrieving data, handling cache, 
+        managing the status of the device, and logging messages. Child classes representing specific types of interfaces should inherit from this class 
+        and implement or override certain methods to tailor the behavior for the specific interface they represent.
 
-    Key Methods to Be Implemented or Overridden by Child Classes:
-        - `initialize()`: Child classes must override this method to implement the specific initialization logic for the interface device.
-        - `update()`: Child classes should override this method to implement the logic for updating the sensor data or retrieving values specific to the device.
-    
-    The `update()` method should be called periodically to ensure that the device's data is up-to-date. The `initialize()` method should be called 
-    once to set up the interface before it is used. 
+    Using the Interface Class:
+        The `initialize()` method should be called once to set up the interface before it is used. 
+        The `update()` method should be called as often as possible to update the device's data.
 
     Methods Inherited from the Base Class:
         - `get_name()`: Returns the name of the interface device.
         - `get_protocol()`: Returns the protocol used by the interface (e.g., CAN, I2C).
         - `get_data()`: Retrieves the most recent cached data for the specified key. 
         - `log()`: Logs messages to a provided logger for tracking the status and events related to the device.
-        - `map_to_percentage()`: Converts a value within a specified range to a percentage.
-        - `percentage_to_map()`: Converts a percentage back to the corresponding value within a specified range.
-        - `clamp()`: Clamps a value between a given minimum and maximum.
         
     Device Status:
         The `status` attribute reflects the state of the interface and can be one of the following:
@@ -76,9 +68,6 @@ class Interface(ABC):
             - `DISABLED`: The interface is inactive and not being polled.
             - `ERROR`: An error occurred, and the interface will attempt to be re-initialized.
             - `NOT_INITIALIZED`: The interface has not been initialized yet.
-
-    Caching:
-        The class maintains a `cached_values` dictionary that stores the most recent sensor data.
     '''
 
     class InterfaceStatus(Enum):
@@ -158,15 +147,19 @@ class Interface(ABC):
         self._log(f'Created {self.interfaceProtocol.name} Interface {self.name}.')
 
 
+    # ===== PUBLIC METHODS =====
     def initialize(self, bus):
         """
         Initializes each device on the interface.
 
         Must be called before data can be collected by devices.
+
+        Parameters:
+            bus: The bus on which devices on this interface should use.
         """
 
         for key, device in self.devices.items():
-            device.initialize(bus=bus)
+            self._initialize_device(device, bus)
         
         # Set status to active
         self.__status = self.InterfaceStatus.ACTIVE
@@ -177,13 +170,9 @@ class Interface(ABC):
 
     def update(self):
         """
-        Updates the `cached_values` dictionary 
-        with the latest sensor readings.
-
-        Logs telemetry with the data.
-
-        Should be called as often as possible.
+        Updates each device on the interface and monitors the parameters of the device.
         """
+
         if self.__status != self.InterfaceStatus.ACTIVE:
             raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
         
@@ -192,15 +181,6 @@ class Interface(ABC):
             self._monitor_device_parameters(device)
              
 
-    # ===== ABSTRACT METHODS =====
-    @abstractmethod
-    def close_connection(self):
-        """
-        Closes the respective interface
-        """
-
-
-    # ===== MAIN METHODS =====
     def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:
         """
         Retrieves the most recent cached data associated with the provided key.
@@ -225,6 +205,7 @@ class Interface(ABC):
         # Return the data
         return data
 
+
     def get_all_device_names(self) -> List[str]:
         """
         Retrieves a list of all device names managed by this interface.
@@ -235,7 +216,7 @@ class Interface(ABC):
         return list(self.devices.keys())
     
 
-    # ===== OTHER METHODS =====
+    # ===== PRIVATE METHODS =====
     def _initialize_device(self, device: Device, bus):
         """
         Safely initializes a given device, 
@@ -278,6 +259,15 @@ class Interface(ABC):
                 parameter_monitor.check_value(param_name, device.get_data(param_name))
 
 
+    # ===== ABSTRACT METHODS =====
+    @abstractmethod
+    def close_connection(self):
+        """
+        Closes the respective interface
+        """
+
+
+    # ===== MISC METHODS =====
     def _log_telemetry(self, param_name: str, value, units: str):
         """
         Logs telemetry data to the telemetry file.
@@ -298,63 +288,41 @@ class Interface(ABC):
         """Shorthand logging method."""
         self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
 
-
-    # ===== GETTER/SETTER METHODS ====
     @property
     def status(self):                             # Status Getter
         return self.__status
     
-
     @status.setter
     def status(self, value: InterfaceStatus):     # Status Setter
-        self.change_status(value)
-
-
-    def change_status(self, new_status: InterfaceStatus):
-        """
-        Changes the Interface's status to the one specified.
-        Logs if there is a change in status.
-
-        Parameters:
-            new_status (Status): The status to switch the device to.
-        """
-
         # Return early if there is no change in status
-        if self.__status == new_status:
+        if self.__status == value:
             return
         
         # Log the change in status
-        self._log(f"{self.name} changed from {self.__status.name} to {new_status.name}.")
+        self._log(f"{self.name} changed from {self.__status.name} to {value.name}.")
 
         # Change the status
-        self.__status = new_status
+        self.__status = value
 
 
 
 # ===== I2CInterface class for DDS' I2C Backend =====
 class I2CInterface(Interface):
     """
-    Represents an I2C Interface in the DDS (Data Display System) backend.
-
-    Each I2C Interface contains at least one device, 
-    which it will collect data from periodically and add the data to the cached_values.
+    Manages the I2C interface for communication with I2C devices.
 
     This class serves as a base for I2C devices, providing fundamental functionality 
     for I2C communication. Each device communicates through a unique address and 
     responds to specific commands. It is likely that each I2C device will have a 
     dedicated device class that implements device-specific behavior, including custom 
     decoding functions.
-
-    Attributes:
-        name (str): The name of the I2C device.
-        logger (DataLogger): Logger used for logging messages and events.
     """
     
 
     def __init__(self, 
                  name: str, 
                  i2c_channel: str, 
-                 devices: List[Device], 
+                 devices: List[I2CDevice], 
                  logger: DataLogger,
                  parameter_monitor: ParameterMonitor):
         super().__init__(name, devices, InterfaceProtocol.I2C, logger, parameter_monitor)
@@ -362,8 +330,15 @@ class I2CInterface(Interface):
 
 
     def initialize(self):
-        self.bus = SMBus(2)
-        return super().initialize(self.bus)
+        '''
+        Starts the I2C bus on the channel given during __init__(),
+        and initializes all devices on the interface.
+        '''
+        # Start the bus
+        self.bus = SMBus(self.channel)
+
+        # Initialize all devices on interface.
+        super().initialize(self.bus)
 
 
     def close_connection(self):
@@ -371,10 +346,9 @@ class I2CInterface(Interface):
         Closes the I2C connection.
         """
         # Close the I2C bus connection
-        self.channel.close()
+        self.bus.close()
 
 
-from Backend.device import CANDevice
 
 # ===== CANInterface class for DDS' CAN Backend =====
 class CANInterface(Interface):
@@ -384,16 +358,7 @@ class CANInterface(Interface):
 
     This class extends the Interface class and provides functionality for initializing 
     and interacting with a CAN bus. Each device connected via CAN can have its own 
-    CAN database (DBC file), which can be loaded using the `add_database()` method. 
-    This allows the interface to decode CAN messages and manage communication.
-    Additional databases can be added to the CANInterface with the add_database() function.
-
-    Attributes:
-        CAN_TIMEOUT (float): Timeout value for reading CAN messages (default 0.0001s).
-        can_bus (can.BusABC): The CAN bus object that facilitates communication.
-        db (cantools.database.Database): The database containing CAN message definitions.
-        cached_values (dict): A dictionary storing the decoded signal values.
-        database_path (str): The path to the CAN DBC file.
+    CAN database (DBC file) This allows the interface to decode CAN messages and manage communication.
     """
 
     # 0.1 ms timeout for reading CAN Bus
@@ -401,8 +366,12 @@ class CANInterface(Interface):
 
     devices: Dict[str, CANDevice]
     
-
-    def __init__(self, name: str, can_channel: str, devices: List[CANDevice], logger: DataLogger, parameter_monitor: ParameterMonitor):
+    def __init__(self, 
+                 name: str, 
+                 can_channel: str, 
+                 devices: List[CANDevice], 
+                 logger: DataLogger, 
+                 parameter_monitor: ParameterMonitor):
         """
         Initializes a CANInterface instance.
 
@@ -424,17 +393,10 @@ class CANInterface(Interface):
         
     def initialize(self):
         """
-        Initializes the interface by communicating with physical devices.
-        
-        This method interacts with the CAN bus and ensures the connection is functional.
-        If communication with the physical device fails, it attempts to initialize the CAN network.
-        Any failure in this process may raise an error.
+        Starts the CANBUS on the channel given during __init__(),
+        and initializes all devices on the interface.
         """
         
-        # Start the can bus
-        # self.__start_can_network()
-        
-
         try:
             # Init the CAN Bus
             self.bus = can.interface.Bus(self.channel, interface='socketcan')
@@ -444,6 +406,10 @@ class CANInterface(Interface):
         except can.CanOperationError:
             # If fetching the message fails, try to initialize the CAN network
             self.__start_can_network(self.channel)
+
+            # Try to restart the bus. If this fails, then that is an interface-level error
+            # and will be handled by DDS_IO.
+            self.bus = can.interface.Bus(self.channel, interface='socketcan')
         
         # Finish the initialization process
         super().initialize(self.bus)
@@ -453,9 +419,8 @@ class CANInterface(Interface):
         """
         Reads data from the CAN bus, logs telemetry, decodes messages, and updates the cached values.
         """
-
         # The CAN Interface differs from other interfaces, because the interface itself reads the message,
-        # not the devices. As a result, we kinda have to some strange things.
+        # not the devices. As a result, we kinda have to some strange things, and we dont use the parent update() method.
 
         # Get data from the CAN Bus
         # This can raise a CanOperationError, but because this is a interface-level failure,

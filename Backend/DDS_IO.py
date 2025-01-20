@@ -3,6 +3,7 @@
 
 import random
 from Backend.interface import Interface, CANInterface, I2CInterface, InterfaceProtocol
+from Backend.device import Device
 from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
@@ -65,7 +66,7 @@ class DDS_IO:
 
 
     def update(self):
-        '''Updates all sensors. Should be called as often as possible.'''
+        '''Updates all Interfaces. Should be called as often as possible.'''
 
         # Update all enabled devices
         for interface_name, interface_object in self.interfaces.items():
@@ -81,62 +82,67 @@ class DDS_IO:
             
             elif status is Interface.InterfaceStatus.ERROR:
                 # TEMPORARILY DISABLED FOR TESTING PURPOSES.
-                pass
                 # try:
                 #     interface_object.initialize()
                 # except Exception as e:
                 #     return
+                pass
 
             elif interface_object.status is Interface.InterfaceStatus.DISABLED:
                 return
 
 
-    def get_device_data(self, device_key: str, parameter: str, caller: str="DDS_IO") -> Union[str, float, int, None]:
+    def get_device_data(self, device_key: str, param_key: str, caller: str="DDS_IO") -> Union[str, float, int, None]:
         '''
         Gets a single parameter from a specified device.
 
         Parameters:
-            device_key `(str)`: The key of the device in the device list
-            parameter `(str)`: The key of the parameter that you are requesting
+            device_key `(str)`: The key of the device with the requested parameter
+            param_key `(str)`: The key of the parameter that you are requesting
             caller `(str)`: The name of the entity calling this function. Used for logging purposes.
         '''
-
-        device = self.__get_device(device_key)
-
-        # If the device is None, we can return early
+        
+        # 1) Get the device at the specified key by checking each interface for it.
+        device: Device = None
+        for name, interface in self.interfaces.items():
+            if interface.devices.get(device_key) is not None:
+                device = interface.devices.get(device_key)
+                break
+            # If the device is None, we can return early
         if device is None:
-            self.__log(f'Device {device_key} not found. (Data Req: {parameter})', DataLogger.LogSeverity.DEBUG, caller)
-
+            # Return a random value if we are in demo mode.
             if self.demo_mode:
                 return random.random() * 100
-            return
+            # Log the mistake and return.
+            self.__log(f'Device {device_key} not found. (Data Req: {param_key})', DataLogger.LogSeverity.DEBUG, caller)
+            return "UKNDEV"
         
-        # If the device is not active, we can return early
+
+        # 2) If the device is not active, we can return early
         if device.status is not Interface.InterfaceStatus.ACTIVE:
 
-            # Log the error
-            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {parameter}', DataLogger.LogSeverity.WARNING)
+            # Log the warning
+            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.WARNING)
 
-            # Return a value that represents the current stat of the device
+            # Return a value that represents the current state of the device
             if device.status is Interface.InterfaceStatus.DISABLED:
-                return 'DIS'
+                return 'DISBLD'
             elif device.status is Interface.InterfaceStatus.ERROR:
-                return 'ERR'
+                return 'ERROR'
             elif device.status is Interface.InterfaceStatus.NOT_INITIALIZED:
-                return 'NIN'
+                return 'NO_INIT'
         
-        # Fetch data from device
-        data = device.get_data_from_device(parameter)
 
-        # If the data is None, we can return early
+        # 3) Fetch data from device
+        data = device.get_data(param_key)
+
+
+        # 4) If the data is None, we can return early
         if data is None:
             self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
-
-            # if self.demo_mode:
-            #     return random.random()
-            return None
+            return "NO_DATA"
         
-        # Return the data
+        # 5) Return the data
         return data
     
 
@@ -154,37 +160,6 @@ class DDS_IO:
                 ParameterWarning('Anna', 2398, 'Anna is out of range').getMsg(),
             ]
             return warnings
-        
-
-    def get_device_names(self) -> List[str]:
-        '''
-        Returns a list of devices.
-        If there are no devices, returns a single string with an error message.
-        '''
-
-        # if len(self.devices) == 0:
-        #     return ['There are no available devices']
-        device_names = []
-        for device_name, device in self.interfaces.items():
-            device_names.append(device_name)
-        return device_names
-    
-
-    def get_device_parameters(self, param_name: str) -> List[str]:
-        '''
-        Returns a list of parameters for a specified device.
-        '''
-        device_params = []
-        for param_name in self.interfaces[param_name].get_all_param_names_for_device():
-            device_params.append(param_name)
-        return device_params
-
-
-    def __get_device(self, deviceKey : str) -> Interface:
-        ''' Gets a device at a specified key.
-        This may return a None value.'''
-
-        return self.interfaces.get(deviceKey)
     
 
     def __initialize_io(self):
@@ -315,24 +290,6 @@ class DDS_IO:
 
         # Mark the device as having an error
         self.interfaces[interface.name].status = Interface.InterfaceStatus.ERROR
-
-
-    def __failed_to_init_protocol(self, protocol: InterfaceProtocol, exception: Exception):
-        '''
-        This logs an error when a protocol (ex. i2c) is unable to be intialized.
-        This is usually caused by hardware being configured incorrectly, or running the program on an OS which doesn't support the protocol.
-        If a protocol can't start, it is impossible to restart the devices on the protocol.
-        '''
-
-        # Log the error
-        self.__log(f'Was unable to intialize {protocol.name}: {exception}. Interfaces on this protocol will be disabled.', DataLogger.LogSeverity.CRITICAL)
-
-        # Disable protocol
-        if protocol is InterfaceProtocol.I2C:
-            self.I2C_ENABLED = False
-        elif protocol is InterfaceProtocol.CAN:
-            self.CAN_ENABLED = False
-            self.__log('Make sure you are running the DDS w/ sudo to init CAN Correctly.')
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO, name="DDS_IO"):

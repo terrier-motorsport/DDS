@@ -198,6 +198,10 @@ class Device(ABC):
         self.__status = value
 
 
+class I2CDevice(Device):
+    # TODO: IMPLEMENT
+    pass
+
 import can
 import cantools.database
 class CANDevice(Device):
