@@ -4,6 +4,7 @@
 from enum import Enum
 from Backend.data_logger import DataLogger
 from Backend.device import Device
+from Backend.value_monitor import ParameterMonitor
 from typing import Dict, Union, List
 from abc import ABC, abstractmethod
 
@@ -260,20 +261,19 @@ class Interface(ABC):
         self._log(f'Finished initializing {device.name}!')
 
 
-    def __monitor_device_parameters(self, device: Device):
+    def __monitor_device_parameters(self, parameter_monitor: ParameterMonitor):
         """
-        Monitors the parameters of a given device and checks if their values are within the defined limits.
-
-        Parameters:
-            device (Interface): The device whose parameters are to be monitored.
+        Monitors the parameters of all devices on this interface, according to the valuelimits config file.
 
         This function retrieves all parameter names from the device's cached values and checks each parameter's value
         against the defined limits using the ParameterMonitor. If a parameter value is out of range, a warning is raised.
         """
-        param_names = device.get_all_param_names()
 
-        for param_name in param_names:
-            self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))
+        # Checks every parameter for every device on the interface
+        for name, device in self.devices.items():
+            param_names = device.get_all_param_names()
+            for param_name in param_names:
+                parameter_monitor.check_value(param_name, device.get_data(param_name))
 
 
     def _log_telemetry(self, param_name: str, value, units: str):
