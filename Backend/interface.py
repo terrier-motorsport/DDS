@@ -189,7 +189,7 @@ class Interface(ABC):
         
         for key, device in self.devices.items():
             device.update()
-            self.__monitor_device_parameters(device)
+            self._monitor_device_parameters(device)
              
 
     # ===== ABSTRACT METHODS =====
@@ -263,7 +263,7 @@ class Interface(ABC):
         self._log(f'Finished initializing {device.name}!')
 
 
-    def __monitor_device_parameters(self, parameter_monitor: ParameterMonitor):
+    def _monitor_device_parameters(self, parameter_monitor: ParameterMonitor):
         """
         Monitors the parameters of all devices on this interface, according to the valuelimits config file.
 

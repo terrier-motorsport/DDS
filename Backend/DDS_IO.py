@@ -75,7 +75,6 @@ class DDS_IO:
             if status is Interface.InterfaceStatus.ACTIVE:
                 try:
                     interface_object.update()
-                    interface_object.__monitor_device_parameters(interface_object)
                 except Exception as e:
                     self.__log(f'Failed to update {interface_name}. {e}')
                     interface_object.status = Interface.InterfaceStatus.ERROR
