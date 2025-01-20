@@ -81,10 +81,12 @@ class DDS_IO:
                     interface_object.status = Interface.InterfaceStatus.ERROR
             
             elif status is Interface.InterfaceStatus.ERROR:
-                try:
-                    interface_object.initialize()
-                except Exception as e:
-                    return
+                # TEMPORARILY DISABLED FOR TESTING PURPOSES.
+                pass
+                # try:
+                #     interface_object.initialize()
+                # except Exception as e:
+                #     return
 
             elif interface_object.status is Interface.InterfaceStatus.DISABLED:
                 return
