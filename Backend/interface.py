@@ -158,8 +158,12 @@ class Interface(ABC):
             bus: The bus on which devices on this interface should use.
         """
 
+        # Initialize devices
         for key, device in self.devices.items():
             self._initialize_device(device, bus)
+
+        # Make everything is working
+        self.update()
         
         # Set status to active
         self.__status = self.InterfaceStatus.ACTIVE
@@ -230,8 +234,6 @@ class Interface(ABC):
             # Initialize the device
             device.initialize(bus)
 
-            # Try reading the first peice of data
-            device.update()
         except Exception as e:
             # Log the error
             self._log(f'Was unable to intialize device {device.name}: {e}.', DataLogger.LogSeverity.CRITICAL)
