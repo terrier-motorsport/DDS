@@ -75,7 +75,7 @@ class DDS_IO:
             if status is Interface.InterfaceStatus.ACTIVE:
                 try:
                     interface_object.update()
-                    self.__monitor_device_parameters(interface_object)
+                    interface_object.__monitor_device_parameters(interface_object)
                 except Exception as e:
                     self.__log(f'Failed to update {interface_name}. {e}')
                     interface_object.status = Interface.InterfaceStatus.ERROR
@@ -204,7 +204,8 @@ class DDS_IO:
                     Orion_BMS_2('Backend/candatabase/Orion_BMS2_CANBUSv7.dbc', self.log),
                     DTI_HV_500('Backend/candatabase/DTI_HV_500_CANBUSv3.dbc', self.log)
                 ],
-                logger=self.log
+                logger=self.log,
+                parameter_monitor=self.parameter_monitor
             )
             self.__safe_initialize_interface(canInterface)
             self.__log("Finished initializing all CAN devices!")
@@ -228,7 +229,8 @@ class DDS_IO:
                     # Backend.config.device_config.define_top_MPU_6050(self.log),
                     # Backend.config.device_config.define_wheel_MPU_6050(self.log),
                 ],
-                logger=self.log
+                logger=self.log,
+                parameter_monitor=self.parameter_monitor
             )
             self.__safe_initialize_interface(i2cInterface)
             self.__log('Finished initializing all i2c devices!')
@@ -242,18 +244,20 @@ class DDS_IO:
 
         # Add dummy devices if we are in demo mode.
         if self.demo_mode:
-            self.interfaces = {
-                "Mike": Interface('Mike', InterfaceProtocol.I2C, self.log),
-                "Anna": Interface('Anna', InterfaceProtocol.CAN, self.log)
-            }
-            for device_name, device in self.interfaces.items():
-                if device_name == "Mike":
-                    device.cached_values["sample_data One (1)"] = 203949.1324
-                    device.cached_values["Two"] = "i like chocolate chip cookies"
-                    device.cached_values["thre three threee"] = "i HATE chocolate chip cookies which dont have chocolate chips"
-                if device_name == "Anna":
-                    device.cached_values["other signal"] = "yum i love chocolate chip cookies"
-                device.change_status(Interface.InterfaceStatus.ACTIVE)
+            # THIS IS ALL GARBO. NEED TO FIX
+            pass
+            # self.interfaces = {
+            #     "Mike": Interface('Mike', InterfaceProtocol.I2C, self.log, self.parameter_monitor),
+            #     "Anna": Interface('Anna', InterfaceProtocol.CAN, self.log)
+            # }
+            # for device_name, device in self.interfaces.items():
+            #     if device_name == "Mike":
+            #         device.cached_values["sample_data One (1)"] = 203949.1324
+            #         device.cached_values["Two"] = "i like chocolate chip cookies"
+            #         device.cached_values["thre three threee"] = "i HATE chocolate chip cookies which dont have chocolate chips"
+            #     if device_name == "Anna":
+            #         device.cached_values["other signal"] = "yum i love chocolate chip cookies"
+            #     device.change_status(Interface.InterfaceStatus.ACTIVE)
 
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')

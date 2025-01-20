@@ -110,7 +110,8 @@ class Interface(ABC):
                  name: str,
                  devices: List[Device],
                  interfaceProtocol: InterfaceProtocol, 
-                 logger: DataLogger):
+                 logger: DataLogger,
+                 parameter_monitor: ParameterMonitor):
         '''
         Initializes an interface device with the given parameters.
 
@@ -140,6 +141,7 @@ class Interface(ABC):
         self.interfaceProtocol = interfaceProtocol
         self.name = name
         self.log = logger
+        self.parameter_monitor = parameter_monitor
         self.__status = self.InterfaceStatus.NOT_INITIALIZED
 
         # Set & Verify that devices have unique names
@@ -349,8 +351,13 @@ class I2CInterface(Interface):
     """
     
 
-    def __init__(self, name: str, i2c_channel: str, devices: List[Device], logger: DataLogger):
-        super().__init__(name, devices, InterfaceProtocol.I2C, logger)
+    def __init__(self, 
+                 name: str, 
+                 i2c_channel: str, 
+                 devices: List[Device], 
+                 logger: DataLogger,
+                 parameter_monitor: ParameterMonitor):
+        super().__init__(name, devices, InterfaceProtocol.I2C, logger, parameter_monitor)
         self.channel = i2c_channel
 
 
@@ -395,7 +402,7 @@ class CANInterface(Interface):
     devices: Dict[str, CANDevice]
     
 
-    def __init__(self, name: str, can_channel: str, devices: List[CANDevice], logger: DataLogger):
+    def __init__(self, name: str, can_channel: str, devices: List[CANDevice], logger: DataLogger, parameter_monitor: ParameterMonitor):
         """
         Initializes a CANInterface instance.
 
@@ -407,7 +414,7 @@ class CANInterface(Interface):
         """
         
         # Initialize the parent class (Interface)
-        super().__init__(name, devices, InterfaceProtocol.CAN, logger=logger)
+        super().__init__(name, devices, InterfaceProtocol.CAN, logger, parameter_monitor)
 
         # Initialize the database
         self.db = cantools.database.Database()
