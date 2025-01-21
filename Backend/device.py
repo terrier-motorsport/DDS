@@ -259,9 +259,6 @@ class I2CDevice(Device):
 import can
 import cantools.database
 class CANDevice(Device):
-    '''
-    CANDevice doesn't use threaded data collection.
-    '''
 
     db: cantools.database.Database
 
@@ -312,6 +309,12 @@ class CANDevice(Device):
         for name, data in decoded_msg.items():
             self.cached_values[name] = data
 
+    
+    def _data_collection_worker(self):
+        '''
+        CANDevice doesn't use threaded data collection.
+        '''
+        return
 
     def get_all_param_names(self) -> List[str]:
         '''

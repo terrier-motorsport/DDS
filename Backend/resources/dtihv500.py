@@ -12,6 +12,3 @@ class DTI_HV_500(CANDevice):
     def __init__(self, dbc_filepath: str, logger):
         super().__init__('DTI_HV_500', dbc_filepath, logger)
 
-    def initialize(self, bus):
-        return super().initialize(bus)
-    
