@@ -236,8 +236,10 @@ class DDS_IO:
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')
         
-        for device_name, device_object in self.interfaces.items():
-            self.__log(f'{device_name}: {device_object.status.name}')
+        for interface_name, interface_object in self.interfaces.items():
+            self.__log(f'{interface_name}: {interface_object.status.name}')
+            for device_name, device_object in interface_object.devices.items():
+                self.__log(f'   {device_name}: {device_obj.status.name}')
 
 
     def __safe_initialize_interface(self, interface: Interface) -> bool:
