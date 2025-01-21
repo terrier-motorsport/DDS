@@ -328,21 +328,27 @@ if __name__ == '__main__':
             # Update the last print time
             last_print_time = current_time
 
+            for interface_name, interface_obj in io.interfaces.items():
+                for device_name, device_obj in interface_obj.devices.items():
+                    param_names = device_obj.get_all_param_names()
+                    for param in param_names:
+                        print(f'{device_name}.{param}: {io.get_device_data(device_name, param, "TestCode")}')
+
             # Get and print the data
-            hotpressure = io.get_device_data('coolingLoopSensors1', 'hotPressure')
-            print(f"hot pressure: {hotpressure}")
+            # hotpressure = io.get_device_data('coolingLoopSensors1', 'hotPressure')
+            # print(f"hot pressure: {hotpressure}")
 
-            coldpressure = io.get_device_data('coolingLoopSensors1', 'coldPressure')
-            print(f"cold pressure: {coldpressure}")
+            # coldpressure = io.get_device_data('coolingLoopSensors1', 'coldPressure')
+            # print(f"cold pressure: {coldpressure}")
 
-            hottemp = io.get_device_data('coolingLoopSensors1', 'hotTemperature')
-            print(f"hot temp: {hottemp}")
+            # hottemp = io.get_device_data('coolingLoopSensors1', 'hotTemperature')
+            # print(f"hot temp: {hottemp}")
 
-            coldtemp = io.get_device_data('coolingLoopSensors1', 'coldTemperature')
-            print(f"cold temp: {coldtemp}")
+            # coldtemp = io.get_device_data('coolingLoopSensors1', 'coldTemperature')
+            # print(f"cold temp: {coldtemp}")
 
-            for warning in io.get_warnings():
-                print(f'{warning}')
+            # for warning in io.get_warnings():
+            #     print(f'{warning}')
 
             # Calculate and print the average delta time
             if delta_times:
