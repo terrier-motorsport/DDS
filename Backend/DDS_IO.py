@@ -329,16 +329,16 @@ if __name__ == '__main__':
             last_print_time = current_time
 
             # Get and print the data
-            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
+            hotpressure = io.get_device_data('coolingLoopSensors1', 'hotPressure')
             print(f"hot pressure: {hotpressure}")
 
-            coldpressure = io.get_device_data('coolingLoopSensors', 'coldPressure')
+            coldpressure = io.get_device_data('coolingLoopSensors1', 'coldPressure')
             print(f"cold pressure: {coldpressure}")
 
-            hottemp = io.get_device_data('coolingLoopSensors', 'hotTemperature')
+            hottemp = io.get_device_data('coolingLoopSensors1', 'hotTemperature')
             print(f"hot temp: {hottemp}")
 
-            coldtemp = io.get_device_data('coolingLoopSensors', 'coldTemperature')
+            coldtemp = io.get_device_data('coolingLoopSensors1', 'coldTemperature')
             print(f"cold temp: {coldtemp}")
 
             for warning in io.get_warnings():
