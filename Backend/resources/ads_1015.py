@@ -119,7 +119,8 @@ class ADS_1015(I2CDevice):
 
         # If we ever get here, there was a problem.
         # We should log that the data collection worker stopped working
-        self._log('Data collection worker stopped.', self.log.LogSeverity.WARNING)
+        self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
+        self.status = self.DeviceStatus.ERROR
     
 
     def __fetch_sensor_data(self) -> List[float]:

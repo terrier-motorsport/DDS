@@ -69,6 +69,7 @@ class Device(ABC):
             )
 
         # Start threaded data collection
+        self.status = self.DeviceStatus.ACTIVE
         self.__start_threaded_data_collection()
 
         # If called by a subclass, complete initialization
@@ -117,7 +118,8 @@ class Device(ABC):
         
         # If we ever get here, there was a problem.
         # We should log that the data collection worker stopped working
-        self._log('Data collection worker stopped.', self.log.LogSeverity.WARNING)
+        self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
+        self.status = self.DeviceStatus.ERROR
 
 
 
