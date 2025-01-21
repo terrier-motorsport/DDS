@@ -328,11 +328,14 @@ if __name__ == '__main__':
             # Update the last print time
             last_print_time = current_time
 
+            # Print every parameter
             for interface_name, interface_obj in io.interfaces.items():
                 for device_name, device_obj in interface_obj.devices.items():
                     param_names = device_obj.get_all_param_names()
                     for param in param_names:
-                        print(f'{device_name}.{param}: {io.get_device_data(device_name, param, "TestCode")}')
+                        data = io.get_device_data(device_name, param, "TestCode")
+                        if data != "NO_DATA":
+                            print(f'{device_name}.{param}: {data}')
 
             # Get and print the data
             # hotpressure = io.get_device_data('coolingLoopSensors1', 'hotPressure')
