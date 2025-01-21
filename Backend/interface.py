@@ -162,11 +162,11 @@ class Interface(ABC):
         for key, device in self.devices.items():
             self._initialize_device(device, bus)
 
-        # Make everything is working
-        self.update()
-        
         # Set status to active
         self.status = self.InterfaceStatus.ACTIVE
+
+        # Make everything is working
+        self.update()
 
         # Log device initialization
         self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
