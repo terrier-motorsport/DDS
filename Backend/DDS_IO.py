@@ -239,7 +239,7 @@ class DDS_IO:
         for interface_name, interface_object in self.interfaces.items():
             self.__log(f'{interface_name}: {interface_object.status.name}')
             for device_name, device_object in interface_object.devices.items():
-                self.__log(f'   {device_name}: {device_obj.status.name}')
+                self.__log(f'   {device_name}: {device_object.status.name}')
 
 
     def __safe_initialize_interface(self, interface: Interface) -> bool:
