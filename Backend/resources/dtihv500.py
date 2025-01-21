@@ -14,3 +14,4 @@ class DTI_HV_500(CANDevice):
 
     def initialize(self, bus):
         return super().initialize(bus)
+    

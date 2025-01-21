@@ -259,12 +259,19 @@ class I2CDevice(Device):
 import can
 import cantools.database
 class CANDevice(Device):
+    '''
+    CANDevice doesn't use threaded data collection.
+    '''
 
     db: cantools.database.Database
 
     def __init__(self, name, dbc_filepath: str, logger: DataLogger):
         self.db = cantools.database.load_file(dbc_filepath)
         super().__init__(name, logger)
+    
+
+    def initialize(self, bus):
+        return super().initialize(bus)
     
 
     def update(self, msg: can.Message):
