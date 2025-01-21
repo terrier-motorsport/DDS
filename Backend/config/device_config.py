@@ -57,7 +57,8 @@ def define_ADC2(logger) -> ADS_1015:
         device = ADS_1015(deviceName, logger=logger, inputs = [
             Analog_In('TBDPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC2(A0)
             Analog_In('TBDTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC2(A1)
-        ])
+        ],
+        i2c_addr=0x49)
 
         return device
 
