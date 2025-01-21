@@ -141,9 +141,9 @@ class ADS_1015(I2CDevice):
                 input_obj.voltage = self.ads.get_voltage(
                     channel=channel
                 )
-            except OSError:
+            except OSError as e:
                 # Occasionally this happens over i2c communication. I'm not sure why.
-                self._log(f'Failed to get ADC data from {channel}!', severity=self.log.LogSeverity.ERROR)
+                self._log(f'Failed to get ADC data from {channel}: {e}', severity=self.log.LogSeverity.ERROR)
 
             # Validate the voltage of the input
             input_obj = self.__validate_voltage(input_obj)
