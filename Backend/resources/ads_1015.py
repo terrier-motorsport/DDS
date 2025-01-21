@@ -76,7 +76,7 @@ class ADS_1015(I2CDevice):
         """
 
         # Fetch the sensor data
-        voltages = self.__get_data_from_thread()
+        voltages = self._get_data_from_thread()
 
         # Check to see if there is null data. If there is, it means that there are no messages to be recieved.
         # Thus, we can end the update poll early.

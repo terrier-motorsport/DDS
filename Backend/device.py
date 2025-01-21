@@ -85,7 +85,7 @@ class Device(ABC):
         See example code below:
         '''
 
-        data = self.__get_data_from_thread()
+        data = self._get_data_from_thread()
 
         if data is None:
             # Update the cache with no new data
@@ -204,7 +204,7 @@ class Device(ABC):
         sensor_thread.start()
 
 
-    def __get_data_from_thread(self) -> List[float]:
+    def _get_data_from_thread(self) -> List[float]:
         """
         Main program calls this to fetch the latest data from the queue.
         """
