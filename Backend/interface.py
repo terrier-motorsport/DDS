@@ -166,7 +166,7 @@ class Interface(ABC):
         self.update()
         
         # Set status to active
-        self.__status = self.InterfaceStatus.ACTIVE
+        self.status = self.InterfaceStatus.ACTIVE
 
         # Log device initialization
         self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
