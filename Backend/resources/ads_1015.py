@@ -3,7 +3,7 @@
 
 from Backend.data_logger import DataLogger
 from Backend.resources.analog_in import Analog_In
-from Backend.device import Device
+from Backend.device import I2CDevice
 from typing import List
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
 from smbus2 import SMBus
@@ -13,7 +13,7 @@ import queue
 
 
 
-class ADS_1015(Device):
+class ADS_1015(I2CDevice):
     """
     # DDS ADS 1015 CLASS
     Analog -> Digital Converter on an I2C interface with caching functionality.
@@ -63,11 +63,6 @@ class ADS_1015(Device):
         self.chip_type = self.ads.detect_chip_type()
         self._log(f"Found: {self.chip_type}")
 
-        # Start data collection thread
-        # NOTE: The status of the device must be set to ACTIVE for the data collector to run.
-        self.__status = self.DeviceStatus.ACTIVE
-        self.__start_threaded_data_collection()
-
         # Wait for thread to collect data
         time.sleep(0.5)
 
@@ -108,21 +103,8 @@ class ADS_1015(Device):
             # Log the data
             self._log_telemetry(key, data, units)
 
-        
 
-
-    def __get_data_from_thread(self) -> List[float]:
-        """
-        Main program calls this to fetch the latest data from the queue.
-        """
-        if not self.data_queue.empty():
-            return self.data_queue.get_nowait()  # Non-blocking call
-        else:
-            return None  # No data available yet
-
-
-    # This is the main thread function
-    def __data_collection_worker(self):
+    def _data_collection_worker(self):
         """
         # This is the function that the thread runs continously
         Thread function to continuously fetch sensor data.
@@ -188,16 +170,6 @@ class ADS_1015(Device):
             clamped_voltage = self.__clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
             analog_in.voltage = clamped_voltage
             return analog_in
-      
-
-    def __start_threaded_data_collection(self):
-        """Start the data collection in a separate thread."""
-
-        # Make thread
-        sensor_thread = threading.Thread(target=self.__data_collection_worker, daemon=True)
-
-        # Create the thread & start running
-        sensor_thread.start()
 
 
     def __clamp(self, value, min_value, max_value):

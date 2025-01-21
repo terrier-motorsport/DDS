@@ -5,6 +5,7 @@ from typing import Dict, List, Union
 from Backend.data_logger import DataLogger
 from abc import ABC, abstractmethod
 import time
+import threading
 from enum import Enum
 
 class Device(ABC):
@@ -52,6 +53,7 @@ class Device(ABC):
         self.last_cache_update = time.time()
 
 
+    # ===== PUBLIC METHODS =====
     @abstractmethod
     def initialize(self, bus):
         '''
@@ -66,20 +68,56 @@ class Device(ABC):
                 f"The 'initialize' method for {self.name} must be implemented in a subclass."
             )
 
+        # Start threaded data collection
+        self.__start_threaded_data_collection()
+
         # If called by a subclass, complete initialization
         self._log(f'{self.name} initialized successfully!')
         self.__status = self.DeviceStatus.ACTIVE
 
-    
     @abstractmethod
     def update(self):
         '''
         Updates the device by reading data from it,
         and storing it into the cached values.
+
+        See example code below:
         '''
-        raise NotImplementedError(
-                f'Update function for {self.name} doesn\'t exist'
-            )
+
+        data = self.__get_data_from_thread()
+
+        if data is None:
+            # Update the cache with no new data
+            self._update_cache(new_data_exists=False)
+            return
+        self._update_cache(new_data_exists=True)
+
+        self.cached_values["Acceleration"] = data
+        self._log_telemetry(f"Acceleration", data, "g")
+        
+
+
+    @abstractmethod
+    def _data_collection_worker(self):
+        '''
+        This function contains the code that will be running on the seperate thread.
+        It should be doing all the communication that interfaces with the I/O of the pi.
+
+        See example code below: 
+        '''
+        
+        sensor = None # Imagine this as a sensor
+
+        while self.__status is self.DeviceStatus.ACTIVE:
+            try:
+                data = sensor.get_data()
+                self.data_queue.put(data) # Put data in the queue for the main program
+            except Exception as e:
+                self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
+        
+        # If we ever get here, there was a problem.
+        # We should log that the data collection worker stopped working
+        self._log('Data collection worker stopped.', self.log.LogSeverity.WARNING)
 
 
 
@@ -93,7 +131,6 @@ class Device(ABC):
         return list(self.cached_values.keys())
     
 
-    # ===== CACHING METHODS =====
     def get_data(self, data_key: str) -> Union[str, float, int, None]:
         '''
         This method verifies that the data at the specified key exists,
@@ -118,6 +155,7 @@ class Device(ABC):
         return self.cached_values[data_key]
     
 
+    # ===== PRIVATE METHODS =====
     def _update_cache(self, new_data_exists: bool):
         '''
         Checks if the cache has expired due to lack of new data and clears it if necessary.
@@ -152,7 +190,26 @@ class Device(ABC):
         self.cached_values = empty_cache
 
         self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
+    
+    
+    def __start_threaded_data_collection(self):
+        """Start the data collection in a separate thread."""
 
+        # Make thread
+        sensor_thread = threading.Thread(target=self._data_collection_worker, daemon=True)
+
+        # Create the thread & start running
+        sensor_thread.start()
+
+
+    def __get_data_from_thread(self) -> List[float]:
+        """
+        Main program calls this to fetch the latest data from the queue.
+        """
+        if not self.data_queue.empty():
+            return self.data_queue.get_nowait()  # Non-blocking call
+        else:
+            return None  # No data available yet
 
     # ===== HELPER METHODS =====
     def _log_telemetry(self, param_name: str, value, units: str):
@@ -174,9 +231,6 @@ class Device(ABC):
     def _log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
         """Shorthand logging method."""
         self.log.writeLog(loggerName=self.name, msg=msg, severity=severity)
-    
-
-
     
 
     # ===== GETTER/SETTER METHODS ====
@@ -250,11 +304,6 @@ class CANDevice(Device):
         # Update or add all decoded values to the cached values dictionary.
         for name, data in decoded_msg.items():
             self.cached_values[name] = data
-    
-
-    # def update_with_no_new_data(self):
-    #     # Update cache
-    #     self._update_cache(new_data_exists=False)
 
 
     def get_all_param_names(self) -> List[str]:
