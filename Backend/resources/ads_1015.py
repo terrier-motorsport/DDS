@@ -110,7 +110,7 @@ class ADS_1015(I2CDevice):
         Thread function to continuously fetch sensor data.
         """
 
-        while self.__status is self.DeviceStatus.ACTIVE:
+        while self.status is self.DeviceStatus.ACTIVE:
             try:
                 voltages = self.__fetch_sensor_data()
                 self.data_queue.put(voltages)  # Put data in the queue for the main program

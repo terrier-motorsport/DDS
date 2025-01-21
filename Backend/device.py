@@ -108,7 +108,7 @@ class Device(ABC):
         
         sensor = None # Imagine this as a sensor
 
-        while self.__status is self.DeviceStatus.ACTIVE:
+        while self.status is self.DeviceStatus.ACTIVE:
             try:
                 data = sensor.get_data()
                 self.data_queue.put(data) # Put data in the queue for the main program
