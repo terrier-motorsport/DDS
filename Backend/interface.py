@@ -182,7 +182,7 @@ class Interface(ABC):
         
         for key, device in self.devices.items():
             device.update()
-            self._monitor_device_parameters(device)
+            self.__monitor_device_parameters()
              
 
     def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:
@@ -246,7 +246,7 @@ class Interface(ABC):
         self._log(f'Finished initializing {device.name}!')
 
 
-    def _monitor_device_parameters(self, parameter_monitor: ParameterMonitor):
+    def __monitor_device_parameters(self):
         """
         Monitors the parameters of all devices on this interface, according to the valuelimits config file.
 
@@ -258,7 +258,7 @@ class Interface(ABC):
         for name, device in self.devices.items():
             param_names = device.get_all_param_names()
             for param_name in param_names:
-                parameter_monitor.check_value(param_name, device.get_data(param_name))
+                self.parameter_monitor.check_value(param_name, device.get_data(param_name))
 
 
     # ===== ABSTRACT METHODS =====
