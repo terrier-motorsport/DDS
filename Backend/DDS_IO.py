@@ -119,17 +119,17 @@ class DDS_IO:
         
 
         # 2) If the device is not active, we can return early
-        if device.status is not Interface.InterfaceStatus.ACTIVE:
+        if device.status is not Device.DeviceStatus.ACTIVE:
 
             # Log the warning
             self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.WARNING)
 
             # Return a value that represents the current state of the device
-            if device.status is Interface.InterfaceStatus.DISABLED:
+            if device.status is Device.DeviceStatus.DISABLED:
                 return 'DISBLD'
-            elif device.status is Interface.InterfaceStatus.ERROR:
+            elif device.status is Device.DeviceStatus.ERROR:
                 return 'ERROR'
-            elif device.status is Interface.InterfaceStatus.NOT_INITIALIZED:
+            elif device.status is Device.DeviceStatus.NOT_INITIALIZED:
                 return 'NO_INIT'
         
 
