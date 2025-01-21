@@ -30,7 +30,7 @@ class ADS_1015(I2CDevice):
 
     # ===== METHODS =====
 
-    def __init__(self, name: str, logger: DataLogger, inputs : List[Analog_In]):
+    def __init__(self, name: str, logger: DataLogger, inputs : List[Analog_In], i2c_addr: int=0x48):
 
         # Initialize super class (Device)
         super().__init__(name, logger)
@@ -38,6 +38,7 @@ class ADS_1015(I2CDevice):
         # Init class variables
         self.inputs = inputs
         self.data_queue = queue.Queue()  # Queue to hold sensor data
+        self.addr = i2c_addr
 
 
     def initialize(self, bus: SMBus):
@@ -46,7 +47,8 @@ class ADS_1015(I2CDevice):
         self.bus = bus
 
         # Make ADS object
-        self.ads = ADS1015(i2c_dev=self.bus)
+        self.ads = ADS1015(i2c_addr=self.addr,
+                           i2c_dev=self.bus)
 
         # Configure ADS
         self.ads.set_mode("continuous")
