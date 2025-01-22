@@ -139,7 +139,6 @@ class DDS_IO:
 
         # 4) If the data is None, we can return early
         if data is None:
-            self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
             return "NO_DATA"
         
         # 5) Return the data
