@@ -72,3 +72,28 @@ print("Acceleration in Z-Axis : %d" %zAccl)
 print("X-Axis of Rotation : %d" %xGyro)
 print("Y-Axis of Rotation : %d" %yGyro)
 print("Z-Axis of Rotation : %d" %zGyro)
+
+# Convert the raw acceleration data to 'g'
+# Sensitivity scale factor for ±16g is 2048 LSB/g
+SCALE_FACTOR = 2048.0
+
+xAccl_g = xAccl / SCALE_FACTOR
+yAccl_g = yAccl / SCALE_FACTOR
+zAccl_g = zAccl / SCALE_FACTOR
+
+# Output the acceleration in g to the screen
+print("Acceleration in X-Axis (g): %.3f" % xAccl_g)
+print("Acceleration in Y-Axis (g): %.3f" % yAccl_g)
+print("Acceleration in Z-Axis (g): %.3f" % zAccl_g)
+
+# Sensitivity scale factor for ±2000 dps is 16.4 LSB/dps
+GYRO_SCALE_FACTOR = 16.4
+
+xGyro_dps = xGyro / GYRO_SCALE_FACTOR
+yGyro_dps = yGyro / GYRO_SCALE_FACTOR
+zGyro_dps = zGyro / GYRO_SCALE_FACTOR
+
+# Output the gyroscope data in dps to the screen
+print("Rotation in X-Axis (dps): %.3f" % xGyro_dps)
+print("Rotation in Y-Axis (dps): %.3f" % yGyro_dps)
+print("Rotation in Z-Axis (dps): %.3f" % zGyro_dps)
