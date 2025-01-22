@@ -145,19 +145,17 @@ class Analog_In:
     name : str
     voltage : float
     units : str
-    tolerance : float   # % in decimal form (Ex: 0.20 = 20%)
 
     # Decoding properties
     min_voltage : float
     max_voltage : float
 
 
-    def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper], tolerance=0.2):
+    def __init__(self, name: str, units: str, mapper: Union[ValueMapper, ExponentialValueMapper]):
         '''Initalizer for the Analog_in object'''
         self.name = name
         self.units = units
         self.converter = mapper
-        self.tolerance = tolerance
 
         self.min_voltage = mapper.min_voltage
         self.max_voltage = mapper.max_voltage
@@ -182,18 +180,6 @@ class Analog_In:
         
         return self.converter.voltage_to_value(voltage)
     
-
-    def voltage_in_tolerange_range(self) -> bool:
-        '''Returns if the current voltage is inside the tolerance range'''
-        # Tolerable Condition
-        voltage_tolerance = (self.converter.voltage_range * self.tolerance) / 2
-        min = self.converter.min_voltage - voltage_tolerance
-        max = self.converter.max_voltage + voltage_tolerance
-
-        if min < self.voltage < max:
-            return True
-        else:
-            return False
         
 
 

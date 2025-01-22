@@ -159,20 +159,11 @@ class ADS_1015(I2CDevice):
         Validates the voltage is within the analog_in's input range. 
         Returns the output with clean data.
         '''
-
-        if not analog_in.voltage_in_tolerange_range():
-            # This means the voltage is outside of the tolerable range.
-            self._log(f"{analog_in.name} out of tolerable range! Voltage: {analog_in.voltage}v, Value: {analog_in.get_output()}{analog_in.units}", severity=self.log.LogSeverity.WARNING)
-            
-            # Return an empty value
-            return analog_in
-
-        else:
-            # The value is in the output range, so we clamp & return it.
-            # This prevents things like negative pressures when the loop is unpresurized
-            clamped_voltage = self.__clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
-            analog_in.voltage = clamped_voltage
-            return analog_in
+        # The value is in the output range, so we clamp & return it.
+        # This prevents things like negative pressures when the loop is unpresurized
+        clamped_voltage = self.__clamp(analog_in.voltage, analog_in.min_voltage, analog_in.max_voltage)
+        analog_in.voltage = clamped_voltage
+        return analog_in
 
 
     def __clamp(self, value, min_value, max_value):

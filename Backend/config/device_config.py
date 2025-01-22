@@ -38,10 +38,10 @@ def define_ADC1(logger) -> ADS_1015:
         deviceName = 'coolingLoopSensors1'
 
         device = ADS_1015(deviceName, logger=logger, inputs = [
-            Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
-            Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
-            Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
-            Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
+            Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper),           #ADC1(A0)
+            Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper),       #ADC1(A1)
+            Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper),          #ADC1(A2)
+            Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper)       #ADC1(A3)
         ])
 
         return device
