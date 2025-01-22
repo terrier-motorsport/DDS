@@ -239,7 +239,7 @@ class Interface(ABC):
             self._log(f'Was unable to intialize device {device.name}: {e}.', DataLogger.LogSeverity.CRITICAL)
 
             # Change device status to error
-            device.__status = Device.DeviceStatus.ERROR
+            device.status = Device.DeviceStatus.ERROR
             return
 
         # ===== FINISHED ===== 
