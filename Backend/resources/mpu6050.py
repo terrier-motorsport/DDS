@@ -8,30 +8,89 @@
 # This code is designed to work with the MPU-6000_I2CS I2C Mini Module available from ControlEverything.com.
 # https://www.controleverything.com/content/Accelorometer?sku=MPU-6000_I2CS#tabs-0-product_tabset-2
 
+
+
 import smbus2
 import time
-import gpiod #type: ignore
-
-
+from gpiozero import LED
+import RPi.GPIO as GPIO #type: ignore
 
 # Get I2C bus
 bus = smbus2.SMBus(2)
-
 ACC_1_SEL = 17
 ACC_2_SEL = 27
 ACC_3_SEL = 22
 
+# RESET GPIO
+GPIO.cleanup()
+time.sleep(0.1)
+
+# DONT ASK
+acc_1 = LED(ACC_1_SEL)
+acc_2 = LED(ACC_2_SEL)
+acc_3 = LED(ACC_3_SEL)
+# SETUP GPIO
+GPIO.setmode(GPIO.BCM)
+
+GPIO.setup(ACC_1_SEL, GPIO.OUT)
+GPIO.setup(ACC_2_SEL, GPIO.OUT)
+GPIO.setup(ACC_3_SEL, GPIO.OUT)
 
 
-chip = gpiod.Chip('gpiochip0')
-acc_1 = chip.get_line(ACC_1_SEL)
-acc_2 = chip.get_line(ACC_2_SEL)
-acc_3 = chip.get_line(ACC_3_SEL)
+while True:
+	for i in range(3):
+
+		if i == 0:
+			acc_1.on()
+			acc_2.off()
+			acc_3.off()
+			GPIO.output(ACC_1_SEL, 1)
+			GPIO.output(ACC_2_SEL, 0)
+			GPIO.output(ACC_3_SEL, 0)
+			time.sleep(0.01)
+		elif i == 1:
+			acc_1.off()
+			acc_2.on()
+			acc_3.off()
+			GPIO.output(ACC_1_SEL, 0)
+			GPIO.output(ACC_2_SEL, 1)
+			GPIO.output(ACC_3_SEL, 0)
+			time.sleep(0.01)
+		elif i == 2:
+			acc_1.off()
+			acc_2.off()
+			acc_3.on()
+			GPIO.output(ACC_1_SEL, 0)
+			GPIO.output(ACC_2_SEL, 0)
+			GPIO.output(ACC_3_SEL, 1)
+			time.sleep(0.01)
 
 
-acc_1.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
-acc_2.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
-acc_3.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+
+# import smbus2
+# import time
+# import gpiod #type: ignore
+
+
+
+# # Get I2C bus
+# bus = smbus2.SMBus(2)
+
+# ACC_1_SEL = 17
+# ACC_2_SEL = 27
+# ACC_3_SEL = 22
+
+
+
+# chip = gpiod.Chip('gpiochip0')
+# acc_1 = chip.get_line(ACC_1_SEL)
+# acc_2 = chip.get_line(ACC_2_SEL)
+# acc_3 = chip.get_line(ACC_3_SEL)
+
+
+# acc_1.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+# acc_2.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+# acc_3.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
 
 
 # try:
@@ -55,24 +114,24 @@ acc_3.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
 # GPIO.setup(ACC_3_SEL, GPIO.OUT)
 
 
-while True:
-	for i in range(3):
+# while True:
+# 	for i in range(3):
 
-		if i == 0:
-			acc_1.set_value(1)
-			acc_2.set_value(0)
-			acc_3.set_value(0)
-			time.sleep(0.01)
-		elif i == 1:
-			acc_1.set_value(0)
-			acc_2.set_value(1)
-			acc_3.set_value(0)
-			time.sleep(0.01)
-		elif i == 2:
-			acc_1.set_value(0)
-			acc_2.set_value(0)
-			acc_3.set_value(1)
-			time.sleep(0.01)
+		# if i == 0:
+		# 	acc_1.set_value(1)
+		# 	acc_2.set_value(0)
+		# 	acc_3.set_value(0)
+		# 	time.sleep(0.01)
+		# elif i == 1:
+		# 	acc_1.set_value(0)
+		# 	acc_2.set_value(1)
+		# 	acc_3.set_value(0)
+		# 	time.sleep(0.01)
+		# elif i == 2:
+		# 	acc_1.set_value(0)
+		# 	acc_2.set_value(0)
+		# 	acc_3.set_value(1)
+		# 	time.sleep(0.01)
 
 
 		# MPU-6000 address, 0x68(104)
