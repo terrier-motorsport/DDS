@@ -129,5 +129,12 @@ while True:
 		print("Rotation in Y-Axis (dps): %.3f" % yGyro_dps)
 		print("Rotation in Z-Axis (dps): %.3f" % zGyro_dps)
 
+
+        # Calculate and print delta time
+		current_time = time.time()
+		delta_time = current_time - prev_time
+		prev_time = current_time
+		print("Delta Time (s): %.6f" % delta_time)
+		
 		print()
 		print()
