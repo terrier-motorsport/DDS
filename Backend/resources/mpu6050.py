@@ -23,7 +23,7 @@ ACC_3_SEL = 22
 
 
 
-chip = gpiod.Chip()
+chip = gpiod.Chip('gpiochip0')
 acc_1 = chip.get_line(ACC_1_SEL)
 acc_2 = chip.get_line(ACC_2_SEL)
 acc_3 = chip.get_line(ACC_3_SEL)
