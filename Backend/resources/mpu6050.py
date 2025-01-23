@@ -10,8 +10,7 @@
 
 import smbus2
 import time
-import RPi.GPIO as GPIO #type: ignore
-import gpiod
+import gpiod #type: ignore
 
 
 
