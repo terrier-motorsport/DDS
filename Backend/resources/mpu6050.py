@@ -125,3 +125,6 @@ for i in range(3):
 	print("Rotation in X-Axis (dps): %.3f" % xGyro_dps)
 	print("Rotation in Y-Axis (dps): %.3f" % yGyro_dps)
 	print("Rotation in Z-Axis (dps): %.3f" % zGyro_dps)
+
+	print()
+	print()
