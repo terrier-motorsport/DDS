@@ -21,6 +21,7 @@ ACC_3_SEL = 22
 
 # RESET GPIO
 GPIO.cleanup()
+time.sleep(0.1)
 
 # SETUP GPIO
 GPIO.setmode(GPIO.BCM)
