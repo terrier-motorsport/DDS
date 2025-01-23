@@ -45,22 +45,22 @@ for i in range(3):
 	# MPU-6000 address, 0x68(104)
 	# Select gyroscope configuration register, 0x1B(27)
 	#		0x18(24)	Full scale range = 2000 dps
-	bus.write_byte_data(0x68, 0x1B, 0x18)
+	bus.write_byte_data(0x69, 0x1B, 0x18)
 	# MPU-6000 address, 0x68(104)
 	# Select accelerometer configuration register, 0x1C(28)
 	#		0x18(24)	Full scale range = +/-16g
-	bus.write_byte_data(0x68, 0x1C, 0x18)
+	bus.write_byte_data(0x69, 0x1C, 0x18)
 	# MPU-6000 address, 0x68(104)
 	# Select power management register1, 0x6B(107)
 	#		0x01(01)	PLL with xGyro reference
-	bus.write_byte_data(0x68, 0x6B, 0x01)
+	bus.write_byte_data(0x69, 0x6B, 0x01)
 
 	time.sleep(0.8)
 
 	# MPU-6000 address, 0x68(104)
 	# Read data back from 0x3B(59), 6 bytes
 	# Accelerometer X-Axis MSB, X-Axis LSB, Y-Axis MSB, Y-Axis LSB, Z-Axis MSB, Z-Axis LSB
-	data = bus.read_i2c_block_data(0x68, 0x3B, 6)
+	data = bus.read_i2c_block_data(0x69, 0x3B, 6)
 
 	# Convert the data
 	xAccl = data[0] * 256 + data[1]
@@ -78,7 +78,7 @@ for i in range(3):
 	# MPU-6000 address, 0x68(104)
 	# Read data back from 0x43(67), 6 bytes
 	# Gyrometer X-Axis MSB, X-Axis LSB, Y-Axis MSB, Y-Axis LSB, Z-Axis MSB, Z-Axis LSB
-	data = bus.read_i2c_block_data(0x68, 0x43, 6)
+	data = bus.read_i2c_block_data(0x69, 0x43, 6)
 
 	# Convert the data
 	xGyro = data[0] * 256 + data[1]
