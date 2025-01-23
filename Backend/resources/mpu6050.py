@@ -21,9 +21,11 @@ ACC_3_SEL = 22
 
 GPIO.setmode(GPIO.BCM)
 
+GPIO.cleanup()
 GPIO.setup(ACC_1_SEL, GPIO.OUT)
 GPIO.setup(ACC_2_SEL, GPIO.OUT)
 GPIO.setup(ACC_3_SEL, GPIO.OUT)
+
 
 while True:
 	for i in range(3):
@@ -135,6 +137,6 @@ while True:
 		delta_time = current_time - prev_time
 		prev_time = current_time
 		print("Delta Time (s): %.6f" % delta_time)
-		
+
 		print()
 		print()
