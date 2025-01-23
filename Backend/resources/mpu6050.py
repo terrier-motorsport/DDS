@@ -19,9 +19,12 @@ ACC_1_SEL = 17
 ACC_2_SEL = 27
 ACC_3_SEL = 22
 
+# RESET GPIO
+GPIO.cleanup()
+
+# SETUP GPIO
 GPIO.setmode(GPIO.BCM)
 
-GPIO.cleanup()
 GPIO.setup(ACC_1_SEL, GPIO.OUT)
 GPIO.setup(ACC_2_SEL, GPIO.OUT)
 GPIO.setup(ACC_3_SEL, GPIO.OUT)
