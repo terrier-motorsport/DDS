@@ -32,14 +32,17 @@ for i in range(3):
 		GPIO.output(ACC_1_SEL, 1)
 		GPIO.output(ACC_2_SEL, 0)
 		GPIO.output(ACC_3_SEL, 0)
+		time.sleep(0.01)
 	elif i == 1:
 		GPIO.output(ACC_1_SEL, 0)
 		GPIO.output(ACC_2_SEL, 1)
 		GPIO.output(ACC_3_SEL, 0)
+		time.sleep(0.01)
 	elif i == 2:
 		GPIO.output(ACC_1_SEL, 0)
 		GPIO.output(ACC_2_SEL, 0)
 		GPIO.output(ACC_3_SEL, 1)
+		time.sleep(0.01)
 
 
 	# MPU-6000 address, 0x68(104)
