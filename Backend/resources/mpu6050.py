@@ -11,6 +11,9 @@
 import smbus2
 import time
 import RPi.GPIO as GPIO #type: ignore
+import gpiod
+
+
 
 # Get I2C bus
 bus = smbus2.SMBus(2)
@@ -19,35 +22,57 @@ ACC_1_SEL = 17
 ACC_2_SEL = 27
 ACC_3_SEL = 22
 
+
+
+chip = gpiod.Chip('gpiochip4')
+acc_1 = chip.get_line(ACC_1_SEL)
+acc_2 = chip.get_line(ACC_2_SEL)
+acc_3 = chip.get_line(ACC_3_SEL)
+
+
+acc_1.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+acc_2.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+acc_3.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+
+
+# try:
+#    while True:
+#        acc_1.set_value(1)
+#        time.sleep(1)
+#        acc_1.set_value(0)
+#        time.sleep(1)
+# finally:
+#    acc_1.release()
+
 # RESET GPIO
-GPIO.cleanup()
-time.sleep(0.1)
+# GPIO.cleanup()
+# time.sleep(0.1)
 
-# SETUP GPIO
-GPIO.setmode(GPIO.BCM)
+# # SETUP GPIO
+# GPIO.setmode(GPIO.BCM)
 
-GPIO.setup(ACC_1_SEL, GPIO.OUT)
-GPIO.setup(ACC_2_SEL, GPIO.OUT)
-GPIO.setup(ACC_3_SEL, GPIO.OUT)
+# GPIO.setup(ACC_1_SEL, GPIO.OUT)
+# GPIO.setup(ACC_2_SEL, GPIO.OUT)
+# GPIO.setup(ACC_3_SEL, GPIO.OUT)
 
 
 while True:
 	for i in range(3):
 
 		if i == 0:
-			GPIO.output(ACC_1_SEL, 1)
-			GPIO.output(ACC_2_SEL, 0)
-			GPIO.output(ACC_3_SEL, 0)
+			acc_1.set_value(1)
+			acc_2.set_value(0)
+			acc_3.set_value(0)
 			time.sleep(0.01)
 		elif i == 1:
-			GPIO.output(ACC_1_SEL, 0)
-			GPIO.output(ACC_2_SEL, 1)
-			GPIO.output(ACC_3_SEL, 0)
+			acc_1.set_value(0)
+			acc_2.set_value(1)
+			acc_3.set_value(0)
 			time.sleep(0.01)
 		elif i == 2:
-			GPIO.output(ACC_1_SEL, 0)
-			GPIO.output(ACC_2_SEL, 0)
-			GPIO.output(ACC_3_SEL, 1)
+			acc_1.set_value(0)
+			acc_2.set_value(0)
+			acc_3.set_value(1)
 			time.sleep(0.01)
 
 
