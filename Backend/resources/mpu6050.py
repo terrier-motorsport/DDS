@@ -229,6 +229,9 @@ while True:
 
 	print(f'mpu param names: {mpu.get_all_param_names()}')
 
+	for param_name in mpu.get_all_param_names():
+		print(f"{param_name}: {mpu.get_data(param_name)}")
+
 	time.sleep(0.1)
 	
 
