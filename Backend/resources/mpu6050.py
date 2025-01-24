@@ -13,7 +13,11 @@
 import smbus2
 import time
 import RPi.GPIO as GPIO #type: ignore
-from gpiozero import LED
+from gpiozero.pins.lgpio import LGPIOFactory
+from gpiozero import Device, LED
+
+
+Device.pin_factory = LGPIOFactory()
 
 # Get I2C bus
 bus = smbus2.SMBus(2)
