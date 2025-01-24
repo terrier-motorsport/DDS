@@ -193,16 +193,14 @@ class MPU_6050_x3(I2CDevice):
 					dev_str = "MPU3"
 
 				# Add the data to the queue
-				# if self.data_queue.
-				for i in range(18):
-					self.data_queue.get()
-				self.data_queue.put((dev_str, ("xAccl","g"), xAccl_g))
-				self.data_queue.put((dev_str, ("yAccl","g"), yAccl_g))
-				self.data_queue.put((dev_str, ("zAccl","g"), zAccl_g))
+				if not self.data_queue.full():
+					self.data_queue.put((dev_str, ("xAccl","g"), xAccl_g))
+					self.data_queue.put((dev_str, ("yAccl","g"), yAccl_g))
+					self.data_queue.put((dev_str, ("zAccl","g"), zAccl_g))
 
-				self.data_queue.put((dev_str, ("xGyro","dps"), xGyro_dps))
-				self.data_queue.put((dev_str, ("yGyro","dps"), yGyro_dps))
-				self.data_queue.put((dev_str, ("zGyro","dps"), zGyro_dps))
+					self.data_queue.put((dev_str, ("xGyro","dps"), xGyro_dps))
+					self.data_queue.put((dev_str, ("yGyro","dps"), yGyro_dps))
+					self.data_queue.put((dev_str, ("zGyro","dps"), zGyro_dps))
 
 		# If we ever get here, there was a problem.
 		# We should log that the data collection worker stopped working
