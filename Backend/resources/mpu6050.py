@@ -23,8 +23,10 @@ class MPU_6050_x3(I2CDevice):
 	'''
 
 
+
 	def initialize(self, bus):
 		self.bus = bus
+		self.data_queue.maxsize = 18
 
 		# Initialize the gpiozero lib with lgpio
 		Device.pin_factory = LGPIOFactory()
@@ -191,6 +193,9 @@ class MPU_6050_x3(I2CDevice):
 					dev_str = "MPU3"
 
 				# Add the data to the queue
+				# if self.data_queue.
+				for i in range(18):
+					self.data_queue.get()
 				self.data_queue.put((dev_str, ("xAccl","g"), xAccl_g))
 				self.data_queue.put((dev_str, ("yAccl","g"), yAccl_g))
 				self.data_queue.put((dev_str, ("zAccl","g"), zAccl_g))
