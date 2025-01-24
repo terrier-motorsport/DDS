@@ -108,8 +108,8 @@ class ADS_1015(I2CDevice):
 
     def _data_collection_worker(self):
         """
-        # This is the function that the thread runs continously
-        Thread function to continuously fetch sensor data.
+        This is the function that the data collection thread runs continously.
+        It should handle the slower I/O dependent communication with the ADS1015.
         """
 
         while self.status is self.DeviceStatus.ACTIVE:
