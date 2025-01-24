@@ -79,7 +79,7 @@ while True:
 		#		0x01(01)	PLL with xGyro reference
 		bus.write_byte_data(0x69, 0x6B, 0x01)
 
-		time.sleep(0.01)
+		# time.sleep(0.01)
 
 		# MPU-6000 address, 0x68(104)
 		# Read data back from 0x3B(59), 6 bytes
