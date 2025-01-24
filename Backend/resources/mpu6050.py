@@ -26,22 +26,15 @@ ACC_1_SEL = 17
 ACC_2_SEL = 27
 ACC_3_SEL = 22
 
-# RESET GPIO
-# GPIO.cleanup()
-time.sleep(0.1)
 
 # SETUP GPIO
-# GPIO.setmode(GPIO.BCM)
-# DONT ASK
+# These are setup as LEDs bc its easy to handle
 acc_1 = LED(ACC_1_SEL)
 acc_2 = LED(ACC_2_SEL)
 acc_3 = LED(ACC_3_SEL)
 
-# GPIO.setup(ACC_1_SEL, GPIO.OUT)
-# GPIO.setup(ACC_2_SEL, GPIO.OUT)
-# GPIO.setup(ACC_3_SEL, GPIO.OUT)
-
 prev_time = time.time()  # Initialize prev_time with the current time
+
 
 while True:
 	for i in range(3):
@@ -71,73 +64,6 @@ while True:
 			acc_3.on()
 			time.sleep(0.01)
 
-
-
-# import smbus2
-# import time
-# import gpiod #type: ignore
-
-
-
-# # Get I2C bus
-# bus = smbus2.SMBus(2)
-
-# ACC_1_SEL = 17
-# ACC_2_SEL = 27
-# ACC_3_SEL = 22
-
-
-
-# chip = gpiod.Chip('gpiochip0')
-# acc_1 = chip.get_line(ACC_1_SEL)
-# acc_2 = chip.get_line(ACC_2_SEL)
-# acc_3 = chip.get_line(ACC_3_SEL)
-
-
-# acc_1.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
-# acc_2.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
-# acc_3.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
-
-
-# try:
-#    while True:
-#        acc_1.set_value(1)
-#        time.sleep(1)
-#        acc_1.set_value(0)
-#        time.sleep(1)
-# finally:
-#    acc_1.release()
-
-# RESET GPIO
-# GPIO.cleanup()
-# time.sleep(0.1)
-
-# # SETUP GPIO
-# GPIO.setmode(GPIO.BCM)
-
-# GPIO.setup(ACC_1_SEL, GPIO.OUT)
-# GPIO.setup(ACC_2_SEL, GPIO.OUT)
-# GPIO.setup(ACC_3_SEL, GPIO.OUT)
-
-
-# while True:
-# 	for i in range(3):
-
-		# if i == 0:
-		# 	acc_1.set_value(1)
-		# 	acc_2.set_value(0)
-		# 	acc_3.set_value(0)
-		# 	time.sleep(0.01)
-		# elif i == 1:
-		# 	acc_1.set_value(0)
-		# 	acc_2.set_value(1)
-		# 	acc_3.set_value(0)
-		# 	time.sleep(0.01)
-		# elif i == 2:
-		# 	acc_1.set_value(0)
-		# 	acc_2.set_value(0)
-		# 	acc_3.set_value(1)
-		# 	time.sleep(0.01)
 
 
 		# MPU-6000 address, 0x68(104)
@@ -225,7 +151,7 @@ while True:
 		print("Rotation in Z-Axis (dps): %.3f" % zGyro_dps)
 
 
-        # Calculate and print delta time
+		# Calculate and print delta time
 		current_time = time.time()
 		delta_time = current_time - prev_time
 		prev_time = current_time
