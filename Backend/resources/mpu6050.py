@@ -41,6 +41,7 @@ acc_3 = LED(ACC_3_SEL)
 # GPIO.setup(ACC_2_SEL, GPIO.OUT)
 # GPIO.setup(ACC_3_SEL, GPIO.OUT)
 
+prev_time = time.time()  # Initialize prev_time with the current time
 
 while True:
 	for i in range(3):
