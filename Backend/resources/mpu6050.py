@@ -80,16 +80,16 @@ class MPU_6050_x3(I2CDevice):
 	def update(self):
 
 		# This runs 18 times bc this device has 18 params
-		for i in range(18):
-			data = self._get_data_from_thread()
-			print(data)
+		# for i in range(18):
+		# 	data = self._get_data_from_thread()
+		# 	print(data)
 
-			if data is None:
-				self._update_cache(new_data_exists=False)
-				return
-			self._update_cache(new_data_exists=True)
+		# 	if data is None:
+		# 		self._update_cache(new_data_exists=False)
+		# 		return
+		# 	self._update_cache(new_data_exists=True)
 
-			pass
+		pass
 
 	def _data_collection_worker(self):
 		'''
@@ -199,9 +199,14 @@ class MPU_6050_x3(I2CDevice):
 
 				# This is kinda bad code
 				for data_piece in data:
-					param_name = f"{data_piece[0]}{data_piece[1][0]}"
-					self.cached_values[param_name] = data_piece[2]
-					self._log_telemetry(param_name, data_piece, data_piece[1][1])
+					if data_piece[2] is not None:
+						self._update_cache(new_data_exists=True)
+						param_name = f"{data_piece[0]}{data_piece[1][0]}"
+						self.cached_values[param_name] = data_piece[2]
+						self._log_telemetry(param_name, data_piece, data_piece[1][1])
+					else:
+						self._update_cache(new_data_exists=True)
+						
 
 
 
