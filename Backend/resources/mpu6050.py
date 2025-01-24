@@ -89,10 +89,6 @@ class MPU_6050_x3(I2CDevice):
 				return
 			self._update_cache(new_data_exists=True)
 
-			# This is kinda bad code
-			param_name = f"{data[0]}{data[1][0]}"
-			self.cached_values[param_name] = data[2]
-			self._log_telemetry(param_name, data, data[1][1])
 			pass
 
 	def _data_collection_worker(self):
@@ -192,15 +188,22 @@ class MPU_6050_x3(I2CDevice):
 				if dev_id == 2:
 					dev_str = "MPU3"
 
-				# Add the data to the queue
-				if not self.data_queue.full():
-					self.data_queue.put((dev_str, ("xAccl","g"), xAccl_g))
-					self.data_queue.put((dev_str, ("yAccl","g"), yAccl_g))
-					self.data_queue.put((dev_str, ("zAccl","g"), zAccl_g))
 
-					self.data_queue.put((dev_str, ("xGyro","dps"), xGyro_dps))
-					self.data_queue.put((dev_str, ("yGyro","dps"), yGyro_dps))
-					self.data_queue.put((dev_str, ("zGyro","dps"), zGyro_dps))
+				data[0] = (dev_str, ("xAccl","g"), xAccl_g)
+				data[1] = (dev_str, ("yAccl","g"), yAccl_g)
+				data[2] = (dev_str, ("zAccl","g"), zAccl_g)
+
+				data[3] = (dev_str, ("xGyro","dps"), xGyro_dps)
+				data[4] = (dev_str, ("yGyro","dps"), yGyro_dps)
+				data[5] = (dev_str, ("zGyro","dps"), zGyro_dps)
+
+				# This is kinda bad code
+				for data_piece in data:
+					param_name = f"{data_piece[0]}{data_piece[1][0]}"
+					self.cached_values[param_name] = data_piece[2]
+					self._log_telemetry(param_name, data_piece, data_piece[1][1])
+
+
 
 		# If we ever get here, there was a problem.
 		# We should log that the data collection worker stopped working
