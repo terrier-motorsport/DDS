@@ -29,21 +29,32 @@ class MPU_6050_x3(I2CDevice):
 		# Initialize the gpiozero lib with lgpio
 		Device.pin_factory = LGPIOFactory()
 
+		ACC_1_SEL = 17
+		ACC_2_SEL = 27
+		ACC_3_SEL = 22
+
+
+		# SETUP GPIO
+		# These are setup as LEDs bc its easy to handle
+		self.dev_1_sel = LED(ACC_1_SEL)
+		self.dev_2_sel = LED(ACC_2_SEL)
+		self.dev_3_sel = LED(ACC_3_SEL)
+
 		# Iterate through each device
 		for dev_id in range(3):
 
 			if dev_id == 0:
-				dev_1_sel.on()
-				dev_2_sel.off()
-				dev_3_sel.off()
+				self.dev_1_sel.on()
+				self.dev_2_sel.off()
+				self.dev_3_sel.off()
 			elif dev_id == 1:
-				dev_1_sel.off()
-				dev_2_sel.on()
-				dev_3_sel.off()
+				self.dev_1_sel.off()
+				self.dev_2_sel.on()
+				self.dev_3_sel.off()
 			elif dev_id == 2:
-				dev_1_sel.off()
-				dev_2_sel.off()
-				dev_3_sel.on()
+				self.dev_1_sel.off()
+				self.dev_2_sel.off()
+				self.dev_3_sel.on()
 			time.sleep(0.01)
 
 			# Configure each device
@@ -92,17 +103,17 @@ class MPU_6050_x3(I2CDevice):
 			for dev_id in range(3):
 
 				if dev_id == 0:
-					dev_1_sel.on()
-					dev_2_sel.off()
-					dev_3_sel.off()
+					self.dev_1_sel.on()
+					self.dev_2_sel.off()
+					self.dev_3_sel.off()
 				elif dev_id == 1:
-					dev_1_sel.off()
-					dev_2_sel.on()
-					dev_3_sel.off()
+					self.dev_1_sel.off()
+					self.dev_2_sel.on()
+					self.dev_3_sel.off()
 				elif dev_id == 2:
-					dev_1_sel.off()
-					dev_2_sel.off()
-					dev_3_sel.on()
+					self.dev_1_sel.off()
+					self.dev_2_sel.off()
+					self.dev_3_sel.on()
 				time.sleep(0.01)
 
 				# MPU-6000 address, 0x68(104)
@@ -210,6 +221,7 @@ bus = SMBus(2)
 mpu = MPU_6050_x3('MPU', DataLogger('MPUTest'))
 
 mpu.initialize(bus)
+
 while True:
 	mpu.update()
 
