@@ -57,7 +57,7 @@ class MPU_6050_x3(I2CDevice):
 				self.dev_1_sel.off()
 				self.dev_2_sel.off()
 				self.dev_3_sel.on()
-			time.sleep(0.01)
+			time.sleep(0.1)
 
 			# Configure each device
 			# MPU-6050 address, 0x68(104)
@@ -114,7 +114,7 @@ class MPU_6050_x3(I2CDevice):
 					self.dev_1_sel.off()
 					self.dev_2_sel.off()
 					self.dev_3_sel.on()
-				time.sleep(0.01)
+				time.sleep(0.05)
 
 				# MPU-6000 address, 0x68(104)
 				# Read data back from 0x3B(59), 6 bytes
