@@ -78,7 +78,7 @@ class MPU_6050_x3(I2CDevice):
 	def update(self):
 
 		data = self._get_data_from_thread()
-		print(data)
+		# print(data)
 
 		if data is None:
 			self._update_cache(new_data_exists=False)
@@ -224,6 +224,11 @@ mpu.initialize(bus)
 
 while True:
 	mpu.update()
+
+	print(f'mpu param names: {mpu.get_all_param_names()}')
+
+	time.sleep(0.1)
+	
 
 
 '''
