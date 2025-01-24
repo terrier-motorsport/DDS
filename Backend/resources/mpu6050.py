@@ -80,7 +80,7 @@ class MPU_6050_x3(I2CDevice):
 		# This runs 18 times bc this device has 18 params
 		for i in range(18):
 			data = self._get_data_from_thread()
-			# print(data)
+			print(data)
 
 			if data is None:
 				self._update_cache(new_data_exists=False)
