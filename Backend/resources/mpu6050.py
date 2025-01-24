@@ -12,7 +12,7 @@
 
 import smbus2
 import time
-import RPi.GPIO as GPIO #type: ignore
+# import RPi.GPIO as GPIO #type: ignore
 from gpiozero.pins.lgpio import LGPIOFactory
 from gpiozero import Device, LED
 
@@ -27,44 +27,44 @@ ACC_2_SEL = 27
 ACC_3_SEL = 22
 
 # RESET GPIO
-GPIO.cleanup()
+# GPIO.cleanup()
 time.sleep(0.1)
 
 # SETUP GPIO
-GPIO.setmode(GPIO.BCM)
+# GPIO.setmode(GPIO.BCM)
 # DONT ASK
 acc_1 = LED(ACC_1_SEL)
 acc_2 = LED(ACC_2_SEL)
 acc_3 = LED(ACC_3_SEL)
 
-GPIO.setup(ACC_1_SEL, GPIO.OUT)
-GPIO.setup(ACC_2_SEL, GPIO.OUT)
-GPIO.setup(ACC_3_SEL, GPIO.OUT)
+# GPIO.setup(ACC_1_SEL, GPIO.OUT)
+# GPIO.setup(ACC_2_SEL, GPIO.OUT)
+# GPIO.setup(ACC_3_SEL, GPIO.OUT)
 
 
 while True:
 	for i in range(3):
 
 		if i == 0:
-			GPIO.output(ACC_1_SEL, 1)
-			GPIO.output(ACC_2_SEL, 0)
-			GPIO.output(ACC_3_SEL, 0)
+			# GPIO.output(ACC_1_SEL, 1)
+			# GPIO.output(ACC_2_SEL, 0)
+			# GPIO.output(ACC_3_SEL, 0)
 			acc_1.on()
 			acc_2.off()
 			acc_3.off()
 			time.sleep(0.01)
 		elif i == 1:
-			GPIO.output(ACC_1_SEL, 0)
-			GPIO.output(ACC_2_SEL, 1)
-			GPIO.output(ACC_3_SEL, 0)
+			# GPIO.output(ACC_1_SEL, 0)
+			# GPIO.output(ACC_2_SEL, 1)
+			# GPIO.output(ACC_3_SEL, 0)
 			acc_1.off()
 			acc_2.on()
 			acc_3.off()
 			time.sleep(0.01)
 		elif i == 2:
-			GPIO.output(ACC_1_SEL, 0)
-			GPIO.output(ACC_2_SEL, 0)
-			GPIO.output(ACC_3_SEL, 1)
+			# GPIO.output(ACC_1_SEL, 0)
+			# GPIO.output(ACC_2_SEL, 0)
+			# GPIO.output(ACC_3_SEL, 1)
 			acc_1.off()
 			acc_2.off()
 			acc_3.on()
