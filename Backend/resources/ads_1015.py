@@ -8,8 +8,7 @@ from typing import List
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
 from smbus2 import SMBus
 import time
-import threading
-import queue
+
 
 
 
@@ -37,7 +36,6 @@ class ADS_1015(I2CDevice):
 
         # Init class variables
         self.inputs = inputs
-        self.data_queue = queue.Queue()  # Queue to hold sensor data
         self.addr = i2c_addr
 
 

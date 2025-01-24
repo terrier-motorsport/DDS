@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 import time
 import threading
 from enum import Enum
+import threading
+import queue
 
 class Device(ABC):
     '''
@@ -47,6 +49,8 @@ class Device(ABC):
         self.name = name
         self.log = logger
         self.__status = self.DeviceStatus.NOT_INITIALIZED
+
+        self.data_queue = queue.Queue()  # Queue to hold sensor data
 
         # Init cache
         self.cached_values = {}
