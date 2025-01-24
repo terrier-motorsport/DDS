@@ -215,8 +215,8 @@ class MPU_6050_x3(I2CDevice):
 
 
 
-
 from Backend.data_logger import DataLogger
+import time  # Import the time module for delta time calculation
 
 # Get I2C bus
 bus = SMBus(2)
@@ -224,16 +224,26 @@ mpu = MPU_6050_x3('MPU', DataLogger('MPUTest'))
 
 mpu.initialize(bus)
 
+# Initialize prev_time to calculate delta time
+prev_time = time.time()
+
 while True:
-	mpu.update()
+    # Calculate delta time
+    current_time = time.time()
+    delta_time = current_time - prev_time
+    prev_time = current_time  # Update prev_time for the next iteration
 
-	print(f'mpu param names: {mpu.get_all_param_names()}')
+    # Update MPU data
+    mpu.update()
 
-	for param_name in mpu.get_all_param_names():
-		print(f"{param_name}: {mpu.get_data(param_name)}")
+    # Display MPU parameter names and their data
+    print(f"Delta Time (s): {delta_time:.6f}")  # Print delta time
+    print(f"mpu param names: {mpu.get_all_param_names()}")
 
-	time.sleep(0.1)
-	
+    for param_name in mpu.get_all_param_names():
+        print(f"{param_name}: {mpu.get_data(param_name)}")
+
+    # time.sleep(0.1)  # Optional: Add a delay to reduce CPU usage
 
 
 '''
