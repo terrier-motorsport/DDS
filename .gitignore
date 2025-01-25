@@ -5,3 +5,4 @@
 *.pyc
 /.vscode
 /.venv
+/venv

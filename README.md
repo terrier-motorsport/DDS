@@ -14,7 +14,7 @@ The Dash Display System (DDS) is a monitoring and display solution developed by 
 - **Backend**: Manages all device communications and data processing. Key files include:
   - `DDS_IO.py`: Handles device management and data accessibility.
 - **Frontend**: Provides the user interface for data visualization. Key files include:
-  - `UI/DDS_draft.py`: Contains the main UI components and layout.
+  - `UI/DDS_UI.py`: Contains the main UI components and layout.
 
 
 ## Credits

@@ -2,13 +2,16 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 import random
-from Backend.interface import Interface, CANInterface, InterfaceProtocol
+from Backend.interface import Interface, CANInterface, I2CInterface, InterfaceProtocol
+from Backend.device import Device
 from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
-from Backend.resources.adxl343 import ADXL343
+from Backend.resources.dtihv500 import DTI_HV_500
+from Backend.resources.orionbms2 import Orion_BMS_2
 from typing import Union, Dict, List
+import Backend.config.device_config
 import smbus2
 import can
 
@@ -22,7 +25,7 @@ EX. The UI calls functions from here which pulls data from sensor objects.
 class DDS_IO:
 
     # ===== Debugging Variables =====
-    CAN_ENABLED = True
+    CAN_ENABLED = False
     I2C_ENABLED = True
 
 
@@ -32,8 +35,7 @@ class DDS_IO:
 
 
     # ===== Devices that the DDS Talks to =====
-    devices: Dict[str, Interface]
-
+    interfaces: Dict[str, Interface]
 
 
     # ===== Class Variables =====
@@ -54,318 +56,286 @@ class DDS_IO:
         self.log = DataLogger('DDS_Log')
         self.debug = debug
         self.demo_mode = demo_mode
-        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json')
+        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
+        self.interfaces = {}
 
         self.__log('Starting Dash Display System Backend...')
 
-        self.__initialize_devices()
+        self.__initialize_io()
 
 
     def update(self):
-        '''Updates all sensors. Should be called as often as possible.'''
+        '''Updates all Interfaces. Should be called as often as possible.'''
 
         # Update all enabled devices
-        for device_name,device_object in self.devices.items():
+        for interface_name, interface_object in self.interfaces.items():
 
-            status = device_object.status
+            status = interface_object.status
 
-            if status is Interface.Status.ACTIVE:
+            if status is Interface.InterfaceStatus.ACTIVE:
                 try:
-                    device_object.update()
-                    self.__monitor_device_parameters(device_object)
+                    interface_object.update()
                 except Exception as e:
-                    self.__log(f'Failed to update {device_name}. {e}')
-                    device_object.status = Interface.Status.ERROR
+                    self.__log(f'Failed to update {interface_name}. {e}')
+                    interface_object.status = Interface.InterfaceStatus.ERROR
             
-            elif status is Interface.Status.ERROR:
-                try:
-                    device_object.initialize()
-                except Exception as e:
-                    return
+            elif status is Interface.InterfaceStatus.ERROR:
+                # TEMPORARILY DISABLED FOR TESTING PURPOSES.
+                # try:
+                #     interface_object.initialize()
+                # except Exception as e:
+                #     return
+                pass
 
-            elif device_object.status is Interface.Status.DISABLED:
+            elif interface_object.status is Interface.InterfaceStatus.DISABLED:
                 return
 
 
-    def get_device_data(self, device_key: str, parameter: str) -> Union[str, float, int, None]:
-        '''Gets a single parameter from a specified device.'''
+    def get_device_data(self, device_key: str, param_key: str, caller: str="DDS_IO") -> Union[str, float, int, None]:
+        '''
+        Gets a single parameter from a specified device.
 
-        device = self.__get_device(device_key)
-
-        # If the device is None, we can return early
+        Parameters:
+            device_key `(str)`: The key of the device with the requested parameter
+            param_key `(str)`: The key of the parameter that you are requesting
+            caller `(str)`: The name of the entity calling this function. Used for logging purposes.
+        '''
+        
+        # 1) Get the device at the specified key by checking each interface for it.
+        device: Device = None
+        for name, interface in self.interfaces.items():
+            if interface.devices.get(device_key) is not None:
+                device = interface.devices.get(device_key)
+                break
+            # If the device is None, we can return early
         if device is None:
-            self.__log(f'Device {device_key} not found. (Data Req: {parameter})', DataLogger.LogSeverity.WARNING)
-
+            # Return a random value if we are in demo mode.
             if self.demo_mode:
                 return random.random() * 100
-            return
+            # Log the mistake and return.
+            self.__log(f'Device {device_key} not found. (Data Req: {param_key})', DataLogger.LogSeverity.DEBUG, caller)
+            return "UKNDEV"
         
-        # If the device is not active, we can return early
-        if device.status is not Interface.Status.ACTIVE:
 
-            # Log the error
-            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {parameter}', DataLogger.LogSeverity.WARNING)
+        # 2) If the device is not active, we can return early
+        if device.status is not Device.DeviceStatus.ACTIVE:
 
-            # Return a value that represents the current stat of the device
-            if device.status is Interface.Status.DISABLED:
-                return 'DIS'
-            elif device.status is Interface.Status.ERROR:
-                return 'ERR'
+            # Log the warning
+            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.WARNING)
+
+            # Return a value that represents the current state of the device
+            if device.status is Device.DeviceStatus.DISABLED:
+                return 'DISBLD'
+            elif device.status is Device.DeviceStatus.ERROR:
+                return 'ERROR'
+            elif device.status is Device.DeviceStatus.NOT_INITIALIZED:
+                return 'NO_INIT'
+              
+        # 3) Fetch data from device
+        data = device.get_data(param_key)
+
         
-        # Fetch data from device
-        data = device.get_data(parameter)
-
-        # If the data is None, we can return early
+        # 4) If the data is None, we can return early
         if data is None:
-            self.__log(f'Data {device_key} not found for device {device_key}', DataLogger.LogSeverity.WARNING)
+            return "NO_DATA"
 
-            if self.demo_mode:
-                return random.random()
-            return None
         
-        # Return the data
+        # 5) Return the data
         return data
     
 
     def get_warnings(self) -> List[str]:
         '''Returns a list of active warnings'''
-        warnings = self.parameter_monitor.get_warnings()
+        warnings = self.parameter_monitor.get_warnings_as_str()
+        print(f'{warnings}, {self.demo_mode}')
 
         if not self.demo_mode:
             return warnings
         else:
             warnings = [
-                ParameterWarning('RPM', 9324, 0, 9000).getMsg(),
-                ParameterWarning('Mike', 1, 0, 0.5).getMsg(),
-                ParameterWarning('Anna', 2398, 100, 2397).getMsg(),
+                ParameterWarning('RPM', 9324, 'RPM is out of range').getMsg(),
+                ParameterWarning('Mike', 1, 'THIS IS A SUPER DUPER LOOPER LONG MESSAGE').getMsg(),
+                ParameterWarning('Anna', 2398, 'Anna is out of range').getMsg(),
             ]
             return warnings
 
 
-    def __get_device(self, deviceKey : str) -> Interface:
-        ''' Gets a device at a specified key.
-        This may return a None value.'''
+    def get_device_names(self) -> List[str]:
+        '''
+        Returns a list of devices.
+        If there are no devices, returns a single string with an error message.
+        '''
 
-        return self.devices.get(deviceKey)
+        # if len(self.devices) == 0:
+        #     return ['There are no available devices']
+        device_names = []
+        for interface_name, interface in self.interfaces.items():
+            for device_name, device in interface.devices.items():
+                device_names.append(device_name)
+        return device_names
     
 
-    def __initialize_devices(self):
+    def get_device_parameters(self, device_name: str) -> List[str]:
+        """
+        Returns a list of parameters for a specified device.
+
+        Args:
+            device_name (str): The name of the device for which parameters are requested.
+
+        Returns:
+            List[str]: A list of parameter names for the specified device. 
+                    If the device is not found, an empty list is returned.
+        """
+        for interface_name, interface in self.interfaces.items():
+            if device_name in interface.devices:
+                device = interface.devices[device_name]
+                return device.get_all_param_names()
+        
+        # If no matching device is found, return an empty list
+        self.__log(f"Device '{device_name}' not found when fetching parameters.", DataLogger.LogSeverity.DEBUG)
+        return []
+    
+
+    def __initialize_io(self):
 
         '''Initializes all sensors & interfaces for the DDS'''
-
         self.__log('Initializing IO Devices')
-
-        # Create empty devices list
-        self.devices = {}
 
 
         # ===== Init CAN =====
         if self.CAN_ENABLED:
-            self.__initialize_CAN()
-
+            self.__log(f"Starting CANInterface on {self.CAN_BUS}")
+            canInterface = CANInterface(
+                name='CANInterface',
+                can_channel=self.CAN_BUS,
+                devices=[
+                    Orion_BMS_2('Backend/candatabase/Orion_BMS2_CANBUSv7.dbc', self.log),
+                    DTI_HV_500('Backend/candatabase/DTI_HV_500_CANBUSv3.dbc', self.log)
+                ],
+                logger=self.log,
+                parameter_monitor=self.parameter_monitor
+            )
+            self.__safe_initialize_interface(canInterface)
+            self.__log("Finished initializing all CAN devices!")
         else:
-            # CANBus Disabled
+            # CAN Disabled
             self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
 
         # ===== Init i2c ===== 
         if self.I2C_ENABLED:
-            self.__initialize_i2c()
-
+            self.__log(f'Starting I2CInterface bus on {self.I2C_BUS}')
+            i2cInterface = I2CInterface(
+                'I2CInterface',
+                i2c_channel=self.I2C_BUS,
+                devices=[
+                    # See the referenced package for details about devices.
+                    Backend.config.device_config.define_ADC1(self.log),
+                    Backend.config.device_config.define_ADC2(self.log),
+                    # TODO: Implement
+                    # Backend.config.device_config.define_chassis_MPU_6050(self.log),
+                    # Backend.config.device_config.define_top_MPU_6050(self.log),
+                    # Backend.config.device_config.define_wheel_MPU_6050(self.log),
+                ],
+                logger=self.log,
+                parameter_monitor=self.parameter_monitor
+            )
+            self.__safe_initialize_interface(i2cInterface)
+            self.__log('Finished initializing all i2c devices!')
         else:
             # i2c Disabled
             self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
-        # Update the IO one time to wake all interface (like ADS 1015)
+        # ===== FIN INIT =====
+        # Update the IO one time to wake all interface
         self.update()
+
+        # Add dummy devices if we are in demo mode.
+        if self.demo_mode:
+            # THIS IS ALL GARBO. NEED TO FIX
+            pass
+            # self.interfaces = {
+            #     "Mike": Interface('Mike', InterfaceProtocol.I2C, self.log, self.parameter_monitor),
+            #     "Anna": Interface('Anna', InterfaceProtocol.CAN, self.log)
+            # }
+            # for device_name, device in self.interfaces.items():
+            #     if device_name == "Mike":
+            #         device.cached_values["sample_data One (1)"] = 203949.1324
+            #         device.cached_values["Two"] = "i like chocolate chip cookies"
+            #         device.cached_values["thre three threee"] = "i HATE chocolate chip cookies which dont have chocolate chips"
+            #     if device_name == "Anna":
+            #         device.cached_values["other signal"] = "yum i love chocolate chip cookies"
+            #     device.change_status(Interface.InterfaceStatus.ACTIVE)
+
 
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')
         
-        for device_name, device_object in self.devices.items():
-            self.__log(f'{device_name}: {device_object.status.name}')
+        for interface_name, interface_object in self.interfaces.items():
+            self.__log(f'{interface_name}: {interface_object.status.name}')
+            for device_name, device_object in interface_object.devices.items():
+                self.__log(f'   {device_name}: {device_object.status.name}')
 
 
-    def __initialize_i2c(self):
-
-        '''Initializes the i2c Bus & all the devices on it.'''
-
-        self.__log(f'Starting i2c bus on {self.I2C_BUS}')
-
-        # ===== Initalize i2c Bus ===== 
-        try:
-            self.i2c_bus = smbus2.SMBus(bus=self.I2C_BUS)
-        except Exception as e:
-            self.__failed_to_init_protocol(InterfaceProtocol.I2C, e)
-            return
-
-
-        # ===== Init cooling loop inputs & ADS ===== 
-        M3200_value_mapper = ValueMapper(
-            voltage_range=[0.5, 4.5], 
-            output_range=[0, 17])
-
-        # Define constants for NTC_M12 value mapping
-        resistance_values = [
-            45313, 26114, 15462, 9397, 5896, 3792, 2500,
-            1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89
-        ]
-        temperature_values = [
-            -40, -30, -20, -10, 0, 10, 20, 30, 40, 50,
-            60, 70, 80, 90, 100, 110, 120, 130
-        ]
-        # Refer to the voltage divider circuit for the NTC_M12s
-        supply_voltage = 5
-        fixed_resistor = 3200
-        NTC_M12_value_mapper = ExponentialValueMapper(
-            resistance_values=resistance_values,
-            output_values=temperature_values,
-            supply_voltage=supply_voltage,
-            fixed_resistor=fixed_resistor
-        )
-
-        coolingLoopDeviceName = 'coolingLoopSensors'
-
-        coolingLoopDevice = ADS_1015(coolingLoopDeviceName, logger=self.log, i2c_bus=self.i2c_bus, inputs = [
-            Analog_In('hotPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),           #ADC1(A0)
-            Analog_In('hotTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1),       #ADC1(A1)
-            Analog_In('coldPressure', 'bar', mapper=M3200_value_mapper, tolerance=0.1),          #ADC1(A2)
-            Analog_In('coldTemperature', '°C', mapper=NTC_M12_value_mapper, tolerance=0.1)       #ADC1(A3)
-        ])
-
-        self.__safe_initialize_device(coolingLoopDevice)
-
-        # ===== Init accelerometer ===== 
-
-        accelerometerDeviceName = 'frontAccelerometer'
-        accelerometerI2CAddr = 0x1D
-
-        accelerometer = ADXL343(accelerometerDeviceName, self.log, self.i2c_bus, accelerometerI2CAddr)
-        self.__safe_initialize_device(accelerometer)
-
-        # ===== FINISHED ===== 
-        self.__log('Finished initializing all i2c devices!')
-    
-
-    def __initialize_CAN(self):
+    def __safe_initialize_interface(self, interface: Interface) -> bool:
         """
-        Initializes the CANBus interface and sets up connected devices.
-        """
-
-        self.__log(f"Starting CAN bus on {self.CAN_BUS}")
-
-        # Step 1: Attempt to initialize the CAN bus
-        
-        try:
-            self.can_bus = can.interface.Bus(self.CAN_BUS, interface="socketcan")
-        except OSError as e:
-            # Log failure and disable the CAN interface if network setup fails
-            self.__failed_to_init_protocol(InterfaceProtocol.CAN, e)
-            return
-
-        # Step 3: Set up the CAN interface with the database
-        canDevice = CANInterface(
-            name="MC & AMS", 
-            can_bus=self.can_bus, 
-            database_path="Backend/candatabase/CANDatabaseDTI500v2.dbc", 
-            logger=self.log
-        )
-        # Add the AMS-specific DBC file to the CAN interface
-        canDevice.add_database("Backend/candatabase/Orion_CANBUSv4.dbc")
-
-        # Step 4: Initialize the CAN device safely
-        self.__safe_initialize_device(canDevice)
-
-        # Step 5: Log completion of CAN initialization
-        self.__log("Finished initializing all CAN devices!")
-
-    
-    def __safe_initialize_device(self, device: Interface) -> bool:
-        """
-        Safely initialize an instance of a Interface child class, and add it to the devices dict.
+        This method takes care of initializing the given interface, with error handling.
         
         Parameters:
-            cls (Type[Interface]): The child class to instantiate.
-            *args: Positional arguments for the child class constructor.
-            **kwargs: Keyword arguments for the child class constructor.
+            interface (Interface): The child class to instantiate.
         
         Returns:
             bool: The result of the device being successfully initialized
         """
 
-        # Add the device to the devices dict:
-        self.devices[device.name] = device
+        # Add the interface to the interfaces dict:
+        self.interfaces[interface.name] = interface
 
         try:
-            # Attempt to initalize the device
-            device.initialize()
+            # Attempt to initalize the interface
+            interface.initialize()
 
-            # Check if the device can read data
-            device.update()
+            # Check if the interface can read data
+            interface.update()
 
         except Exception as e:
-            self.__failed_to_init_device(device=device, exception=e)
+            self.__failed_to_init_interface(interface=interface, e=e)
             return False
         return True      
 
 
-    def __failed_to_init_device(self, device: Interface, exception: Exception):
+    def __failed_to_init_interface(self, interface: Interface, e: Exception):
         '''
-        This logs an error when a device (ex. MC) is unable to be intialized.
-        This is usually caused by hardware being configured incorrectly.
-        The device is set to the ERROR state and the DDS_IO will continously attempt to inialize the device.
-        '''
-
-        # Log the error
-        self.__log(f'{device.get_protocol().name} {device.name} Initialization Error: {exception}', DataLogger.LogSeverity.CRITICAL)
-
-        if isinstance(exception, OSError):
-            if exception.errno == 121:
-                self.__log(f'Make sure {device.name} is properly wired and shows up on i2cdetect!')
-
-        # Mark the device as having an error
-        self.devices[device.name].status = Interface.Status.ERROR
-
-
-    def __failed_to_init_protocol(self, protocol: InterfaceProtocol, exception: Exception):
-        '''
-        This logs an error when a protocol (ex. i2c) is unable to be intialized.
-        This is usually caused by hardware being configured incorrectly, or running the program on an OS which doesn't support the protocol.
-        If a protocol can't start, it is impossible to restart the devices on the protocol.
-        '''
-
-        # Log the error
-        self.__log(f'Was unable to intialize {protocol.name}: {exception}. Interfaces on this protocol will be disabled.', DataLogger.LogSeverity.CRITICAL)
-
-        # Disable protocol
-        if protocol is InterfaceProtocol.I2C:
-            self.I2C_ENABLED = False
-        elif protocol is InterfaceProtocol.CAN:
-            self.CAN_ENABLED = False
-            self.__log('Make sure you are running the DDS w/ sudo to init CAN Correctly.')
-
-    
-    def __monitor_device_parameters(self, device: Interface):
-        """
-        Monitors the parameters of a given device and checks if their values are within the defined limits.
+        This method takes care of handling the failed initialization
+        The interface is set to the ERROR state and the DDS_IO will 
+        continously attempt to inialize the interface.
 
         Parameters:
-            device (Interface): The device whose parameters are to be monitored.
+            interface (Interface): The interface that failed being initialized.
+            e (Exception): The exception raised during initialization.
 
-        This function retrieves all parameter names from the device's cached values and checks each parameter's value
-        against the defined limits using the ParameterMonitor. If a parameter value is out of range, a warning is raised.
-        """
-        param_names = device.get_all_param_names()
 
-        for param_name in param_names:
-            self.parameter_monitor.check_value(param_name, self.get_device_data(device.name, param_name))
+        '''
+
+        # Log the error
+        self.__log(f'{interface.interfaceProtocol.name} {interface.name} Initialization Error: {e}', 
+                   DataLogger.LogSeverity.CRITICAL)
+
+        if isinstance(e, OSError):
+            if e.errno == 121:
+                self.__log(f'Make sure {interface.name} is properly wired and shows up on i2cdetect!')
+
+        # Mark the device as having an error
+        self.interfaces[interface.name].status = Interface.InterfaceStatus.ERROR
 
     
-    def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO):
+    def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO, name="DDS_IO"):
         self.log.writeLog(
-            loggerName='DDS_IO',
+            loggerName=name,
             msg=msg,
             severity=severity)
+
+
 
 # Example / Testing Code
 
@@ -384,8 +354,6 @@ if __name__ == '__main__':
     while True:
         io.update()
 
-
-
         # Measure the current time and calculate the delta time for this loop iteration
         current_time = time.time()
         delta_time = current_time - last_loop_time
@@ -397,21 +365,30 @@ if __name__ == '__main__':
             # Update the last print time
             last_print_time = current_time
 
+            # Print every parameter
+            for interface_name, interface_obj in io.interfaces.items():
+                for device_name, device_obj in interface_obj.devices.items():
+                    param_names = device_obj.get_all_param_names()
+                    for param in param_names:
+                        data = io.get_device_data(device_name, param, "TestCode")
+                        if data != "NO_DATA":
+                            print(f'{device_name}.{param}: {data}')
+
             # Get and print the data
-            hotpressure = io.get_device_data('coolingLoopSensors', 'hotPressure')
-            print(f"hot pressure: {hotpressure}")
+            # hotpressure = io.get_device_data('coolingLoopSensors1', 'hotPressure')
+            # print(f"hot pressure: {hotpressure}")
 
-            coldpressure = io.get_device_data('coolingLoopSensors', 'coldPressure')
-            print(f"cold pressure: {coldpressure}")
+            # coldpressure = io.get_device_data('coolingLoopSensors1', 'coldPressure')
+            # print(f"cold pressure: {coldpressure}")
 
-            hottemp = io.get_device_data('coolingLoopSensors', 'hotTemperature')
-            print(f"hot temp: {hottemp}")
+            # hottemp = io.get_device_data('coolingLoopSensors1', 'hotTemperature')
+            # print(f"hot temp: {hottemp}")
 
-            coldtemp = io.get_device_data('coolingLoopSensors', 'coldTemperature')
-            print(f"cold temp: {coldtemp}")
+            # coldtemp = io.get_device_data('coolingLoopSensors1', 'coldTemperature')
+            # print(f"cold temp: {coldtemp}")
 
-            for warning in io.get_warnings():
-                print(f'{warning}')
+            # for warning in io.get_warnings():
+            #     print(f'{warning}')
 
             # Calculate and print the average delta time
             if delta_times:
