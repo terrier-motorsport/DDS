@@ -8,7 +8,6 @@ from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
-from Backend.resources.adxl343 import ADXL343
 from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.orionbms2 import Orion_BMS_2
 from typing import Union, Dict, List
