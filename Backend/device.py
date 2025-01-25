@@ -39,7 +39,7 @@ class Device(ABC):
         self.log = logger
         self.cached_values = {}
         self.lock = threading.Lock()
-        self.status = self.DeviceStatus.NOT_INITIALIZED
+        self.__status = self.DeviceStatus.NOT_INITIALIZED
         self.last_cache_update = time.time()
         self.thread = None  # Worker thread for data collection
         self.CACHE_TIMEOUT_THRESHOLD = 2  # Cache timeout in seconds
