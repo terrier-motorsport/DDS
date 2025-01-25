@@ -538,63 +538,76 @@ class Center(FloatLayout):
         super().__init__(**kwargs)
 
         self.io = io
-
-        def get_speed():
-            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-            if isinstance(erpm, str):
-                # If it's a string (e.g., error message), return it directly
-                return erpm
-            elif erpm is None:
-                # If no data is available, return a fallback value
-                return -1
-            else:
-                try:
-                    # Convert to float and calculate speed
-                    return float(erpm) * 5
-                except (ValueError, TypeError):
-                    # Handle invalid data gracefully
-                    return -1
-        
-        def get_rpm():
-            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-            if isinstance(erpm, str):
-                # If it's a string (e.g., error message), return it directly
-                return erpm
-            elif erpm is None:
-                # If no data is available, return a fallback value
-                return -1
-            else:
-                try:
-                    # Convert to float and calculate RPM
-                    return float(erpm) * 10
-                except (ValueError, TypeError):
-                    # Handle invalid data gracefully
-                    return -1
+        self.speed = -1
+        self.rpm = -1
 
         # Use FloatLayout for layout behavior
         self.center_block = FloatLayout(size_hint=(0.9, 1))
         self.center_block.pos_hint = {"x": 0.0977, "y": 0}
         self.add_widget(self.center_block)
-
+    
         # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{get_speed()} MPH",
+            text=f"{self.get_speed()} MPH",
             font_size='100sp',
             pos_hint={'center_x': 0.45, 'center_y': 0.60}
         )
         self.center_block.add_widget(self.speed_label)
-
-
-         # Create a label to display the rpm value
+    
+    
+        # Create a label to display the rpm value
         self.rpm_label = Label(
-            text=f"{get_rpm()} RPM",
+            text=f"{self.get_rpm()} RPM",
             font_size='50sp',
             pos_hint={'center_x': 0.45, 'center_y': 0.40}
         )
         self.center_block.add_widget(self.rpm_label)
+    
+            # Schedule updates every second
+            Clock.schedule_interval(self.update_value, 1)
+
+    def get_speed():
+        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+        if isinstance(erpm, str):
+            # If it's a string (e.g., error message), return it directly
+            return erpm
+        elif erpm is None:
+            # If no data is available, return a fallback value
+            return -1
+        else:
+            try:
+                # Convert to float and calculate speed
+                return float(erpm) * 5
+            except (ValueError, TypeError):
+                # Handle invalid data gracefully
+                return -1
+        
+    def get_rpm():
+        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+        if isinstance(erpm, str):
+            # If it's a string (e.g., error message), return it directly
+            return erpm
+        elif erpm is None:
+            # If no data is available, return a fallback value
+            return -1
+        else:
+            try:
+                # Convert to float and calculate RPM
+                return float(erpm) * 10
+            except (ValueError, TypeError):
+                # Handle invalid data gracefully
+                return -1
+
+    def update_value(self,dt):
+        self.speed = self.get_speed()
+        self.rpm = self.get_rpm()
+        self.speed_label.text = f"Speed: {self.speed:.2f} mph" if self.speed != -1 else "Speed: -- mph"
+        self.rpm_label.text = f"RPM: {self.rpm:.2f}" if self.rpm != -1 else "RPM: --"
+
+        print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
 
 
-
+        
 
 
 
