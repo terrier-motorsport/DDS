@@ -215,14 +215,14 @@ class Device(ABC):
                 self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
 
 
-    def _check_cache_timeout(self):
-        '''
-        Clears the cache if the timeout threshold is exceeded.
-        '''
-        with self.lock:
-            if time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-                self.cached_values = {key: None for key in self.cached_values}
-                self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
+    # def _check_cache_timeout(self):
+    #     '''
+    #     Clears the cache if the timeout threshold is exceeded.
+    #     '''
+    #     with self.lock:
+    #         if time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+    #             self.cached_values = {key: None for key in self.cached_values}
+    #             self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
 
     # def __clear_cache(self):
     #     '''
