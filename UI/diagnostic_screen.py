@@ -9,6 +9,7 @@ from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.label import Label
 from kivy.core.window import Window
+from kivy.clock import Clock
 
 
 # Constants for default text and layout configurations
@@ -239,6 +240,34 @@ class DiagnosticScreen(FloatLayout):
 
         self.option_dropdown.bind_to_dropdown_selection(update_value)
 
+
+    def add_value_label(self):
+        """Add a label to display diagnostic values."""
+        self.value_label = Label(text=NO_DATA_TEXT, size_hint=(1, None), height=BUTTON_HEIGHT)
+        self.grid_layout.add_widget(self.value_label)
+
+        # Function to update the value label
+        def update_value_label(dt=None):
+            selected_device = self.get_selected_device()
+            selected_parameter = self.get_selected_parameter()
+            if selected_device and selected_parameter:
+                parameter_value = (
+                    self.io.get_device_data(selected_device, selected_parameter, "DiagnosticsScreen")
+                    or "No data"
+                )
+                self.value_label.text = str(parameter_value)
+            else:
+                self.value_label.text = NO_DATA_TEXT
+
+        # Bind the option dropdown to update the value immediately upon selection
+        def on_parameter_selected(instance, selected_value):
+            print(f'UPDATING VALUE: {instance}, {selected_value}')
+            update_value_label()
+
+        self.option_dropdown.bind_to_dropdown_selection(on_parameter_selected)
+
+        # Schedule continuous updates to the value label
+        Clock.schedule_interval(update_value_label, 0.01)  # Update every second
 
     def set_value_label_text(self, text: str):
         print(f'SETTING VALUE TEXT: {text}')
