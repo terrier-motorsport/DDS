@@ -540,18 +540,36 @@ class Center(FloatLayout):
         self.io = io
 
         def get_speed():
-            erpm = self.io.get_device_data('canInterface','ERPM',"CenterWidget")
-            if erpm is not None:
-                return erpm*5
-            else:
+            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+            if isinstance(erpm, str):
+                # If it's a string (e.g., error message), return it directly
+                return erpm
+            elif erpm is None:
+                # If no data is available, return a fallback value
                 return -1
+            else:
+                try:
+                    # Convert to float and calculate speed
+                    return float(erpm) * 5
+                except (ValueError, TypeError):
+                    # Handle invalid data gracefully
+                    return -1
         
         def get_rpm():
-            erpm = self.io.get_device_data('canInterface','ERPM',"CenterWidget")
-            if erpm is not None:
-                return erpm*10
-            else:
+            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+            if isinstance(erpm, str):
+                # If it's a string (e.g., error message), return it directly
+                return erpm
+            elif erpm is None:
+                # If no data is available, return a fallback value
                 return -1
+            else:
+                try:
+                    # Convert to float and calculate RPM
+                    return float(erpm) * 10
+                except (ValueError, TypeError):
+                    # Handle invalid data gracefully
+                    return -1
 
         # Use FloatLayout for layout behavior
         self.center_block = FloatLayout(size_hint=(0.9, 1))
