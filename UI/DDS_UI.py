@@ -117,7 +117,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
         self.outline_width = 4
 
         # Update color as data is read 
-        self.update_color()
+        # self.update_color()
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
@@ -147,7 +147,9 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
 
         # If value is valid, display it
         try:
-            self.text = f"{float(self.value):.2f}°F"
+            self.value = float(self.value)
+            self.text = f"{self.value:.2f}°F"
+            self.update_color()
         except (ValueError, TypeError):
             self.text = "N/A"
             self.color = (1, 0, 0, 1)  # Red for invalid values
@@ -185,7 +187,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
         self.outline_width = 4
 
         # Update color as data is red 
-        self.update_color()
+        # self.update_color()
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
@@ -215,7 +217,9 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
 
         # If value is valid, display it
         try:
-            self.text = f"{float(self.value):.2f} Amps"
+            self.value = float(self.value)
+            self.text = f"{self.value:.2f} Amps"
+            self.update_color()
         except (ValueError, TypeError):
             self.text = "N/A"
             self.color = (1, 0, 0, 1)  # Red for invalid values
