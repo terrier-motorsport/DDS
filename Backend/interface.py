@@ -187,6 +187,7 @@ class Interface(ABC):
             elif device.status is Device.DeviceStatus.ERROR:
                 # TODO: IMPLEMENT
                 # device.initialize()
+                pass
              
 
     def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:
