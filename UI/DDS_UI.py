@@ -231,29 +231,49 @@ class Battery (FloatLayout):
         corner_radius = 20
 
         # Example value source function for demonstration
-        def get_pack_state_of_charge():
+        def get_pack_state_of_charge() -> str:
             soc = self.io.get_device_data('canInterface', 'Pack_SOC', "BatteryWidget")
             print(soc)
-            try:
-                return float(soc) if soc is not None else -1
-            except ValueError:
-                return -1
+            if soc is str:
+                # This will happen if there is an error.
+                return soc
+            elif soc is None:
+                return ""
+            else:
+                try:
+                    return float(soc) if soc is not None else -1
+                except ValueError:
+                    return -1
         
         # Example value source function for demonstration
         def get_cell_high_temperature():
-            highTemp = self.io.get_device_data('canInterface','High_Temperature',"BatteryWidget")  
-            if highTemp is not None:
+            highTemp = self.io.get_device_data('canInterface', 'High_Temperature', "BatteryWidget")
+            print(highTemp)  # Debugging print
+            if isinstance(highTemp, str):
+                # If an error string is returned, use it directly
                 return highTemp
+            elif highTemp is None:
+                return ""
             else:
-                return -1
-        
+                try:
+                    return float(highTemp)
+                except ValueError:
+                    return -1
+
         # Example value source function for demonstration
         def get_pack_current():
-            current = self.io.get_device_data('canInterface','Pack_Current',"BatteryWidget")
-            if current is not None:
+            current = self.io.get_device_data('canInterface', 'Pack_Current', "BatteryWidget")
+            print(current)  # Debugging print
+            if isinstance(current, str):
+                # If an error string is returned, use it directly
                 return current
+            elif current is None:
+                return ""
             else:
-                return -1
+                try:
+                    return float(current)
+                except ValueError:
+                    return -1
 
         
         # Creates a float layout within the box
@@ -286,7 +306,7 @@ class Battery (FloatLayout):
         # Percentage label
         self.battery_label = OutlineColorChangingLabel_Battery(
             value_source=get_pack_state_of_charge,
-            text=f"{get_pack_state_of_charge():.2f}%",
+            text=f"{get_pack_state_of_charge()}",
             font_size='40sp',
             size_hint=(0.8, 0.1),
             pos_hint={"center_x": 0.5, "top": 0.9}
