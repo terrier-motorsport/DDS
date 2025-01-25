@@ -167,12 +167,12 @@ class ADS_1015(I2CDevice):
 # Example usage
 from Backend.resources.analog_in import ValueMapper
 if __name__ == '__main__':
-
     testValueMapper = ValueMapper(
         voltage_range=[0.5, 4.5], 
-        output_range=[0, 17])
+        output_range=[0, 17]
+    )
 
-    ads = ADS_1015('ADS', DataLogger('ADSTest'),inputs=[
+    ads = ADS_1015('ADS', DataLogger('ADSTest'), inputs=[
         Analog_In('Testinput1', 'Units', testValueMapper),
         Analog_In('Testinput2', 'Units', testValueMapper),
         Analog_In('Testinput3', 'Units', testValueMapper),
@@ -184,13 +184,20 @@ if __name__ == '__main__':
 
     print("Starting ADS1015 data collection... Press Ctrl+C to exit.")
 
+    prev_time = time.time()  # Initialize the previous time for delta time tracking
+
     try:
         while True:
+            current_time = time.time()  # Capture the current time
+            delta_time = current_time - prev_time  # Calculate delta time
+            prev_time = current_time  # Update previous time
+
             # Update the ADS object (fetch data from the device and update cache)
             ads.update()
 
             # Print the data for all parameters (voltages for each input)
             param_names = ads.get_all_param_names()
+            print(f"Delta Time: {delta_time:.6f} seconds")
             for param in param_names:
                 print(f"{param}: {ads.get_data(param)}")
 
