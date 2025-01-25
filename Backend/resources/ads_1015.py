@@ -165,5 +165,36 @@ class ADS_1015(I2CDevice):
         return max(min_value, min(value, max_value))
 
 # Example usage
+from Backend.resources.analog_in import ValueMapper
 if __name__ == '__main__':
-    pass
+
+    testValueMapper = ValueMapper(
+        voltage_range=[0.5, 4.5], 
+        output_range=[0, 17])
+
+    ads = ADS_1015('ADS', DataLogger('ADSTest'),inputs=[
+        Analog_In('Testinput1', 'Units', testValueMapper),
+        Analog_In('Testinput2', 'Units', testValueMapper),
+        Analog_In('Testinput3', 'Units', testValueMapper),
+        Analog_In('Testinput4', 'Units', testValueMapper)
+    ])
+    
+    # Initialize the ADS_1015 with the I2C bus
+    ads.initialize(SMBus(2))
+
+    print("Starting ADS1015 data collection... Press Ctrl+C to exit.")
+
+    try:
+        while True:
+            # Update the ADS object (fetch data from the device and update cache)
+            ads.update()
+
+            # Print the data for all parameters (voltages for each input)
+            for input_obj in ads.inputs:
+                print(f"{input_obj.name}: {input_obj.voltage:.2f} V, {input_obj.get_output()} {input_obj.units}")
+
+            # Wait before the next update (adjust as needed)
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("\nExiting ADS1015 test...")
