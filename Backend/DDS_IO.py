@@ -8,7 +8,6 @@ from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
-from Backend.resources.adxl343 import ADXL343
 from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.orionbms2 import Orion_BMS_2
 from typing import Union, Dict, List
@@ -170,27 +169,31 @@ class DDS_IO:
         # if len(self.devices) == 0:
         #     return ['There are no available devices']
         device_names = []
-        for device_name, device in self.devices.items():
-            device_names.append(device_name)
+        for interface_name, interface in self.interfaces.items():
+            for device_name, device in interface.devices.items():
+                device_names.append(device_name)
         return device_names
     
 
-    def get_device_parameters(self, param_name: str) -> List[str]:
-        '''
+    def get_device_parameters(self, device_name: str) -> List[str]:
+        """
         Returns a list of parameters for a specified device.
-        '''
-        device_params = []
-        for param_name in self.devices[param_name].get_all_param_names():
-            device_params.append(param_name)
-        return device_params
 
+        Args:
+            device_name (str): The name of the device for which parameters are requested.
 
-    def __get_device(self, deviceKey : str) -> Interface:
-        ''' Gets a device at a specified key.
-        This may return a None value.'''
-
-        return self.devices.get(deviceKey)
-
+        Returns:
+            List[str]: A list of parameter names for the specified device. 
+                    If the device is not found, an empty list is returned.
+        """
+        for interface_name, interface in self.interfaces.items():
+            if device_name in interface.devices:
+                device = interface.devices[device_name]
+                return device.get_all_param_names()
+        
+        # If no matching device is found, return an empty list
+        self.__log(f"Device '{device_name}' not found when fetching parameters.", DataLogger.LogSeverity.DEBUG)
+        return []
     
 
     def __initialize_io(self):

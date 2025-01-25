@@ -181,8 +181,13 @@ class Interface(ABC):
             raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
         
         for key, device in self.devices.items():
-            device.update()
-            self.__monitor_device_parameters()
+            if device.status is Device.DeviceStatus.ACTIVE:
+                device.update()
+                self.__monitor_device_parameters()
+            elif device.status is Device.DeviceStatus.ERROR:
+                # TODO: IMPLEMENT
+                # device.initialize()
+                pass
              
 
     def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:

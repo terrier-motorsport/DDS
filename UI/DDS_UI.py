@@ -117,7 +117,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
         self.outline_width = 4
 
         # Update color as data is read 
-        self.update_color()
+        # self.update_color()
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
@@ -138,8 +138,22 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
-        self.text = f"{self.value:.2f}°F"
-        self.update_color()
+
+        # Check if value is a string (indicating an error)
+        if isinstance(self.value, str):
+            self.text = self.value
+            self.color = (1, 0, 0, 1)  # Red for errors
+            return
+
+        # If value is valid, display it
+        try:
+            self.value = float(self.value)
+            self.text = f"{self.value:.2f}°F"
+            self.update_color()
+        except (ValueError, TypeError):
+            self.text = "N/A"
+            self.color = (1, 0, 0, 1)  # Red for invalid values
+            return
 
     def update_color(self):
         if 50 <= self.value <= 120:
@@ -173,7 +187,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
         self.outline_width = 4
 
         # Update color as data is red 
-        self.update_color()
+        # self.update_color()
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
@@ -194,8 +208,22 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
-        self.text = f"{self.value:.2f} Amps"
-        self.update_color()
+
+        # Check if value is a string (indicating an error)
+        if isinstance(self.value, str):
+            self.text = self.value
+            self.color = (1, 0, 0, 1)  # Red for errors
+            return
+
+        # If value is valid, display it
+        try:
+            self.value = float(self.value)
+            self.text = f"{self.value:.2f} Amps"
+            self.update_color()
+        except (ValueError, TypeError):
+            self.text = "N/A"
+            self.color = (1, 0, 0, 1)  # Red for invalid values
+            return
 
     def update_color(self):
         if 7 <= self.value:
@@ -231,28 +259,49 @@ class Battery (FloatLayout):
         corner_radius = 20
 
         # Example value source function for demonstration
-        def get_pack_state_of_charge():
-            soc = self.io.get_device_data('canInterface','Pack_SOC',"BatteryWidget")
-            if soc is not None:
+        def get_pack_state_of_charge() -> str:
+            soc = self.io.get_device_data('canInterface', 'Pack_SOC', "BatteryWidget")
+            print(soc)
+            if soc is str:
+                # This will happen if there is an error.
                 return soc
+            elif soc is None:
+                return ""
             else:
-                return -1
+                try:
+                    return float(soc) if soc is not None else -1
+                except ValueError:
+                    return -1
         
         # Example value source function for demonstration
         def get_cell_high_temperature():
-            highTemp = self.io.get_device_data('canInterface','High_Temperature',"BatteryWidget")  
-            if highTemp is not None:
+            highTemp = self.io.get_device_data('canInterface', 'High_Temperature', "BatteryWidget")
+            print(highTemp)  # Debugging print
+            if isinstance(highTemp, str):
+                # If an error string is returned, use it directly
                 return highTemp
+            elif highTemp is None:
+                return ""
             else:
-                return -1
-        
+                try:
+                    return float(highTemp)
+                except ValueError:
+                    return -1
+
         # Example value source function for demonstration
         def get_pack_current():
-            current = self.io.get_device_data('canInterface','Pack_Current',"BatteryWidget")
-            if current is not None:
+            current = self.io.get_device_data('canInterface', 'Pack_Current', "BatteryWidget")
+            print(current)  # Debugging print
+            if isinstance(current, str):
+                # If an error string is returned, use it directly
                 return current
+            elif current is None:
+                return ""
             else:
-                return -1
+                try:
+                    return float(current)
+                except ValueError:
+                    return -1
 
         
         # Creates a float layout within the box
@@ -285,7 +334,7 @@ class Battery (FloatLayout):
         # Percentage label
         self.battery_label = OutlineColorChangingLabel_Battery(
             value_source=get_pack_state_of_charge,
-            text=f"{get_pack_state_of_charge():.2f}%",
+            text=f"{get_pack_state_of_charge()}",
             font_size='40sp',
             size_hint=(0.8, 0.1),
             pos_hint={"center_x": 0.5, "top": 0.9}
@@ -303,7 +352,7 @@ class Battery (FloatLayout):
         # Temperature
         self.battery_temp = OutlineColorChangingLabel_BatteryTemp(
             value_source=get_cell_high_temperature,
-            text=f"{get_cell_high_temperature():.2f} ºF",
+            text=f"{get_cell_high_temperature()}",
             font_size='30sp',
             size_hint=(0.8, 0.1),
             pos_hint={"center_x": 0.5, "center_y": 0.4}
@@ -312,7 +361,7 @@ class Battery (FloatLayout):
         # Discharge rate 
         self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(
             value_source=get_pack_current,
-            text=f"{get_pack_current():.2f} Amps",
+            text=f"{get_pack_current()}",
             font_size='30sp',
             size_hint=(0.8, 0.1),
             pos_hint={"center_x": 0.5, "center_y": 0.2}
@@ -491,18 +540,36 @@ class Center(FloatLayout):
         self.io = io
 
         def get_speed():
-            erpm = self.io.get_device_data('canInterface','ERPM',"CenterWidget")
-            if erpm is not None:
-                return erpm*5
-            else:
+            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+            if isinstance(erpm, str):
+                # If it's a string (e.g., error message), return it directly
+                return erpm
+            elif erpm is None:
+                # If no data is available, return a fallback value
                 return -1
+            else:
+                try:
+                    # Convert to float and calculate speed
+                    return float(erpm) * 5
+                except (ValueError, TypeError):
+                    # Handle invalid data gracefully
+                    return -1
         
         def get_rpm():
-            erpm = self.io.get_device_data('canInterface','ERPM',"CenterWidget")
-            if erpm is not None:
-                return erpm*10
-            else:
+            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+            if isinstance(erpm, str):
+                # If it's a string (e.g., error message), return it directly
+                return erpm
+            elif erpm is None:
+                # If no data is available, return a fallback value
                 return -1
+            else:
+                try:
+                    # Convert to float and calculate RPM
+                    return float(erpm) * 10
+                except (ValueError, TypeError):
+                    # Handle invalid data gracefully
+                    return -1
 
         # Use FloatLayout for layout behavior
         self.center_block = FloatLayout(size_hint=(0.9, 1))
@@ -511,7 +578,7 @@ class Center(FloatLayout):
 
         # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{get_speed():.2f}",
+            text=f"{get_speed()} MPH",
             font_size='100sp',
             pos_hint={'center_x': 0.45, 'center_y': 0.60}
         )
@@ -520,7 +587,7 @@ class Center(FloatLayout):
 
          # Create a label to display the rpm value
         self.rpm_label = Label(
-            text=f"{get_rpm():.2f} RPM",
+            text=f"{get_rpm()} RPM",
             font_size='50sp',
             pos_hint={'center_x': 0.45, 'center_y': 0.40}
         )
