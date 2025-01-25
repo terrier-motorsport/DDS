@@ -190,8 +190,9 @@ if __name__ == '__main__':
             ads.update()
 
             # Print the data for all parameters (voltages for each input)
-            for input_obj in ads.inputs:
-                print(f"{input_obj.name}: {input_obj.voltage:.2f} V, {input_obj.get_output()} {input_obj.units}")
+            param_names = ads.get_all_param_names()
+            for param in param_names:
+                print(f"{param}: {ads.get_data(param)}")
 
             # Wait before the next update (adjust as needed)
             time.sleep(1)
