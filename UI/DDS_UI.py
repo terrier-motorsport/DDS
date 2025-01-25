@@ -324,7 +324,7 @@ class Battery (FloatLayout):
         # Temperature
         self.battery_temp = OutlineColorChangingLabel_BatteryTemp(
             value_source=get_cell_high_temperature,
-            text=f"{get_cell_high_temperature():.2f} ºF",
+            text=f"{get_cell_high_temperature()}",
             font_size='30sp',
             size_hint=(0.8, 0.1),
             pos_hint={"center_x": 0.5, "center_y": 0.4}
@@ -333,7 +333,7 @@ class Battery (FloatLayout):
         # Discharge rate 
         self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(
             value_source=get_pack_current,
-            text=f"{get_pack_current():.2f} Amps",
+            text=f"{get_pack_current()}",
             font_size='30sp',
             size_hint=(0.8, 0.1),
             pos_hint={"center_x": 0.5, "center_y": 0.2}
