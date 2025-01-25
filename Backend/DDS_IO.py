@@ -131,15 +131,15 @@ class DDS_IO:
                 return 'ERROR'
             elif device.status is Device.DeviceStatus.NOT_INITIALIZED:
                 return 'NO_INIT'
-        
-
+              
         # 3) Fetch data from device
         data = device.get_data(param_key)
 
-
+        
         # 4) If the data is None, we can return early
         if data is None:
             return "NO_DATA"
+
         
         # 5) Return the data
         return data
@@ -159,6 +159,38 @@ class DDS_IO:
                 ParameterWarning('Anna', 2398, 'Anna is out of range').getMsg(),
             ]
             return warnings
+
+
+    def get_device_names(self) -> List[str]:
+        '''
+        Returns a list of devices.
+        If there are no devices, returns a single string with an error message.
+        '''
+
+        # if len(self.devices) == 0:
+        #     return ['There are no available devices']
+        device_names = []
+        for device_name, device in self.devices.items():
+            device_names.append(device_name)
+        return device_names
+    
+
+    def get_device_parameters(self, param_name: str) -> List[str]:
+        '''
+        Returns a list of parameters for a specified device.
+        '''
+        device_params = []
+        for param_name in self.devices[param_name].get_all_param_names():
+            device_params.append(param_name)
+        return device_params
+
+
+    def __get_device(self, deviceKey : str) -> Interface:
+        ''' Gets a device at a specified key.
+        This may return a None value.'''
+
+        return self.devices.get(deviceKey)
+
     
 
     def __initialize_io(self):
@@ -231,6 +263,7 @@ class DDS_IO:
             #     if device_name == "Anna":
             #         device.cached_values["other signal"] = "yum i love chocolate chip cookies"
             #     device.change_status(Interface.InterfaceStatus.ACTIVE)
+
 
         # Log that initialization has finished
         self.__log('All devices have been initialized. Listing devices.')
