@@ -232,10 +232,11 @@ class Battery (FloatLayout):
 
         # Example value source function for demonstration
         def get_pack_state_of_charge():
-            soc = self.io.get_device_data('canInterface','Pack_SOC',"BatteryWidget")
-            if soc is not None:
-                return soc
-            else:
+            soc = self.io.get_device_data('canInterface', 'Pack_SOC', "BatteryWidget")
+            print(soc)
+            try:
+                return float(soc) if soc is not None else -1
+            except ValueError:
                 return -1
         
         # Example value source function for demonstration
