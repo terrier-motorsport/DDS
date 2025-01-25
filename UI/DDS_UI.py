@@ -138,8 +138,20 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
-        self.text = f"{self.value:.2f}°F"
-        self.update_color()
+
+        # Check if value is a string (indicating an error)
+        if isinstance(self.value, str):
+            self.text = self.value
+            self.color = (1, 0, 0, 1)  # Red for errors
+            return
+
+        # If value is valid, display it
+        try:
+            self.text = f"{float(self.value):.2f}°F"
+        except (ValueError, TypeError):
+            self.text = "N/A"
+            self.color = (1, 0, 0, 1)  # Red for invalid values
+            return
 
     def update_color(self):
         if 50 <= self.value <= 120:
@@ -194,8 +206,20 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
     # Update the value as data changes 
     def update_value(self, *args):
         self.value = self.value_source()
-        self.text = f"{self.value:.2f} Amps"
-        self.update_color()
+
+        # Check if value is a string (indicating an error)
+        if isinstance(self.value, str):
+            self.text = self.value
+            self.color = (1, 0, 0, 1)  # Red for errors
+            return
+
+        # If value is valid, display it
+        try:
+            self.text = f"{float(self.value):.2f} Amps"
+        except (ValueError, TypeError):
+            self.text = "N/A"
+            self.color = (1, 0, 0, 1)  # Red for invalid values
+            return
 
     def update_color(self):
         if 7 <= self.value:
