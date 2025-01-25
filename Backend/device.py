@@ -30,75 +30,60 @@ class Device(ABC):
         ERROR = 3,
         NOT_INITIALIZED = 4
 
-    # Class variables
-    name: str
-    __status: DeviceStatus
-
-    # Cache variables
-    CACHE_TIMEOUT_THRESHOLD = 2      # Cache timeout in seconds
-    cached_values: dict              # Dictionary to store cached values
-    last_cache_update: float         # Time since last cache update
-
 
     def __init__(self, name: str, logger: DataLogger):
         '''
         Initializes a Device object.
         '''
-
-        # Init Class variables
         self.name = name
         self.log = logger
-        self.__status = self.DeviceStatus.NOT_INITIALIZED
-
-        self.data_queue = queue.Queue()  # Queue to hold sensor data
-
-        # Init cache
         self.cached_values = {}
+        self.lock = threading.Lock()
+        self.status = self.DeviceStatus.NOT_INITIALIZED
         self.last_cache_update = time.time()
+        self.thread = None  # Worker thread for data collection
+        self.CACHE_TIMEOUT_THRESHOLD = 2  # Cache timeout in seconds
 
 
     # ===== PUBLIC METHODS =====
     @abstractmethod
     def initialize(self, bus):
         '''
-        Initializes the device.
-
-        Raises:
-            ...
+        Initialize the device. Must be implemented by subclasses.
         '''
-        # Check if the method is being called on the base class
-        if type(self) is Device:
-            raise NotImplementedError(
-                f"The 'initialize' method for {self.name} must be implemented in a subclass."
-            )
+        pass
 
-        # Start threaded data collection
-        self.status = self.DeviceStatus.ACTIVE
-        self.__start_threaded_data_collection()
+        # # Check if the method is being called on the base class
+        # if type(self) is Device:
+        #     raise NotImplementedError(
+        #         f"The 'initialize' method for {self.name} must be implemented in a subclass."
+        #     )
 
-        # If called by a subclass, complete initialization
-        self._log(f'{self.name} initialized successfully!')
-        self.__status = self.DeviceStatus.ACTIVE
+        # # Start threaded data collection
+        # self.status = self.DeviceStatus.ACTIVE
+        # self.__start_threaded_data_collection()
+
+        # # If called by a subclass, complete initialization
+        # self._log(f'{self.name} initialized successfully!')
+        # self.__status = self.DeviceStatus.ACTIVE
 
     @abstractmethod
     def update(self):
         '''
-        Updates the device by reading data from it,
-        and storing it into the cached values.
-
-        See example code below:
+        Updates cached values with new data.
         '''
+        pass
 
-        data = self._get_data_from_thread()
+        # data = self._get_data_from_thread()
 
-        if data is None:
-            # Update the cache with no new data
-            self._update_cache(new_data_exists=False)
-            return
-        self._update_cache(new_data_exists=True)
+        # if data is None:
+        #     # Update the cache with no new data
+        #     self._update_cache(new_data_exists=False)
+        #     return
+        # self._update_cache(new_data_exists=True)
 
-        self.cached_values["Acceleration"] = data
-        self._log_telemetry(f"Acceleration", data, "g")
+        # self.cached_values["Acceleration"] = data
+        # self._log_telemetry(f"Acceleration", data, "g")
         
 
 
@@ -110,21 +95,38 @@ class Device(ABC):
 
         See example code below: 
         '''
+        pass
         
-        sensor = None # Imagine this as a sensor
+        # sensor = None # Imagine this as a sensor
 
-        while self.status is self.DeviceStatus.ACTIVE:
-            try:
-                data = sensor.get_data()
-                self.data_queue.put(data) # Put data in the queue for the main program
-            except Exception as e:
-                self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
+        # while self.status is self.DeviceStatus.ACTIVE:
+        #     try:
+        #         data = sensor.get_data()
+        #         self.data_queue.put(data) # Put data in the queue for the main program
+        #     except Exception as e:
+        #         self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
         
-        # If we ever get here, there was a problem.
-        # We should log that the data collection worker stopped working
-        self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
-        self.status = self.DeviceStatus.ERROR
+        # # If we ever get here, there was a problem.
+        # # We should log that the data collection worker stopped working
+        # self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
+        # self.status = self.DeviceStatus.ERROR
 
+
+    def start_worker(self):
+        '''
+        Start the worker thread for data collection.
+        '''
+        self.thread = threading.Thread(target=self._data_collection_worker, daemon=True)
+        self.thread.start()
+
+
+    def stop_worker(self):
+        '''
+        Stop the worker thread gracefully.
+        '''
+        self.status = self.DeviceStatus.DISABLED
+        if self.thread and self.thread.is_alive():
+            self.thread.join()
 
 
     def get_all_param_names(self) -> List[str]:
@@ -137,85 +139,121 @@ class Device(ABC):
         return list(self.cached_values.keys())
     
 
-    def get_data(self, data_key: str) -> Union[str, float, int, None]:
+    def get_data(self, param_name: str):
         '''
-        This method verifies that the data at the specified key exists,
-        and if it does, return it.
-
-        If it doesn't exist, log a message and return None.
-
-        Parameters:
-            data_key (str): The key of the data being requested.
-
-        Returns:
-            Union[str, float, int, None]: The data at the specified key.
+        Thread-safe access to cached data.
         '''
+        with self.lock:
+            return self.cached_values.get(param_name, None)
 
-        # Verify data exists, and return it if so
-        if not data_key in self.cached_values:
-            # This happens if this data has never existed
-            return self._log(f"No data found for key: {data_key}", self.log.LogSeverity.WARNING)
-        elif self.cached_values[data_key] is None:
-            # This happens if the data doesn't currently exist
-            return self._log(f"No cached data found for key: {data_key}", self.log.LogSeverity.DEBUG)
-        return self.cached_values[data_key]
+
+    # def get_data(self, data_key: str) -> Union[str, float, int, None]:
+    #     '''
+    #     This method verifies that the data at the specified key exists,
+    #     and if it does, return it.
+
+    #     If it doesn't exist, log a message and return None.
+
+    #     Parameters:
+    #         data_key (str): The key of the data being requested.
+
+    #     Returns:
+    #         Union[str, float, int, None]: The data at the specified key.
+    #     '''
+
+    #     # Verify data exists, and return it if so
+    #     if not data_key in self.cached_values:
+    #         # This happens if this data has never existed
+    #         return self._log(f"No data found for key: {data_key}", self.log.LogSeverity.WARNING)
+    #     elif self.cached_values[data_key] is None:
+    #         # This happens if the data doesn't currently exist
+    #         return self._log(f"No cached data found for key: {data_key}", self.log.LogSeverity.DEBUG)
+    #     return self.cached_values[data_key]
     
 
     # ===== PRIVATE METHODS =====
-    def _update_cache(self, new_data_exists: bool):
-        '''
-        Checks if the cache has expired due to lack of new data and clears it if necessary.
-        Should be called once every update() frame.
+    # def _update_cache(self, new_data_exists: bool):
+    #     '''
+    #     Checks if the cache has expired due to lack of new data and clears it if necessary.
+    #     Should be called once every update() frame.
 
-        Parameters:
-            new_data_exists (bool): True if the most recent data collected is unique.
+    #     Parameters:
+    #         new_data_exists (bool): True if the most recent data collected is unique.
+    #     '''
+    #     # Update caching functions
+    #     if new_data_exists:
+    #         self.last_cache_update = time.time()
+    #     else:
+    #         # Return early if the cache is already empty
+    #         if not self.cached_values:
+    #             return
+
+    #         # Update the current time
+    #         current_time = time.time()
+
+    #         # Clear the cache if it has expired
+    #         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+    #             self.__clear_cache()
+
+
+    def _update_cache(self, new_data: dict):
         '''
-        # Update caching functions
-        if new_data_exists:
+        Thread-safe update of the cache.
+        '''
+        with self.lock:
+            self.cached_values.update(new_data)
             self.last_cache_update = time.time()
-        else:
-            # Return early if the cache is already empty
-            if not self.cached_values:
-                return
 
-            # Update the current time
-            current_time = time.time()
 
-            # Clear the cache if it has expired
-            if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-                self.__clear_cache()
-
-    
-    def __clear_cache(self):
+    def _check_cache_timeout(self):
         '''
-        Clears the cached values by changing the values to None.
-        The keys are left unchanged.
+        Clears the cache if the timeout threshold is exceeded.
         '''
-        # Change all values to None 
-        empty_cache = {key: None for key in self.cached_values}
-        self.cached_values = empty_cache
+        with self.lock:
+            if time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+                self.cached_values = {key: None for key in self.cached_values}
+                self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
 
-        self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
+
+    def _check_cache_timeout(self):
+        '''
+        Clears the cache if the timeout threshold is exceeded.
+        '''
+        with self.lock:
+            if time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+                self.cached_values = {key: None for key in self.cached_values}
+                self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
+
+    # def __clear_cache(self):
+    #     '''
+    #     Clears the cached values by changing the values to None.
+    #     The keys are left unchanged.
+    #     '''
+    #     # Change all values to None 
+    #     empty_cache = {key: None for key in self.cached_values}
+    #     self.cached_values = empty_cache
+
+    #     self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
     
     
-    def __start_threaded_data_collection(self):
-        """Start the data collection in a separate thread."""
+    # def __start_threaded_data_collection(self):
+    #     """Start the data collection in a separate thread."""
 
-        # Make thread
-        sensor_thread = threading.Thread(target=self._data_collection_worker, daemon=True)
+    #     # Make thread
+    #     sensor_thread = threading.Thread(target=self._data_collection_worker, daemon=True)
 
-        # Create the thread & start running
-        sensor_thread.start()
+    #     # Create the thread & start running
+    #     sensor_thread.start()
 
 
-    def _get_data_from_thread(self) -> List[float]:
-        """
-        Main program calls this to fetch the latest data from the queue.
-        """
-        if not self.data_queue.empty():
-            return self.data_queue.get_nowait()  # Non-blocking call
-        else:
-            return None  # No data available yet
+    # def _get_data_from_thread(self) -> List[float]:
+    #     """
+    #     Main program calls this to fetch the latest data from the queue.
+    #     """
+    #     if not self.data_queue.empty():
+    #         return self.data_queue.get_nowait()  # Non-blocking call
+    #     else:
+    #         return None  # No data available yet
 
     # ===== HELPER METHODS =====
     def _log_telemetry(self, param_name: str, value, units: str):
