@@ -174,19 +174,23 @@ class MPU_6050_x3(I2CDevice):
         Device.pin_factory = LGPIOFactory()
         self.device_selectors = [LED(pin) for pin in self.dev_pins]
 
-        # Configure each MPU6050 device
-        for dev_id in range(3):
-            self._select_device(dev_id)
-            time.sleep(0.1)  # Allow time for device switching
+        # Make sure GPIO is properly released if this fails
+        try:
+            # Configure each MPU6050 device
+            for dev_id in range(3):
+                self._select_device(dev_id)
+                time.sleep(0.1)  # Allow time for device switching
 
-            # Create an Internal_MPU_6050 instance for this sensor
-            internal_device = Internal_MPU_6050(bus)
-            internal_device.initialize()
-            self.internal_devices.append(internal_device)
+                # Create an Internal_MPU_6050 instance for this sensor
+                internal_device = Internal_MPU_6050(bus)
+                internal_device.initialize()
+                self.internal_devices.append(internal_device)
 
-        self.status = self.DeviceStatus.ACTIVE
-        self.start_worker()  # Start the data collection thread
-        self._log(f"{self.name} Finished Initializing.")
+            self.status = self.DeviceStatus.ACTIVE
+            self.start_worker()  # Start the data collection thread
+            self._log(f"{self.name} Finished Initializing.")
+        except Exception as e:
+            self._close_gpio()
 
     
     def _select_device(self, dev_id):
@@ -248,6 +252,9 @@ class MPU_6050_x3(I2CDevice):
         self._log("Data collection worker stopped.", self.log.LogSeverity.ERROR)
         self.status = self.DeviceStatus.ERROR
 
+        self._close_gpio()
+
+    def _close_gpio(self):
         # Release the GPIO pins that the thread was using
         try:
             for led in self.device_selectors:
