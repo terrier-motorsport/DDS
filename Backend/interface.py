@@ -182,10 +182,10 @@ class Interface(ABC):
             raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
         
         for key, device in self.devices.items():
-            if device.status is Device.DeviceStatus.ACTIVE:
+            if device.status == Device.DeviceStatus.ACTIVE:
                 device.update()
                 self.__monitor_device_parameters()
-            elif device.status is Device.DeviceStatus.ERROR:
+            elif device.status == Device.DeviceStatus.ERROR:
                 try:
                     device.initialize(self.bus)
                 except Exception as e:
