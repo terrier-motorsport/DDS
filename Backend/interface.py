@@ -247,8 +247,8 @@ class Interface(ABC):
             # Log the error
             self._log(f'Was unable to intialize device {device.name}: {e}.', DataLogger.LogSeverity.CRITICAL)
 
-            # Change device status to error
-            device.status = Device.DeviceStatus.ERROR
+            # If the device throws an error at runtime, it will be disabled for the rest of the session.
+            device.status = Device.DeviceStatus.DISABLED
             return
 
         # ===== FINISHED ===== 
