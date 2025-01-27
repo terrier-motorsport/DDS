@@ -177,7 +177,7 @@ class DataLogger:
         """
         if timestamp is None:
             timestamp = time.time()  # Use the current time if no timestamp is given
-        return strftime("%Y-%m-%d-%H:%M:%S", localtime(timestamp))
+        return strftime("%Y-%m-%d--%H-%M-%S", localtime(timestamp))
 
 
     def __createCSVFile(self, fileName: str):
