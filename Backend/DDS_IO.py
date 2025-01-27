@@ -8,6 +8,7 @@ from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
+from Backend.resources.mpu6050 import MPU_6050_x3
 from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.orionbms2 import Orion_BMS_2
 from typing import Union, Dict, List
@@ -233,7 +234,7 @@ class DDS_IO:
                     Backend.config.device_config.define_ADC1(self.log),
                     Backend.config.device_config.define_ADC2(self.log),
                     # TODO: Implement
-                    # Backend.config.device_config.define_chassis_MPU_6050(self.log),
+                    Backend.config.device_config.define_MPU_6050(self.log),
                     # Backend.config.device_config.define_top_MPU_6050(self.log),
                     # Backend.config.device_config.define_wheel_MPU_6050(self.log),
                 ],
