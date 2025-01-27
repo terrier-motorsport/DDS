@@ -122,7 +122,7 @@ class DDS_IO:
         if device.status is not Device.DeviceStatus.ACTIVE:
 
             # Log the warning
-            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.WARNING)
+            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.DEBUG)
 
             # Return a value that represents the current state of the device
             if device.status is Device.DeviceStatus.DISABLED:
