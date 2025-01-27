@@ -168,8 +168,8 @@ class Interface(ABC):
         # Make everything is working
         self.update()
 
-        # Log device initialization
-        self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
+        # Log Interface initialization
+        self._log(f'Finish initializing {self.interfaceProtocol.name} interface {self.name} successfully.')
 
 
     def update(self):
