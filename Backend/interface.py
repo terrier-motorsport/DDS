@@ -5,7 +5,7 @@ from enum import Enum
 from Backend.data_logger import DataLogger
 from Backend.device import Device, CANDevice, I2CDevice
 from Backend.value_monitor import ParameterMonitor
-from typing import Dict, Union, List
+from typing import Any, Dict, Union, List
 from abc import ABC, abstractmethod
 
 import can
@@ -90,6 +90,7 @@ class Interface(ABC):
     name: str
     log: DataLogger
     __status: InterfaceStatus
+    bus: Any             # To be implemented by subclass
 
     # Device variables
     devices: Dict[str, Device]
@@ -186,7 +187,7 @@ class Interface(ABC):
                 self.__monitor_device_parameters()
             elif device.status is Device.DeviceStatus.ERROR:
                 try:
-                    device.initialize()
+                    device.initialize(self.bus)
                 except Exception as e:
                     self._log(f'Couldn\'t init {device.name}, {e}', DataLogger.LogSeverity.DEBUG)
                     print(e)
