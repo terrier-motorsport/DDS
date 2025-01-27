@@ -1,5 +1,5 @@
 # Code orignially by ryker1990 on github.
-	# https://github.com/ControlEverythingCommunity/MPU-6000/tree/master
+    # https://github.com/ControlEverythingCommunity/MPU-6000/tree/master
 # Adapted by Jackson Justus (jackjust@bu.edu) for Terrier Motorsport's DDS.
 
 # Distributed with a free-will license.
@@ -151,97 +151,103 @@ class Internal_MPU_6050(InternalDevice):
 
 class MPU_6050_x3(I2CDevice):
 
-	'''
-	This handles the communication for all three MPU 6050 accel/gyro sensors.
-	'''
+    '''
+    This handles the communication for all three MPU 6050 accel/gyro sensors.
+    '''
 
-	def __init__(self, name, logger):
-		super().__init__(name, logger)
-		self.dev_pins = [17, 27, 22]  # GPIO pins for device selection
-		self.bus = None
-		self.internal_devices = []  # Holds Internal_MPU_6050 instances
-		self.device_selectors = []  # GPIO selectors for each device
+    def __init__(self, name, logger):
+        super().__init__(name, logger)
+        self.dev_pins = [17, 27, 22]  # GPIO pins for device selection
+        self.bus = None
+        self.internal_devices = []  # Holds Internal_MPU_6050 instances
+        self.device_selectors = []  # GPIO selectors for each device
 
 
-	def initialize(self, bus):
-		'''
+    def initialize(self, bus):
+        '''
         Initialize the MPU6050 sensors and configure GPIO.
         '''
-		self.bus = bus
+        self.bus = bus
 
-		# Setup GPIO for device selection
-		Device.pin_factory = LGPIOFactory()
-		self.device_selectors = [LED(pin) for pin in self.dev_pins]
+        # Setup GPIO for device selection
+        Device.pin_factory = LGPIOFactory()
+        self.device_selectors = [LED(pin) for pin in self.dev_pins]
 
         # Configure each MPU6050 device
-		for dev_id in range(3):
-			self._select_device(dev_id)
-			time.sleep(0.1)  # Allow time for device switching
+        for dev_id in range(3):
+            self._select_device(dev_id)
+            time.sleep(0.1)  # Allow time for device switching
 
-			# Create an Internal_MPU_6050 instance for this sensor
-			internal_device = Internal_MPU_6050(bus)
-			internal_device.initialize()
-			self.internal_devices.append(internal_device)
+            # Create an Internal_MPU_6050 instance for this sensor
+            internal_device = Internal_MPU_6050(bus)
+            internal_device.initialize()
+            self.internal_devices.append(internal_device)
 
-		self.status = self.DeviceStatus.ACTIVE
-		self.start_worker()  # Start the data collection thread
-		self._log(f"{self.name} Finished Initializing.")
+        self.status = self.DeviceStatus.ACTIVE
+        self.start_worker()  # Start the data collection thread
+        self._log(f"{self.name} Finished Initializing.")
 
-	
-	def _select_device(self, dev_id):
-		'''
+    
+    def _select_device(self, dev_id):
+        '''
         Activates the GPIO pin corresponding to the selected device.
         '''
-		for i, selector in enumerate(self.device_selectors):
-			if i == dev_id:
-				selector.on()
-			else:
-				selector.off()
+        for i, selector in enumerate(self.device_selectors):
+            if i == dev_id:
+                selector.on()
+            else:
+                selector.off()
 
 
-	def update(self):
-		'''
+    def update(self):
+        '''
         Updates cached values from the data collection thread.
         '''
+            
         # No additional logic needed if data collection worker is running
-		self._check_cache_timeout()
+        self._check_cache_timeout()
 
 
-	def _data_collection_worker(self):
-		"""
-		This function contains the code that will be running on the separate thread.
-		It should handle communication with the sensors and update the cache.
-		"""
-		while self.status == self.DeviceStatus.ACTIVE:
-			for dev_id in range(3):
-				self._select_device(dev_id)
-				time.sleep(0.05)
+    def _data_collection_worker(self):
+        """
+        This function contains the code that will be running on the separate thread.
+        It should handle communication with the sensors and update the cache.
+        """
+        while self.status == self.DeviceStatus.ACTIVE:
+            for dev_id in range(3):
+                self._select_device(dev_id)
+                time.sleep(0.05)
 
-				# Get data from the internal MPU6050 device
-				internal_device = self.internal_devices[dev_id]
+                # Get data from the internal MPU6050 device
+                internal_device = self.internal_devices[dev_id]
 
-				# Read acceleration and gyroscope data
-				acceleration = internal_device.read_acceleration()
-				gyroscope = internal_device.read_gyroscope()
+                # Read acceleration and gyroscope data
+                try:
+                    acceleration = internal_device.read_acceleration()
+                    gyroscope = internal_device.read_gyroscope()
+                except Exception as e:
+                    self.status = self.DeviceStatus.ERROR
+                    break
 
-				# Create parameterized data entries
-				data = {
-					f"MPU{dev_id + 1}_xAccl": acceleration["x"],
-					f"MPU{dev_id + 1}_yAccl": acceleration["y"],
-					f"MPU{dev_id + 1}_zAccl": acceleration["z"],
-					f"MPU{dev_id + 1}_xGyro": gyroscope["x"],
-					f"MPU{dev_id + 1}_yGyro": gyroscope["y"],
-					f"MPU{dev_id + 1}_zGyro": gyroscope["z"],
-				}
 
-				# Update the shared cache
-				self._update_cache(data)
+                # Create parameterized data entries
+                data = {
+                    f"MPU{dev_id + 1}_xAccl": acceleration["x"],
+                    f"MPU{dev_id + 1}_yAccl": acceleration["y"],
+                    f"MPU{dev_id + 1}_zAccl": acceleration["z"],
+                    f"MPU{dev_id + 1}_xGyro": gyroscope["x"],
+                    f"MPU{dev_id + 1}_yGyro": gyroscope["y"],
+                    f"MPU{dev_id + 1}_zGyro": gyroscope["z"],
+                }
 
-		# Log error if the data collection worker stops unexpectedly
-		self._log("Data collection worker stopped.", self.log.LogSeverity.ERROR)
-		self.status = self.DeviceStatus.ERROR
+                # Update the shared cache
+                self._update_cache(data)
 
-			
+        # Log error if the data collection worker stops unexpectedly
+        self._log("Data collection worker stopped.", self.log.LogSeverity.ERROR)
+        self.status = self.DeviceStatus.ERROR
+
+            
 
 
 
