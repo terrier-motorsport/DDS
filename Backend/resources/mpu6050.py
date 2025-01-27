@@ -248,6 +248,15 @@ class MPU_6050_x3(I2CDevice):
         self._log("Data collection worker stopped.", self.log.LogSeverity.ERROR)
         self.status = self.DeviceStatus.ERROR
 
+        # Release the GPIO pins that the thread was using
+        try:
+            for led in self.device_selectors:
+                led.close()
+        except Exception as e:
+            self._log(f'Resources for {self.name} were unable to be released during the failure.', DataLogger.LogSeverity.ERROR)
+            self._log('This device is unavailable until program restart.', DataLogger.LogSeverity.ERROR)
+            self.status = self.DeviceStatus.ERROR
+
             
 
 

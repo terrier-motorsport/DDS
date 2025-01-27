@@ -246,6 +246,7 @@ class Interface(ABC):
         except Exception as e:
             # Log the error
             self._log(f'Was unable to intialize device {device.name}: {e}.', DataLogger.LogSeverity.CRITICAL)
+            self._log(f'{device.name} will be disabled since it failed at runtime.', DataLogger.LogSeverity.CRITICAL)
 
             # If the device throws an error at runtime, it will be disabled for the rest of the session.
             device.status = Device.DeviceStatus.DISABLED
