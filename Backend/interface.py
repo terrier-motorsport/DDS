@@ -185,8 +185,10 @@ class Interface(ABC):
                 device.update()
                 self.__monitor_device_parameters()
             elif device.status is Device.DeviceStatus.ERROR:
-                # TODO: IMPLEMENT
-                # device.initialize()
+                try:
+                    device.initialize()
+                except Exception as e:
+                    self._log(f'Couldn\'t init {device.name}, {e}', DataLogger.LogSeverity.DEBUG)
                 pass
              
 

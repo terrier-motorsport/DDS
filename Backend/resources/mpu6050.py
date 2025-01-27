@@ -9,6 +9,7 @@
 # https://www.controleverything.com/content/Accelorometer?sku=MPU-6000_I2CS#tabs-0-product_tabset-2
 
 
+from typing import List
 from Backend.device import I2CDevice
 from Backend.resources.internal_device import InternalDevice
 from smbus2 import SMBus
@@ -159,7 +160,7 @@ class MPU_6050_x3(I2CDevice):
         super().__init__(name, logger)
         self.dev_pins = [17, 27, 22]  # GPIO pins for device selection
         self.bus = None
-        self.internal_devices = []  # Holds Internal_MPU_6050 instances
+        self.internal_devices: List[Internal_MPU_6050] = []  # Holds Internal_MPU_6050 instances
         self.device_selectors = []  # GPIO selectors for each device
 
 
