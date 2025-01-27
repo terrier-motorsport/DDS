@@ -54,7 +54,7 @@ class DDS_IO:
             demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
 
         '''
-        self.log = DataLogger('DDS_Log')
+        self.log = DataLogger('DDS_Log', baseDirectoryPath='/media/butm/JacksUSB/DDSLogs')
         self.debug = debug
         self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)

@@ -25,7 +25,6 @@ class DataLogger:
                 - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    logDirectoryPath = './Backend/logs/'
     directoryPath: str        # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
@@ -42,13 +41,14 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str):
+    def __init__(self, directoryName: str, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
         # Initialize variables
         self.__validateFileName(directoryName)
+        self.baseDirectoryPath = baseDirectoryPath
 
         # Make the directory & save the path
         self.directoryPath = self.__make_directory(directoryName)
@@ -231,7 +231,7 @@ class DataLogger:
 
         # Make the path to the directory
         current_time = self.__getFormattedTime()
-        directoryPath = os.path.join(self.logDirectoryPath, f"{current_time}-{directoryName}")
+        directoryPath = os.path.join(self.baseDirectoryPath, f"{current_time}-{directoryName}")
 
         # Make the directory
         if not os.path.exists(directoryPath):
