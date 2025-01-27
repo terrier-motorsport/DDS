@@ -174,7 +174,7 @@ class MPU_6050_x3(I2CDevice):
         Device.pin_factory = LGPIOFactory()
         self.device_selectors = [LED(pin) for pin in self.dev_pins]
 
-        # Make sure GPIO is properly released if this fails
+
         try:
             # Configure each MPU6050 device
             for dev_id in range(3):
@@ -190,7 +190,9 @@ class MPU_6050_x3(I2CDevice):
             self.start_worker()  # Start the data collection thread
             self._log(f"{self.name} Finished Initializing.")
         except Exception as e:
+            # Make sure GPIO is properly released if this fails
             self._close_gpio()
+            raise e
 
     
     def _select_device(self, dev_id):
