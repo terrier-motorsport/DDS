@@ -261,7 +261,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_pack_state_of_charge() -> str:
             soc = self.io.get_device_data('canInterface', 'Pack_SOC', "BatteryWidget")
-            print(soc)
+            # print(soc)
             if soc is str:
                 # This will happen if there is an error.
                 return soc
@@ -276,7 +276,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_cell_high_temperature():
             highTemp = self.io.get_device_data('canInterface', 'High_Temperature', "BatteryWidget")
-            print(highTemp)  # Debugging print
+            # print(highTemp)  # Debugging print
             if isinstance(highTemp, str):
                 # If an error string is returned, use it directly
                 return highTemp
@@ -291,7 +291,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_pack_current():
             current = self.io.get_device_data('canInterface', 'Pack_Current', "BatteryWidget")
-            print(current)  # Debugging print
+            # print(current)  # Debugging print
             if isinstance(current, str):
                 # If an error string is returned, use it directly
                 return current
