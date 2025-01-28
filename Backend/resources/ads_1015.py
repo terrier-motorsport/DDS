@@ -89,7 +89,6 @@ class ADS_1015(I2CDevice):
                 for input_obj, channel in zip(self.inputs, self.CHANNELS):
                     
                     # Get the voltage from the ADC
-                    print(channel)
                     voltage = self.ads.get_voltage(channel=channel)
 
                     # Get the output value
