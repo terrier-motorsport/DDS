@@ -687,19 +687,34 @@ class MyApp(App):
         return self.layout
     
     def update_io(self, dt):
-        # Accumulate time
+        # Initialize attributes for tracking elapsed time and dt values
         if not hasattr(self, '_elapsed_time'):
             self._elapsed_time = 0
+            self._dt_sum = 0
+            self._dt_count = 0
+
+        # Accumulate the elapsed time
         self._elapsed_time += dt
+
+        # Update the sum of dt values and count
+        self._dt_sum += dt
+        self._dt_count += 1
 
         # Update io
         self.io.update()
 
-        # Print dt every second
+        # Every second, calculate and print the average dt
         if self._elapsed_time >= 1.0:
-            print(f"Delta time (dt): {self._elapsed_time:.2f} seconds")
-            self._elapsed_time = 0  # Reset the counter
-            # print(dt)
+            # Calculate the average delta time
+            average_dt = self._dt_sum / self._dt_count if self._dt_count > 0 else 0
+
+            # Print the average dt for the past second
+            print(f"Average delta time (dt): {average_dt:.6f} seconds")
+
+            # Reset the counters for the next second
+            self._elapsed_time = 0
+            self._dt_sum = 0
+            self._dt_count = 0
 
 
 
