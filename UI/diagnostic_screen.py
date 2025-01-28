@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from collections import deque
 import matplotlib.pyplot as plt
-from 
 
 
 
