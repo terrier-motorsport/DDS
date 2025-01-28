@@ -109,59 +109,8 @@ class ADS_1015(I2CDevice):
         # Log error if the data collection worker stops unexpectedly
         self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
         self.status = self.DeviceStatus.ERROR
-    
-
-    def __fetch_sensor_data(self) -> List[float]:
-        """
-        Reads voltages from the ADC for each channel and returns a list of voltages.
-        Returns:
-            List[float]: A list of voltages read from each channel.
-        """
-        voltages = []
-
-        for channel, input_obj in zip(self.CHANNELS, self.inputs):
-            try:
-                # Read voltage from the current channel
-                voltage = self.ads.get_voltage(channel=channel)
-            except OSError as e:
-                # Handle occasional I2C errors
-                self._log(f"Failed to get ADC data from {channel}: {e}", self.log.LogSeverity.ERROR)
-                voltage = None
-
-            # Validate and clamp the voltage
-            voltage = self.__validate_voltage(input_obj, voltage)
-
-            # Store the validated voltage
-            voltages.append(voltage)
-
-        return voltages
 
 
-    def __validate_voltage(self, analog_in: Analog_In, voltage: float) -> float:
-        """
-        Validates and clamps the voltage within the Analog_In's valid range.
-        Args:
-            analog_in (Analog_In): The Analog_In object associated with the voltage.
-            voltage (float): The voltage to validate.
-        Returns:
-            float: The clamped voltage.
-        """
-        # Clamp the voltage to the valid range
-        return self.__clamp(voltage, analog_in.min_voltage, analog_in.max_voltage)
-
-
-
-    def __clamp(self, value, min_value, max_value) -> float:
-        """
-        Clamps a value between a minimum and maximum.
-        Args:
-            value (float): The value to clamp.
-            min_value (float): The minimum allowable value.
-            max_value (float): The maximum allowable value.
-        Returns:
-            float: The clamped value.
-        """
-        return max(min_value, min(value, max_value))
 
 # Example usage
 from Backend.resources.analog_in import ValueMapper
