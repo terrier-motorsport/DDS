@@ -96,7 +96,7 @@ class ADS_1015(I2CDevice):
                 self._log_telemetry(input_obj.name, output, input_obj.units)
 
                 # Add it to list of outputs
-                outputs[input_obj.name] = outputs
+                outputs[input_obj.name] = output
 
 
             # Update the cache in a thread-safe manner
