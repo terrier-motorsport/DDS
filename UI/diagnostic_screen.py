@@ -249,9 +249,6 @@ class DiagnosticScreen(FloatLayout):
             parameter_value = self.io.get_device_data(selected_device, selected_parameter, "DiagnosticsScreen") or "No data"
             self.value_label.text = str(parameter_value)
 
-            # Reset the graph
-            self.add_live_graph()
-
         self.option_dropdown.bind_to_dropdown_selection(update_value)
 
 
@@ -277,6 +274,7 @@ class DiagnosticScreen(FloatLayout):
         def on_parameter_selected(instance, selected_value):
             print(f'UPDATING VALUE: {instance}, {selected_value}')
             update_value_label()
+            self.clear_graph()
 
         self.option_dropdown.bind_to_dropdown_selection(on_parameter_selected)
 
@@ -384,8 +382,11 @@ class DiagnosticScreen(FloatLayout):
             self.graph_widget.draw()
         else:
             # If no device/parameter selected, clear the graph
-            self.data_points.clear()
-            self.line.set_data([], [])
-            self.ax.relim()
-            self.ax.autoscale_view()
-            self.graph_widget.draw()
+            self.clear_graph()
+
+    def clear_graph(self):
+        self.data_points.clear()
+        self.line.set_data([], [])
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.graph_widget.draw()
