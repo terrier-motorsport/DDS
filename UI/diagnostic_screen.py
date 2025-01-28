@@ -10,6 +10,12 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.label import Label
 from kivy.core.window import Window
 from kivy.clock import Clock
+import matplotlib.pyplot as plt
+from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+import matplotlib.pyplot as plt
+
 
 
 # Constants for default text and layout configurations
@@ -131,8 +137,12 @@ class DiagnosticScreen(FloatLayout):
         self.option_dropdown_button = self.create_option_dropdown_button()
         self.add_racing_button()
         self.add_value_label()
+        self.add_live_graph()  # Add live updating graph
 
         self.add_widget(self.grid_layout)
+
+        # Schedule graph updates every 0.1 seconds
+        Clock.schedule_interval(self.update_graph, 0.1)
 
 
     def create_grid_layout(self) -> GridLayout:
@@ -324,3 +334,54 @@ class DiagnosticScreen(FloatLayout):
 
         # Return the parameters for the selected device if it exists, else the no parameters text
         return self.io.get_device_parameters(device) if device else [NO_PARAMETERS_TEXT]
+    
+
+    def add_live_graph(self):
+        """Adds a live updating graph to display the selected parameter."""
+        # Create a Matplotlib figure
+        self.figure, self.ax = plt.subplots()
+        self.line, = self.ax.plot([], [], lw=2)
+
+        # Set up axes labels
+        self.ax.set_xlabel("Time (s)")
+        self.ax.set_ylabel("Parameter Value")
+        self.ax.grid()
+
+        # Add Matplotlib figure to Kivy layout
+        self.graph_widget = FigureCanvasKivyAgg(self.figure)
+        self.graph_widget.size_hint = (1, 0.5)
+        self.graph_widget.height = 300
+        self.grid_layout.add_widget(self.graph_widget)
+
+    def update_graph(self, dt):
+        """
+        Updates the graph with the latest data points for the selected parameter.
+        This function is scheduled to run at regular intervals.
+        """
+        selected_device = self.get_selected_device()
+        selected_parameter = self.get_selected_parameter()
+
+        if selected_device and selected_parameter:
+            # Fetch the latest parameter value
+            parameter_value = self.io.get_device_data(selected_device, selected_parameter, "DiagnosticsScreen")
+
+            # If valid data, add it to the data points deque
+            if parameter_value is not None:
+                self.data_points.append(float(parameter_value))
+
+            # Update the line on the graph
+            self.line.set_data(range(len(self.data_points)), list(self.data_points))
+
+            # Adjust the axes to fit the data
+            self.ax.relim()
+            self.ax.autoscale_view()
+
+            # Refresh the graph widget
+            self.graph_widget.draw()
+        else:
+            # If no device/parameter selected, clear the graph
+            self.data_points.clear()
+            self.line.set_data([], [])
+            self.ax.relim()
+            self.ax.autoscale_view()
+            self.graph_widget.draw()
