@@ -105,7 +105,7 @@ class ADS_1015(I2CDevice):
                 self._update_cache(outputs)
             except Exception as e:
                 self.status = self.DeviceStatus.ERROR
-                raise e
+                
 
         # Log error if the data collection worker stops unexpectedly
         self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
