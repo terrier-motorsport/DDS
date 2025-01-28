@@ -82,6 +82,7 @@ class ADS_1015(I2CDevice):
         Handles slower I/O-dependent communication with the device.
         """
         while self.status == self.DeviceStatus.ACTIVE:
+            print('yay')
 
             # Fetch voltages from the sensor
             voltages = self.__fetch_sensor_data()
@@ -129,7 +130,6 @@ class ADS_1015(I2CDevice):
 
             # Store the validated voltage
             voltages.append(voltage)
-            print(voltages)
 
         return voltages
 
