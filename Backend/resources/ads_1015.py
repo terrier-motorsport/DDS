@@ -98,7 +98,7 @@ class ADS_1015(I2CDevice):
                 # Add it to list of outputs
                 outputs[input_obj.name] = output
 
-
+            print('updating cache')
             # Update the cache in a thread-safe manner
             self._update_cache(outputs)
 
