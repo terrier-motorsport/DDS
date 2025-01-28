@@ -83,31 +83,28 @@ class ADS_1015(I2CDevice):
         """
         while self.status == self.DeviceStatus.ACTIVE:
 
-            # Fetch voltages from the sensor
-            # try:
-            #     voltages = self.__fetch_sensor_data()
-            # except Exception as e:
-            #     self.status = self.DeviceStatus.ERROR
-                
+            try:    
+                # Process the voltages
+                outputs: Dict[str, float] = {}
+                for input_obj, channel in zip(self.inputs, self.CHANNELS):
+                    
+                    # Get the voltage from the ADC
+                    voltage = self.ads.get_voltage(channel=channel)
 
-            # Process the voltages
-            outputs: Dict[str, float] = {}
-            for input_obj, channel in zip(self.inputs, self.CHANNELS):
-                
-                # Get the voltage from the ADC
-                voltage = self.ads.get_voltage(channel=channel)
+                    # Get the output value
+                    output = input_obj.voltage_to_output(voltage)
 
-                # Get the output value
-                output = input_obj.voltage_to_output(voltage)
+                    # Log it
+                    self._log_telemetry(input_obj.name, output, input_obj.units)
 
-                # Log it
-                self._log_telemetry(input_obj.name, output, input_obj.units)
+                    # Add it to list of outputs
+                    outputs[input_obj.name] = output
 
-                # Add it to list of outputs
-                outputs[input_obj.name] = output
-
-            # Update the cache
-            self._update_cache(outputs)
+                # Update the cache
+                self._update_cache(outputs)
+            except Exception as e:
+                self.status = self.DeviceStatus.ERROR
+                raise e
 
         # Log error if the data collection worker stops unexpectedly
         self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
