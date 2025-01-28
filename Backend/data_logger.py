@@ -30,6 +30,7 @@ class DataLogger:
     systemLogPath: str        # Path of the system logs
 
     LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
+    TIMEOUT_THRESH = 1
 
     
     class LogSeverity(Enum):
@@ -127,9 +128,29 @@ class DataLogger:
             msg (str): The content to be logged
             severity (LogSeverity): The level of the log
         """
+        # Dictionary to track the last time each message was logged
+        if not hasattr(self, "_last_log_times"):
+            self._last_log_times = {}
 
+        # Create a unique key for the logger and message
+        log_key = f"{loggerName}:{msg}"
+
+        # Get the current time
+        current_time = time.time()
+
+        # Check if the message was recently logged
+        if log_key in self._last_log_times:
+            last_log_time = self._last_log_times[log_key]
+            # Skip logging if less than 1 second has passed
+            if current_time - last_log_time < self.TIMEOUT_THRESH
+                return
+
+        # Update the last logged time for the message
+        self._last_log_times[log_key] = current_time
+
+        # Get the logger and log the message
         logger = self.__getLogger(loggerName)
-        logger.log(level=severity.value,msg=f"{msg}")
+        logger.log(level=severity.value, msg=f"{msg}")
 
 
     def __configureLogger(self, systemLogPath: str, debugLogPath: str):
