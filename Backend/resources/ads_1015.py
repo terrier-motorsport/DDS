@@ -82,10 +82,13 @@ class ADS_1015(I2CDevice):
         Handles slower I/O-dependent communication with the device.
         """
         while self.status == self.DeviceStatus.ACTIVE:
-            print('yay')
 
             # Fetch voltages from the sensor
-            voltages = self.__fetch_sensor_data()
+            try:
+                voltages = self.__fetch_sensor_data()
+            except Exception as e:
+                self.status = self.DeviceStatus.ERROR
+                
 
             # Process the voltages
             outputs: Dict[str, float] = {}
@@ -99,7 +102,6 @@ class ADS_1015(I2CDevice):
                 # Add it to list of outputs
                 outputs[input_obj.name] = output
 
-            print('updating cache')
             # Update the cache in a thread-safe manner
             self._update_cache(outputs)
 
