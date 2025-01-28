@@ -142,7 +142,7 @@ class DataLogger:
         if log_key in self._last_log_times:
             last_log_time = self._last_log_times[log_key]
             # Skip logging if less than 1 second has passed
-            if current_time - last_log_time < self.TIMEOUT_THRESH
+            if current_time - last_log_time < self.TIMEOUT_THRESH:
                 return
 
         # Update the last logged time for the message
