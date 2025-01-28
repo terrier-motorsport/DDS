@@ -249,6 +249,13 @@ class DiagnosticScreen(FloatLayout):
             parameter_value = self.io.get_device_data(selected_device, selected_parameter, "DiagnosticsScreen") or "No data"
             self.value_label.text = str(parameter_value)
 
+            # Reset the graph
+            self.data_points.clear()  # Clear all stored data points
+            self.line.set_data([], [])  # Clear the line data
+            self.ax.relim()  # Reset axes limits
+            self.ax.autoscale_view()  # Adjust axes to the cleared data
+            self.graph_widget.draw()  # Redraw the graph
+
         self.option_dropdown.bind_to_dropdown_selection(update_value)
 
 
