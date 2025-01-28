@@ -12,8 +12,9 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 import matplotlib.pyplot as plt
 from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
+import matplotlib.pyplot as plt
+from kivy.garden.matplotlib import FigureCanvasKivyAgg
+from collections import deque
 import matplotlib.pyplot as plt
 
 

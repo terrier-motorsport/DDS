@@ -12,7 +12,6 @@ cycler==0.12.1
 diskcache==5.6.3
 docutils==0.21.2
 fonttools==4.55.6
-gpiod==2.2.3
 gpiozero==2.0.1
 i2cdevice==1.0.0
 idna==3.10
@@ -20,6 +19,7 @@ iniconfig==2.0.0
 json5==0.10.0
 Kivy==2.3.0
 Kivy-Garden==0.1.5
+kivy_garden.matplotlib==0.1.1.dev0
 kiwisolver==1.4.8
 lgpio==0.2.2.0
 matplotlib==3.10.0
@@ -38,6 +38,7 @@ requests==2.32.3
 rpi-lgpio==0.6
 RPi.GPIO==0.7.1
 scipy==1.14.1
+setuptools==75.8.0
 six==1.17.0
 smbus2==0.5.0
 spidev==3.6
