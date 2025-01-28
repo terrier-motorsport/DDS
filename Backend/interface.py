@@ -190,7 +190,7 @@ class Interface(ABC):
                     device.initialize(self.bus)
                 except Exception as e:
                     self._log(f'Couldn\'t init {device.name}, {e}', DataLogger.LogSeverity.DEBUG)
-                    print(f'Err init dev {device.name}, {e}')
+                    # print(f'Err init dev {device.name}, {e}')
                 pass
              
 
