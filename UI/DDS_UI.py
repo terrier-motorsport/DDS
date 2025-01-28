@@ -687,8 +687,19 @@ class MyApp(App):
         return self.layout
     
     def update_io(self, dt):
+        # Accumulate time
+        if not hasattr(self, '_elapsed_time'):
+            self._elapsed_time = 0
+        self._elapsed_time += dt
+
+        # Update io
         self.io.update()
-        # print(dt)
+
+        # Print dt every second
+        if self._elapsed_time >= 1.0:
+            print(f"Delta time (dt): {self._elapsed_time:.2f} seconds")
+            self._elapsed_time = 0  # Reset the counter
+            # print(dt)
 
 
 
