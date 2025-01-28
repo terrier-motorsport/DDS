@@ -131,6 +131,7 @@ class DiagnosticScreen(FloatLayout):
         super().__init__(**kwargs)
         self.io = io
         self.navigate_to_racing = navigate_to_racing
+        self.data_points = []
 
         self.grid_layout = self.create_grid_layout()
         self.device_dropdown_button = self.create_device_dropdown_button()
