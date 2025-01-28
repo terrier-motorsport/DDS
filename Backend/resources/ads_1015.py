@@ -129,6 +129,7 @@ class ADS_1015(I2CDevice):
 
             # Store the validated voltage
             voltages.append(voltage)
+            print(voltages)
 
         return voltages
 
