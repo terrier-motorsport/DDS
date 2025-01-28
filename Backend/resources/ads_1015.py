@@ -84,15 +84,19 @@ class ADS_1015(I2CDevice):
         while self.status == self.DeviceStatus.ACTIVE:
 
             # Fetch voltages from the sensor
-            try:
-                voltages = self.__fetch_sensor_data()
-            except Exception as e:
-                self.status = self.DeviceStatus.ERROR
+            # try:
+            #     voltages = self.__fetch_sensor_data()
+            # except Exception as e:
+            #     self.status = self.DeviceStatus.ERROR
                 
 
             # Process the voltages
             outputs: Dict[str, float] = {}
-            for input_obj, voltage in zip(self.inputs, voltages):
+            for input_obj, channel in zip(self.inputs, self.CHANNELS):
+                
+                # Get the voltage from the ADC
+                voltage = self.ads.get_voltage(channel=channel)
+
                 # Get the output value
                 output = input_obj.voltage_to_output(voltage)
 
@@ -102,7 +106,7 @@ class ADS_1015(I2CDevice):
                 # Add it to list of outputs
                 outputs[input_obj.name] = output
 
-            # Update the cache in a thread-safe manner
+            # Update the cache
             self._update_cache(outputs)
 
         # Log error if the data collection worker stops unexpectedly
