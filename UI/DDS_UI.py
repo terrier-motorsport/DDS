@@ -664,6 +664,7 @@ class MyApp(App):
 
     def __init__(self, io: DDS_IO, demoMode=False, **kwargs):
         super().__init__(**kwargs)
+        self.title = 'Terrier Motorsport DDS'
         self.io = io
         self.demoMode = demoMode
         
