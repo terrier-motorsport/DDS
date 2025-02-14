@@ -13,15 +13,15 @@ class TestDataLogger(unittest.TestCase):
         Each test will run in isolation with its own environment.
         """
         self.test_dir = tempfile.mkdtemp()
-        self.original_log_dir = DataLogger.logDirectoryPath
+        self.original_log_dir = DataLogger.baseDirectoryPath
         # Redirect the logger's base directory to our temporary directory
-        DataLogger.logDirectoryPath = self.test_dir
+        DataLogger.baseDirectoryPath = self.test_dir
 
     def tearDown(self):
         """
         Remove the temporary directory and restore defaults after each test.
         """
-        DataLogger.logDirectoryPath = self.original_log_dir
+        DataLogger.baseDirectoryPath = self.original_log_dir
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     # -----------------------------------------------------------------------

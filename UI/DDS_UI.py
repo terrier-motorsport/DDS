@@ -261,7 +261,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_pack_state_of_charge() -> str:
             soc = self.io.get_device_data('canInterface', 'Pack_SOC', "BatteryWidget")
-            print(soc)
+            # print(soc)
             if soc is str:
                 # This will happen if there is an error.
                 return soc
@@ -276,7 +276,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_cell_high_temperature():
             highTemp = self.io.get_device_data('canInterface', 'High_Temperature', "BatteryWidget")
-            print(highTemp)  # Debugging print
+            # print(highTemp)  # Debugging print
             if isinstance(highTemp, str):
                 # If an error string is returned, use it directly
                 return highTemp
@@ -291,7 +291,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_pack_current():
             current = self.io.get_device_data('canInterface', 'Pack_Current', "BatteryWidget")
-            print(current)  # Debugging print
+            # print(current)  # Debugging print
             if isinstance(current, str):
                 # If an error string is returned, use it directly
                 return current
@@ -677,6 +677,7 @@ class MyApp(App):
 
     def __init__(self, io: DDS_IO, demoMode=False, **kwargs):
         super().__init__(**kwargs)
+        self.title = 'Terrier Motorsport DDS'
         self.io = io
         self.demoMode = demoMode
         
@@ -699,8 +700,34 @@ class MyApp(App):
         return self.layout
     
     def update_io(self, dt):
+        # Initialize attributes for tracking elapsed time and dt values
+        if not hasattr(self, '_elapsed_time'):
+            self._elapsed_time = 0
+            self._dt_sum = 0
+            self._dt_count = 0
+
+        # Accumulate the elapsed time
+        self._elapsed_time += dt
+
+        # Update the sum of dt values and count
+        self._dt_sum += dt
+        self._dt_count += 1
+
+        # Update io
         self.io.update()
-        # print(dt)
+
+        # Every second, calculate and print the average dt
+        if self._elapsed_time >= 1.0:
+            # Calculate the average delta time
+            average_dt = self._dt_sum / self._dt_count if self._dt_count > 0 else 0
+
+            # Print the average dt for the past second
+            print(f"Average delta time (dt): {average_dt:.6f} seconds")
+
+            # Reset the counters for the next second
+            self._elapsed_time = 0
+            self._dt_sum = 0
+            self._dt_count = 0
 
 
 

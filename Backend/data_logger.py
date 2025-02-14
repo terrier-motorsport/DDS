@@ -25,12 +25,12 @@ class DataLogger:
                 - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    logDirectoryPath = './Backend/logs/'
     directoryPath: str        # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
 
     LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
+    TIMEOUT_THRESH = 1
 
     
     class LogSeverity(Enum):
@@ -42,13 +42,14 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str):
+    def __init__(self, directoryName: str, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
         # Initialize variables
         self.__validateFileName(directoryName)
+        self.baseDirectoryPath = baseDirectoryPath
 
         # Make the directory & save the path
         self.directoryPath = self.__make_directory(directoryName)
@@ -127,9 +128,29 @@ class DataLogger:
             msg (str): The content to be logged
             severity (LogSeverity): The level of the log
         """
+        # Dictionary to track the last time each message was logged
+        if not hasattr(self, "_last_log_times"):
+            self._last_log_times = {}
 
+        # Create a unique key for the logger and message
+        log_key = f"{loggerName}:{msg}"
+
+        # Get the current time
+        current_time = time.time()
+
+        # Check if the message was recently logged
+        if log_key in self._last_log_times:
+            last_log_time = self._last_log_times[log_key]
+            # Skip logging if less than 1 second has passed
+            if current_time - last_log_time < self.TIMEOUT_THRESH:
+                return
+
+        # Update the last logged time for the message
+        self._last_log_times[log_key] = current_time
+
+        # Get the logger and log the message
         logger = self.__getLogger(loggerName)
-        logger.log(level=severity.value,msg=f"{msg}")
+        logger.log(level=severity.value, msg=f"{msg}")
 
 
     def __configureLogger(self, systemLogPath: str, debugLogPath: str):
@@ -177,7 +198,7 @@ class DataLogger:
         """
         if timestamp is None:
             timestamp = time.time()  # Use the current time if no timestamp is given
-        return strftime("%Y-%m-%d-%H:%M:%S", localtime(timestamp))
+        return strftime("%Y-%m-%d--%H-%M-%S", localtime(timestamp))
 
 
     def __createCSVFile(self, fileName: str):
@@ -231,7 +252,7 @@ class DataLogger:
 
         # Make the path to the directory
         current_time = self.__getFormattedTime()
-        directoryPath = os.path.join(self.logDirectoryPath, f"{current_time}-{directoryName}")
+        directoryPath = os.path.join(self.baseDirectoryPath, f"{current_time}-{directoryName}")
 
         # Make the directory
         if not os.path.exists(directoryPath):
