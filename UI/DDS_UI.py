@@ -251,6 +251,10 @@ class Battery (FloatLayout):
         super().__init__(**kwargs)
 
         self.io = io
+
+        # rectangle dimensions
+        rect_height = 450
+        rect_width = 285  
     
         # Rectangle color (light blue)
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
@@ -309,11 +313,11 @@ class Battery (FloatLayout):
         self.left_rect.pos_hint = {"x": 0.05, "center_y": 0.5}  # 5% from left, vertically centered
 
         # Draw the white rectangle around the left_rect
-        def draw_white_rectangle(*args):
-            self.left_rect.canvas.before.clear()  # Clear previous drawings
-            with self.left_rect.canvas.before:
-                Color(rect_color)  # White color (RGBA)
-                RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos)
+        self.left_rect = FloatLayout(size_hint=(None, None), size=(rect_width, rect_height))
+        self.left_rect.pos = (0+20, (600 - rect_height) // 2)  # Left-aligned, vertically centered (600 is the screen height)
+        with self.left_rect.canvas.before:
+            RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos, radius=[corner_radius], color=rect_color)
+        self.add_widget(self.left_rect)
 
         # Bind the drawing function to the size and position changes
         self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
@@ -325,54 +329,24 @@ class Battery (FloatLayout):
         self.add_widget(self.left_rect)
 
 
-       
-
-        
-
-
         # Add content to the battery
         # Percentage label
-        self.battery_label = OutlineColorChangingLabel_Battery(
-            value_source=get_pack_state_of_charge,
-            text=f"{get_pack_state_of_charge()}",
-            font_size='40sp',
-            size_hint=(0.8, 0.1),
-            pos_hint={"center_x": 0.5, "top": 0.9}
-        )
-
+        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='20sp', position=(20, (rect_height/2)+10))
+        
         # Percentage icon (TO BE CHANGED)
-        self.battery_icon = OutlineColorChangingLabel_Battery(
-            value_source=get_pack_state_of_charge,
-            text="*ICON*",
-            font_size='70sp',
-            size_hint=(0.8, 0.2),
-            pos_hint={"center_x": 0.5, "center_y": 0.6}
-        )
-
+        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', position=(20, (rect_height/2)-80))
+        
         # Temperature
-        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(
-            value_source=get_cell_high_temperature,
-            text=f"{get_cell_high_temperature()}",
-            font_size='30sp',
-            size_hint=(0.8, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.4}
-        )
-
+        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='20sp', position=(100, (rect_height/2)-200))
+        
         # Discharge rate 
-        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(
-            value_source=get_pack_current,
-            text=f"{get_pack_current()}",
-            font_size='30sp',
-            size_hint=(0.8, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.2}
-        )
-    
+        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='20sp', position=(80, (rect_height/2)-300))
         
         # Adds widgets to the battery rectangle 
-        self.left_rect.add_widget(self.battery_label)
-        self.left_rect.add_widget(self.battery_icon)
-        self.left_rect.add_widget(self.battery_temp)
-        self.left_rect.add_widget(self.battery_discharge)
+        self.left_rect.add_widget(battery_label)  
+        self.left_rect.add_widget(battery_icon)
+        self.left_rect.add_widget(battery_temp)
+        self.left_rect.add_widget(battery_discharge)
         
 
 
@@ -396,9 +370,9 @@ class Warnings(FloatLayout):
 
         self.io = io
 
-        # Rectangle dimensions
-        rect_height = 700
-        rect_width = 550
+        # rectangle dimensions
+        rect_height = 450
+        rect_width = 285 
 
         # Rectangle color
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
@@ -406,24 +380,12 @@ class Warnings(FloatLayout):
         # How round the corners are
         corner_radius = 20
 
-        # Establish the rectangle using FloatLayout
-        self.right_rect = FloatLayout(size_hint=(0.25, 0.6))  # 25% width, 60% height of parent
-        self.right_rect.pos_hint = {"right": 0.95, "center_y": 0.5}  # 5% from right, vertically centered
-
-        # Draw the right rectangle
-        def draw_right_rectangle(*args):
-            self.right_rect.canvas.before.clear()  # Clear previous drawings
-            with self.right_rect.canvas.before:
-                Color(rect_color)  # Desired color
-                RoundedRectangle(size=self.right_rect.size, pos=self.right_rect.pos, radius=[corner_radius])
-
-        # Bind the drawing function to the size and position changes
-        self.right_rect.bind(size=draw_right_rectangle, pos=draw_right_rectangle)
-
-        # Initially call the draw function
-        draw_right_rectangle()
-
-        # Add the widget to the parent
+        # Establishes light blue rectangle 
+        self.right_rect = Widget(size_hint=(None, None), size=(rect_width, rect_height))
+        # Position the rectangle on the right side with absolute pixel values
+        self.right_rect.pos = ((1024 - rect_width) - 20, (600 - rect_height) // 2)  # Right-aligned, vertically centered
+        with self.right_rect.canvas.before:
+            RoundedRectangle(pos=self.right_rect.pos, size=self.right_rect.size, radius=[corner_radius], color=rect_color)
         self.add_widget(self.right_rect)
 
         # Scrolling layout constrained to the rectangle
@@ -542,15 +504,17 @@ class Center(FloatLayout):
         self.rpm = -1
 
         # Use FloatLayout for layout behavior
-        self.center_block = FloatLayout(size_hint=(0.9, 1))
-        self.center_block.pos_hint = {"x": 0.0977, "y": 0}
+        self.center_block = FloatLayout(size_hint=(None, None), size=(804, 600))  # Fixed size: (Window.width - 210, Window.height)
+        # Absolute positioning: center the block manually on a 600x1024 screen
+        self.center_block.pos = (212, 0)  # Absolute position for center block
+
         self.add_widget(self.center_block)
     
         # Create a label to display the speed value
         self.speed_label = Label(
             text=f"{self.get_speed()} MPH",
-            font_size='100sp',
-            pos_hint={'center_x': 0.45, 'center_y': 0.60}
+            font_size='60sp',
+            pos=(106, 60)
         )
         self.center_block.add_widget(self.speed_label)
     
@@ -558,8 +522,8 @@ class Center(FloatLayout):
         # Create a label to display the rpm value
         self.rpm_label = Label(
             text=f"{self.get_rpm()} RPM",
-            font_size='50sp',
-            pos_hint={'center_x': 0.45, 'center_y': 0.40}
+            font_size='20sp',
+            pos=(106, -40)
         )
         self.center_block.add_widget(self.rpm_label)
     
