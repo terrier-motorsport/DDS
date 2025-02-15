@@ -530,45 +530,45 @@ class Center(FloatLayout):
             # Schedule updates every second
             Clock.schedule_interval(self.update_value, 1)
 
-    def get_speed():
-        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-        if isinstance(erpm, str):
+        def get_speed():
+            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+            if isinstance(erpm, str):
             # If it's a string (e.g., error message), return it directly
-            return erpm
-        elif erpm is None:
+                return erpm
+            elif erpm is None:
             # If no data is available, return a fallback value
-            return -1
-        else:
-            try:
+                return -1
+            else:
+                try:
                 # Convert to float and calculate speed
-                return float(erpm) * 5
-            except (ValueError, TypeError):
+                    return float(erpm) * 5
+                except (ValueError, TypeError):
                 # Handle invalid data gracefully
-                return -1
+                    return -1
         
-    def get_rpm():
-        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-        if isinstance(erpm, str):
+        def get_rpm():
+            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+            if isinstance(erpm, str):
             # If it's a string (e.g., error message), return it directly
-            return erpm
-        elif erpm is None:
+                return erpm
+            elif erpm is None:
             # If no data is available, return a fallback value
-            return -1
-        else:
-            try:
-                # Convert to float and calculate RPM
-                return float(erpm) * 10
-            except (ValueError, TypeError):
-                # Handle invalid data gracefully
                 return -1
+            else:
+                try:
+                # Convert to float and calculate RPM
+                    return float(erpm) * 10
+                except (ValueError, TypeError):
+                # Handle invalid data gracefully
+                    return -1
 
-    def update_value(self,dt):
-        self.speed = self.get_speed()
-        self.rpm = self.get_rpm()
-        self.speed_label.text = f"Speed: {self.speed:.2f} mph" if self.speed != -1 else "Speed: -- mph"
-        self.rpm_label.text = f"RPM: {self.rpm:.2f}" if self.rpm != -1 else "RPM: --"
+        def update_value(self,dt):
+            self.speed = self.get_speed()
+            self.rpm = self.get_rpm()
+            self.speed_label.text = f"Speed: {self.speed:.2f} mph" if self.speed != -1 else "Speed: -- mph"
+            self.rpm_label.text = f"RPM: {self.rpm:.2f}" if self.rpm != -1 else "RPM: --"
 
-        print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
+            print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
 
 
         
