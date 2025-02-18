@@ -64,7 +64,7 @@ class DataLogger:
             time.sleep(2)
 
             # Set new path to local directory
-            self.directoryPath = self.FALLBACK_DIR_PATH
+            self.directoryPath = self.__make_directory(self.FALLBACK_DIR_PATH)
 
         # Paths for telemetry and system logs
         self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
