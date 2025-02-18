@@ -50,6 +50,8 @@ class Device(ABC):
     def initialize(self, bus):
         '''
         Initialize the device. Must be implemented by subclasses.
+
+        At the bare minimum, must set status to active.
         '''
         pass
 
@@ -312,7 +314,8 @@ class CANDevice(Device):
     
 
     def initialize(self, bus):
-        return super().initialize(bus)
+        self.bus = bus
+        self.status = self.DeviceStatus.ACTIVE
     
 
     def update(self, msg: can.Message):
