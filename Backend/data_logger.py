@@ -57,11 +57,11 @@ class DataLogger:
             self.childDirectoryPath = self.__make_directory(directoryName)
         except OSError as e:
             # Warn user of failure
-            print(f'Data logger package failed to create log directory.')
+            print(f'&&&&&&&&&&& ~~~WARNING~~~ Data logger package failed to create log directory. ~~~WARNING~~~ &&&&&&&&&&&')
             print(f'\n Writing logs to {directoryName} will be disabled.')
             print(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
-            print('Waiting 2 seconds.')
-            time.sleep(2)
+            print('Waiting 3 seconds.')
+            time.sleep(3)
 
             # Set new path to local directory
             self.parentDirectoryPath = self.FALLBACK_DIR_PATH
