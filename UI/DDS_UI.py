@@ -527,8 +527,8 @@ class Center(FloatLayout):
         )
         self.center_block.add_widget(self.rpm_label)
     
-            # Schedule updates every second
-            Clock.schedule_interval(self.update_value, 1)
+        # Schedule updates every second
+        Clock.schedule_interval(self.update_value, 1)
 
         def get_speed():
             erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
