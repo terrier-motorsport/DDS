@@ -267,6 +267,7 @@ class DataLogger:
         directoryPath = os.path.join(self.baseDirectoryPath, f"{current_time}-{directoryName}")
 
         # Make the directory (if it doesn't already exist)
+        print(f'making dir {directoryPath}')
         if not os.path.exists(directoryPath):
             os.makedirs(directoryPath)
 
