@@ -371,7 +371,7 @@ class DiagnosticScreen(FloatLayout):
             parameter_value = self.io.get_device_data(selected_device, selected_parameter, "DiagnosticsScreen")
 
             # If valid data, add it to the data points deque
-            if parameter_value is not None:
+            if isinstance(parameter_value, Union[float, int]):
                 self.data_points.append(float(parameter_value))
 
             # Update the line on the graph
