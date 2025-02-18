@@ -25,7 +25,7 @@ class DataLogger:
                 - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    directoryPath: str        # Path of the parent directory
+    childDirectoryPath: str        # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
     FALLBACK_DIR_PATH = './Backend/logs/'
@@ -50,11 +50,11 @@ class DataLogger:
 
         # Initialize variables
         self.__validateFileName(directoryName)
-        self.baseDirectoryPath = baseDirectoryPath
+        self.parentDirectoryPath = baseDirectoryPath
 
         # Make the directory & save the path
         try:
-            self.directoryPath = self.__make_directory(directoryName)
+            self.childDirectoryPath = self.__make_directory(directoryName)
         except OSError as e:
             # Warn user of failure
             print(f'Data logger package failed to create log directory.')
@@ -64,13 +64,13 @@ class DataLogger:
             time.sleep(2)
 
             # Set new path to local directory
-            self.baseDirectoryPath = self.FALLBACK_DIR_PATH
-            self.directoryPath = self.__make_directory(directoryName)
+            self.parentDirectoryPath = self.FALLBACK_DIR_PATH
+            self.childDirectoryPath = self.__make_directory(directoryName)
 
         # Paths for telemetry and system logs
-        self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
-        self.systemLogPath = os.path.join(self.directoryPath, "System.log")
-        self.debugLogPath = os.path.join(self.directoryPath, "debug.log")
+        self.telemetryPath = os.path.join(self.childDirectoryPath, "Telemetry.csv")
+        self.systemLogPath = os.path.join(self.childDirectoryPath, "System.log")
+        self.debugLogPath = os.path.join(self.childDirectoryPath, "debug.log")
 
         # Create files
         self.__createCSVFile("Telemetry.csv")
@@ -223,7 +223,7 @@ class DataLogger:
             fileName (str): The name of the file to be created.
         '''
 
-        filePath = os.path.join(self.directoryPath, fileName)
+        filePath = os.path.join(self.childDirectoryPath, fileName)
 
         with open(filePath, "w") as file:
             # Create the CSV writer
@@ -265,7 +265,7 @@ class DataLogger:
 
         # Make the path to the directory
         current_time = self.__getFormattedTime()
-        directoryPath = os.path.join(self.baseDirectoryPath, f"{current_time}-{directoryName}")
+        directoryPath = os.path.join(self.parentDirectoryPath, f"{current_time}-{directoryName}")
 
         # Make the directory (if it doesn't already exist)
         print(f'making dir {directoryPath}')

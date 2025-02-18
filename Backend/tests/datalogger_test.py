@@ -13,15 +13,15 @@ class TestDataLogger(unittest.TestCase):
         Each test will run in isolation with its own environment.
         """
         self.test_dir = tempfile.mkdtemp()
-        self.original_log_dir = DataLogger.baseDirectoryPath
+        self.original_log_dir = DataLogger.parentDirectoryPath
         # Redirect the logger's base directory to our temporary directory
-        DataLogger.baseDirectoryPath = self.test_dir
+        DataLogger.parentDirectoryPath = self.test_dir
 
     def tearDown(self):
         """
         Remove the temporary directory and restore defaults after each test.
         """
-        DataLogger.baseDirectoryPath = self.original_log_dir
+        DataLogger.parentDirectoryPath = self.original_log_dir
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     # -----------------------------------------------------------------------
@@ -33,7 +33,7 @@ class TestDataLogger(unittest.TestCase):
         Test that a valid file name passes without raising an exception.
         """
         logger = DataLogger("valid_name")
-        self.assertTrue(os.path.exists(logger.directoryPath))
+        self.assertTrue(os.path.exists(logger.childDirectoryPath))
 
     def test_validate_file_name_failure_empty(self):
         """
@@ -58,7 +58,7 @@ class TestDataLogger(unittest.TestCase):
         Test that the directory is created successfully within the log base.
         """
         logger = DataLogger("directory_test")
-        self.assertTrue(os.path.exists(logger.directoryPath))
+        self.assertTrue(os.path.exists(logger.childDirectoryPath))
 
     # -----------------------------------------------------------------------
     # __createCSVFile Tests
