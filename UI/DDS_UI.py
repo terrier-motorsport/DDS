@@ -543,7 +543,7 @@ class Center(FloatLayout):
         self.center_block.add_widget(self.rpm_label)
     
         # Schedule updates every second
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     # Define getter functions
     def get_speed(self):
