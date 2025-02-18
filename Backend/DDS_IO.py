@@ -102,6 +102,10 @@ class DDS_IO:
             param_key `(str)`: The key of the parameter that you are requesting
             caller `(str)`: The name of the entity calling this function. Used for logging purposes.
         '''
+
+        # Return a random value if we are in demo mode.
+        if self.demo_mode:
+            return random.random() * 100
         
         # 1) Get the device at the specified key by checking each interface for it.
         device: Device = None
@@ -111,9 +115,6 @@ class DDS_IO:
                 break
             # If the device is None, we can return early
         if device is None:
-            # Return a random value if we are in demo mode.
-            if self.demo_mode:
-                return random.random() * 100
             # Log the mistake and return.
             self.__log(f'Device {device_key} not found. (Data Req: {param_key})', DataLogger.LogSeverity.DEBUG, caller)
             return "UKNDEV"
