@@ -636,7 +636,7 @@ class MainLayout(FloatLayout):
         diagnostic_button = Button(
             text="Diagnostics",
             size_hint=(None, None),
-            size=(250, 100),
+            size=(250, 70),
             pos_hint={'right': 1, 'top': 1},  # Top-right corner
         )
         # Bind the button to the method to enable the diagnostic screen
