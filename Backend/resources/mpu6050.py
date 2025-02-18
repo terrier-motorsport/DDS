@@ -13,8 +13,11 @@ from typing import List
 from Backend.device import I2CDevice
 from Backend.resources.internal_device import InternalDevice
 from smbus2 import SMBus
-from gpiozero.pins.lgpio import LGPIOFactory
-from gpiozero import Device, LED
+try:
+    from gpiozero.pins.lgpio import LGPIOFactory
+    from gpiozero import Device, LED
+except Exception as e:
+    print(f"Failed to init gpiozero: {e}.\n If this is unexpected, make sure requirements.txt is installed.")
 import time
 
 class Internal_MPU_6050(InternalDevice):

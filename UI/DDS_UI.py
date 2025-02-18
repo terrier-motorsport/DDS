@@ -7,15 +7,15 @@
     # Have you installed requirements.txt? (run pip install -r requirements.txt)
     # Do NOT run further that Python 3.12, kivy does not have 3.13 support yet as of 11/16
 
-# This disables kivy logs (interferes with Backend logs)
+# This configures kivy logs (interferes with Backend logs without this)
 import os
 os.environ["KIVY_NO_CONSOLELOG"] = "0"
 os.environ["KIVY_LOG_MODE"] = "PYTHON"
 
 
 from typing import List
-import cv2
 import kivy
+import random
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.label import Label
@@ -26,6 +26,7 @@ from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
 from kivy.uix.button import Button
+
 
 from UI.diagnostic_screen import DiagnosticScreen
 from Backend.DDS_IO import DDS_IO
@@ -319,28 +320,39 @@ class Battery (FloatLayout):
             RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos, radius=[corner_radius], color=rect_color)
         self.add_widget(self.left_rect)
 
-        # Bind the drawing function to the size and position changes
-        self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
+        # TODO: FIX THIS. CURRENTLY UNDEFINED.
+            # Bind the drawing function to the size and position changes
+            # self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
 
-        # Initially call the draw function
-        draw_white_rectangle()
+            # Initially call the draw function
+            # draw_white_rectangle()
 
-        # Add the widget to the parent
-        self.add_widget(self.left_rect)
+            # Add the widget to the parent
+            # self.add_widget(self.left_rect)
+
+        # Dummy values:
+        def temp_source():
+            return random.randint(0,100)
+        def temp_source1():
+            return random.randint(0,100)
+        def temp_source2():
+            return random.randint(0,100)
+        def temp_source3():
+            return random.randint(0,100)
 
 
         # Add content to the battery
         # Percentage label
-        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='20sp', position=(20, (rect_height/2)+10))
+        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='20sp', pos=(20, (rect_height/2)+10))
         
         # Percentage icon (TO BE CHANGED)
-        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', position=(20, (rect_height/2)-80))
+        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', pos=(20, (rect_height/2)-80))
         
         # Temperature
-        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='20sp', position=(100, (rect_height/2)-200))
+        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='20sp', pos=(100, (rect_height/2)-200))
         
         # Discharge rate 
-        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='20sp', position=(80, (rect_height/2)-300))
+        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='20sp', pos=(80, (rect_height/2)-300))
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(battery_label)  
@@ -509,8 +521,8 @@ class Center(FloatLayout):
         self.center_block.pos = (212, 0)  # Absolute position for center block
 
         self.add_widget(self.center_block)
-    
-        # Create a label to display the speed value
+
+                # Create a label to display the speed value
         self.speed_label = Label(
             text=f"{self.get_speed()} MPH",
             font_size='60sp',
@@ -530,45 +542,57 @@ class Center(FloatLayout):
         # Schedule updates every second
         Clock.schedule_interval(self.update_value, 1)
 
-        def get_speed():
-            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-            if isinstance(erpm, str):
-            # If it's a string (e.g., error message), return it directly
-                return erpm
-            elif erpm is None:
-            # If no data is available, return a fallback value
+    # Define getter functions
+    def get_speed(self):
+        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+        if isinstance(erpm, str):
+        # If it's a string (e.g., error message), return it directly
+            return erpm
+        elif erpm is None:
+        # If no data is available, return a fallback value
+            return -1
+        else:
+            try:
+            # Convert to float and calculate speed
+                return float(erpm) * 5
+            except (ValueError, TypeError):
+            # Handle invalid data gracefully
                 return -1
-            else:
-                try:
-                # Convert to float and calculate speed
-                    return float(erpm) * 5
-                except (ValueError, TypeError):
-                # Handle invalid data gracefully
-                    return -1
-        
-        def get_rpm():
-            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-            if isinstance(erpm, str):
-            # If it's a string (e.g., error message), return it directly
-                return erpm
-            elif erpm is None:
-            # If no data is available, return a fallback value
+    
+    def get_rpm(self):
+        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+        if isinstance(erpm, str):
+        # If it's a string (e.g., error message), return it directly
+            return erpm
+        elif erpm is None:
+        # If no data is available, return a fallback value
+            return -1
+        else:
+            try:
+            # Convert to float and calculate RPM
+                return float(erpm) * 10
+            except (ValueError, TypeError):
+            # Handle invalid data gracefully
                 return -1
-            else:
-                try:
-                # Convert to float and calculate RPM
-                    return float(erpm) * 10
-                except (ValueError, TypeError):
-                # Handle invalid data gracefully
-                    return -1
 
-        def update_value(self,dt):
-            self.speed = self.get_speed()
-            self.rpm = self.get_rpm()
+    def update_value(self, dt=None):
+        self.speed = self.get_speed()
+        self.rpm = self.get_rpm()
+
+        if isinstance(self.speed, str):
+            self.speed_label.text = self.speed
+        else:
             self.speed_label.text = f"Speed: {self.speed:.2f} mph" if self.speed != -1 else "Speed: -- mph"
+
+        if isinstance(self.rpm, str):
+            self.rpm_label.text = self.rpm
+        else:
             self.rpm_label.text = f"RPM: {self.rpm:.2f}" if self.rpm != -1 else "RPM: --"
 
-            print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
+        print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
+
+
+
 
 
         

@@ -55,6 +55,7 @@ class DDS_IO:
 
         '''
         self.log = DataLogger('DDS_Log', baseDirectoryPath='/media/butm/JacksUSB/DDSLogs')
+
         self.debug = debug
         self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)

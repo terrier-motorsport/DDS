@@ -28,6 +28,7 @@ class DataLogger:
     directoryPath: str        # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
+    FALLBACK_DIR_PATH = './Backend/logs/'
 
     LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
     TIMEOUT_THRESH = 1
@@ -52,7 +53,18 @@ class DataLogger:
         self.baseDirectoryPath = baseDirectoryPath
 
         # Make the directory & save the path
-        self.directoryPath = self.__make_directory(directoryName)
+        try:
+            self.directoryPath = self.__make_directory(directoryName)
+        except OSError as e:
+            # Warn user of failure
+            print(f'Data logger package failed to create log directory.')
+            print(f'\n Writing logs to {directoryName} will be disabled.')
+            print(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
+            print('Waiting 2 seconds.')
+            time.sleep(2)
+
+            # Set new path to local directory
+            self.directoryPath = self.FALLBACK_DIR_PATH
 
         # Paths for telemetry and system logs
         self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
@@ -254,7 +266,7 @@ class DataLogger:
         current_time = self.__getFormattedTime()
         directoryPath = os.path.join(self.baseDirectoryPath, f"{current_time}-{directoryName}")
 
-        # Make the directory
+        # Make the directory (if it doesn't already exist)
         if not os.path.exists(directoryPath):
             os.makedirs(directoryPath)
 

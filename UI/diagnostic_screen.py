@@ -12,8 +12,11 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
-from kivy_garden.matplotlib import FigureCanvasKivyAgg
-from collections import deque
+# The diagnostic screen uses some depricated packages, so it may fail to build.
+try:
+    from kivy_garden.matplotlib import FigureCanvasKivyAgg
+except Exception as e:
+    print(f'Diagnostic Screen failed to load: {e}.')
 import matplotlib.pyplot as plt
 
 
