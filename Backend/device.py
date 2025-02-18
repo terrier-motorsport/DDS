@@ -324,7 +324,7 @@ class CANDevice(Device):
 
         # Return early if no new data.
         if msg is None:
-            self._update_cache(new_data_exists=False)
+            self._check_cache_timeout()
             return
 
         # Decode message
@@ -350,8 +350,7 @@ class CANDevice(Device):
             self._log_telemetry(signal_name, value, units=unit)
 
         # Update or add all decoded values to the cached values dictionary.
-        for name, data in decoded_msg.items():
-            self.cached_values[name] = data
+        self._update_cache(decoded_msg)
 
     
     def _data_collection_worker(self):
