@@ -146,6 +146,36 @@ class ParameterWarning:
 
     def __str__(self) -> str:
         return self.msg
+    
+    @staticmethod
+    def standardMsg(type: str, **kwargs) -> 'ParameterWarning':
+        """
+        Returns a ParameterWarning instance with a standard message.
+        This is a way to ensure consistency accross different places creating warnings.
+
+        Params:
+            type (str): the type of standard message wanted
+            **kwargs: the keywords required to form the message
+
+        Returns:
+            ParameterWarning: An instance of ParameterWarning with a predefined message.
+
+        Types of msg w/ req params:
+            DeviceStatusWarning: dev_name, dev_status
+        """
+        # Set defaults for undefined values
+        if kwargs["param_name"] is None: kwargs["param_name"] = "WarningTemplate"
+        if kwargs["param_value"] is None: kwargs["param_value"] = "DummyValue"
+        if kwargs["dev_name"] is None: kwargs["dev_name"] = "DummyDeviceName"
+        if kwargs["dev_status"] is None: kwargs["dev_status"] = "DummyDeviceStatus"
+
+        if (type == 'DeviceStatusWarning'):
+            return ParameterWarning(
+                param_name=f"{kwargs["dev_name"]}",
+                param_value=f"{kwargs["dev_status"]}",
+                msg=f"{kwargs["dev_name"]} has status {kwargs["dev_status"]}",
+                priority=100
+            )
 
 
 VALID_RETURN_STR = ""
@@ -402,7 +432,6 @@ class ParameterMonitor:
         # If the value is not recognized, return a error
         return self.__log_and_return_err(f"{param_name} has unknown code '{param_value}'.")
 
-
     def create_warning(self, warning: ParameterWarning):
         """
         Adds a warning to the warning list if it does not already exist.
@@ -418,7 +447,6 @@ class ParameterMonitor:
 
         # Log creation of warning
         self.__log(f'{warning.getMsg()}', DataLogger.LogSeverity.WARNING)
-
 
     def clear_warning(self, param_name: str):
         """

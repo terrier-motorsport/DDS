@@ -3,6 +3,7 @@
 
 from typing import Dict, List, Union
 from Backend.data_logger import DataLogger
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from abc import ABC, abstractmethod
 import time
 import threading
@@ -149,55 +150,6 @@ class Device(ABC):
             return self.cached_values.get(param_name, None)
 
 
-    # def get_data(self, data_key: str) -> Union[str, float, int, None]:
-    #     '''
-    #     This method verifies that the data at the specified key exists,
-    #     and if it does, return it.
-
-    #     If it doesn't exist, log a message and return None.
-
-    #     Parameters:
-    #         data_key (str): The key of the data being requested.
-
-    #     Returns:
-    #         Union[str, float, int, None]: The data at the specified key.
-    #     '''
-
-    #     # Verify data exists, and return it if so
-    #     if not data_key in self.cached_values:
-    #         # This happens if this data has never existed
-    #         return self._log(f"No data found for key: {data_key}", self.log.LogSeverity.WARNING)
-    #     elif self.cached_values[data_key] is None:
-    #         # This happens if the data doesn't currently exist
-    #         return self._log(f"No cached data found for key: {data_key}", self.log.LogSeverity.DEBUG)
-    #     return self.cached_values[data_key]
-    
-
-    # ===== PRIVATE METHODS =====
-    # def _update_cache(self, new_data_exists: bool):
-    #     '''
-    #     Checks if the cache has expired due to lack of new data and clears it if necessary.
-    #     Should be called once every update() frame.
-
-    #     Parameters:
-    #         new_data_exists (bool): True if the most recent data collected is unique.
-    #     '''
-    #     # Update caching functions
-    #     if new_data_exists:
-    #         self.last_cache_update = time.time()
-    #     else:
-    #         # Return early if the cache is already empty
-    #         if not self.cached_values:
-    #             return
-
-    #         # Update the current time
-    #         current_time = time.time()
-
-    #         # Clear the cache if it has expired
-    #         if current_time - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-    #             self.__clear_cache()
-
-
     def _update_cache(self, new_data: dict):
         '''
         Thread-safe update of the cache.
@@ -216,46 +168,6 @@ class Device(ABC):
                 self.cached_values = {key: None for key in self.cached_values}
                 self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
 
-
-    # def _check_cache_timeout(self):
-    #     '''
-    #     Clears the cache if the timeout threshold is exceeded.
-    #     '''
-    #     with self.lock:
-    #         if time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
-    #             self.cached_values = {key: None for key in self.cached_values}
-    #             self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
-
-    # def __clear_cache(self):
-    #     '''
-    #     Clears the cached values by changing the values to None.
-    #     The keys are left unchanged.
-    #     '''
-    #     # Change all values to None 
-    #     empty_cache = {key: None for key in self.cached_values}
-    #     self.cached_values = empty_cache
-
-    #     self._log("Cache cleared due to data timeout.", self.log.LogSeverity.WARNING)
-    
-    
-    # def __start_threaded_data_collection(self):
-    #     """Start the data collection in a separate thread."""
-
-    #     # Make thread
-    #     sensor_thread = threading.Thread(target=self._data_collection_worker, daemon=True)
-
-    #     # Create the thread & start running
-    #     sensor_thread.start()
-
-
-    # def _get_data_from_thread(self) -> List[float]:
-    #     """
-    #     Main program calls this to fetch the latest data from the queue.
-    #     """
-    #     if not self.data_queue.empty():
-    #         return self.data_queue.get_nowait()  # Non-blocking call
-    #     else:
-    #         return None  # No data available yet
 
     # ===== HELPER METHODS =====
     def _log_telemetry(self, param_name: str, value, units: str):

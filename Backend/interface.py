@@ -258,12 +258,13 @@ class Interface(ABC):
             device.status = Device.DeviceStatus.DISABLED
 
             # Create warning for device
-            self.parameter_monitor.create_warning(ParameterWarning(
-                f'{device.name}',
-                f'Error',
-                f'{device.name}: ERROR @ Init: {e}'
+            self.parameter_monitor.create_warning(ParameterWarning.standardMsg(
+                'DeviceStatusWarning',
+                dev_name=f"{device.name}",
+                dev_status=f"{device.status.name}"
             ))
             return
+            
 
         # ===== FINISHED ===== 
         self._log(f'Finished initializing {device.name}!')
