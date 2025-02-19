@@ -385,41 +385,56 @@ class Warnings(FloatLayout):
 
         self.io = io
 
-        # rectangle dimensions
+        # Rectangle dimensions
         rect_height = 450
-        rect_width = 285 
+        rect_width = 285
 
         # Rectangle color
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
 
-        # How round the corners are
+        # Rounded corners
         corner_radius = 20
 
-        # Establishes light blue rectangle 
+        # Establish rectangle
         self.right_rect = Widget(size_hint=(None, None), size=(rect_width, rect_height))
-        # Position the rectangle on the right side with absolute pixel values
-        self.right_rect.pos = ((1024 - rect_width) - 20, (600 - rect_height) // 2)  # Right-aligned, vertically centered
+        self.right_rect.pos = ((1024 - rect_width) - 20, (600 - rect_height) // 2)  # Right-aligned
         with self.right_rect.canvas.before:
             RoundedRectangle(pos=self.right_rect.pos, size=self.right_rect.size, radius=[corner_radius], color=rect_color)
         self.add_widget(self.right_rect)
 
-        # Scrolling layout constrained to the rectangle
-        layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
-        # Make sure the height is dynamically adjusted
-        layout.bind(minimum_height=layout.setter('height'))
+        # Scrolling layout to contain warnings
+        self.layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        self.layout.bind(minimum_height=self.layout.setter('height'))
 
-        # Temporary source to mock values
-        warnings = io.get_warnings()
-        # [
-        #     "Short warning",
-        #     "This is a much longer warning message that will likely span multiple lines in the UI",
-        #     "Another long message that needs to wrap and dynamically adjust the height of its label.",
-        #     "Small",
-        #     "More warnings to demonstrate dynamic height handling.",
-        # ]
+        # Create the ScrollView
+        self.scrollView = ScrollView(
+            size_hint=(None, None),
+            size=(self.right_rect.size[0], self.right_rect.size[1] - 20),
+            pos=(self.right_rect.pos[0] + 10, self.right_rect.pos[1] + 10)
+        )
+        self.scrollView.add_widget(self.layout)
 
+        # Add ScrollView to the widget
+        self.add_widget(self.scrollView)
 
-        # Add buttons as an example
+        # Update warnings initially
+        self.update_warnings()
+
+        # Schedule updates every second
+        Clock.schedule_interval(self.update_warnings, 1)
+
+    def update_warnings(self, *args):
+        """
+        Updates the list of warnings dynamically by fetching new warnings
+        from the DDS_IO instance and repopulating the UI.
+        """
+        # Clear existing widgets
+        self.layout.clear_widgets()
+
+        # Get the latest warnings from the io object
+        warnings = self.io.get_warnings()
+
+        # Repopulate the warning labels
         for warning in warnings:
             label = Label(
                 text=warning,
@@ -427,10 +442,9 @@ class Warnings(FloatLayout):
                 size_hint=(1, None),  # Fixed width, dynamic height
                 halign="left",  # Align text to the left
                 valign="middle",  # Align text vertically to the middle
-                color=(0.8, 0, 0, 1),  # White text
+                color=(0.8, 0, 0, 1),  # Red text for warnings
                 bold=True
             )
-            # Enable text wrapping
             label.text_size = (self.right_rect.size[0] - 20, None)
 
             # Dynamically adjust height based on content
@@ -439,68 +453,9 @@ class Warnings(FloatLayout):
                     instance, 'height', value[1] + 10  # Add padding
                 )
             )
-            layout.add_widget(label)
-
-        # Create the ScrollView and constrain it to the rectangle
-        scrollView = ScrollView(
-            size_hint=(None, None),  # Disable automatic size adjustments
-            size=(self.right_rect.size[0] , self.right_rect.size[1] - 20),  # Match rectangle's dimensions with padding
-            pos=(self.right_rect.pos[0] + 10, self.right_rect.pos[1] + 10)  # Match rectangle's position with padding
-        )
-        scrollView.add_widget(layout)
-
-        # Add the ScrollView to the rectangle
-        self.add_widget(scrollView)
+            self.layout.add_widget(label)
 
 
-        # # Create a ScrollView to contain the warnings
-        # scroll_view = ScrollView(size_hint=(None, None), size=(rect_width - 40, rect_height - 40))
-        # scroll_view.pos = (self.right_rect.pos[0] + 20, self.right_rect.pos[1] + 20)  # Add padding
-
-        # # Create a BoxLayout inside the ScrollView for the warnings
-        # layout = BoxLayout(
-        #     padding=10,
-        #     orientation="vertical",  # Stack labels vertically
-        #     size_hint=(None, None),
-        #     width=scroll_view.width,  # Match width to ScrollView
-        # )
-
-        # # Dynamically calculate height based on content
-        # layout.bind(
-        #     minimum_height=lambda instance, value: setattr(
-        #         layout, 'height', max(value, rect_height)  # Ensure layout is at least as tall as rect_height
-        #     )
-        # )
-
-        # # Add each warning as a Label to the layout
-        # for warning in warnings:
-        #     label = Label(
-        #         text=warning,
-        #         font_size="20sp",
-        #         size_hint=(1, None),  # Allow fixed width and dynamic height
-        #         halign="left",
-        #         valign="middle",
-        #         color=(1, 0, 0, 1),
-        #         bold=True
-        #     )
-        #     # Enable text wrapping and alignment
-        #     label.text_size = (layout.width - 20, None)  # Set the width for text wrapping
-
-        #     # Bind the texture_size to dynamically adjust the height of the label
-        #     label.bind(
-        #         texture_size=lambda instance, value: setattr(
-        #             instance, 'height', value[1] + 10  # Adjust height based on text and add padding
-        #         )
-        #     )
-
-        #     # Add the widget to the layout
-        #     layout.add_widget(label)
-
-        # # Add the layout to the ScrollView
-        # scroll_view.add_widget(layout)
-
-        # # Add the ScrollView to the right rectangle
-        # self.add_widget(scroll_view)
             
 
 #################################
