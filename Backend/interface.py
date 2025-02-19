@@ -261,7 +261,7 @@ class Interface(ABC):
             self.parameter_monitor.create_warning(ParameterWarning(
                 f'{device.name}',
                 f'Error',
-                'ERROR'
+                f'{device.name}: ERROR @ Init: {e}'
             ))
             return
 
