@@ -14,7 +14,7 @@ from Backend.DDS_IO import DDS_IO
 
 
 
-io = DDS_IO(debug=False, demo_mode=False)
+io = DDS_IO(debug=False, demo_mode=True)
 
 ui = MyApp(io=io, demoMode=True)
 
