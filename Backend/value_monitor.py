@@ -161,19 +161,19 @@ class ParameterWarning:
             ParameterWarning: An instance of ParameterWarning with a predefined message.
 
         Types of msg w/ req params:
-            DeviceStatusWarning: dev_name, dev_status
+            StatusWarning: name, status
         """
         # Set defaults for undefined values
         if kwargs["param_name"] is None: kwargs["param_name"] = "WarningTemplate"
         if kwargs["param_value"] is None: kwargs["param_value"] = "DummyValue"
-        if kwargs["dev_name"] is None: kwargs["dev_name"] = "DummyDeviceName"
-        if kwargs["dev_status"] is None: kwargs["dev_status"] = "DummyDeviceStatus"
+        if kwargs["name"] is None: kwargs["name"] = "DummyName"
+        if kwargs["status"] is None: kwargs["status"] = "DummyStatus"
 
-        if (type == 'DeviceStatusWarning'):
+        if (type == 'StatusWarning'):
             return ParameterWarning(
-                param_name=kwargs["dev_name"],
-                param_value=kwargs["dev_status"],
-                msg=kwargs["dev_name"] + " has status " + kwargs["dev_status"],
+                param_name=kwargs["name"],
+                param_value=kwargs["status"],
+                msg=kwargs["name"] + " has status " + kwargs["status"],
                 priority=100
             )
 

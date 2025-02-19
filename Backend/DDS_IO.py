@@ -333,10 +333,10 @@ class DDS_IO:
         self.interfaces[interface.name].status = Interface.InterfaceStatus.ERROR
 
         # Create warning
-        self.parameter_monitor.create_warning(ParameterWarning(
-            f'{interface.name}',
-            'FAIL INIT',
-            'FAILED TO INIT'
+        self.parameter_monitor.create_warning(ParameterWarning.standardMsg(
+            'StatusWarning',
+            name=f"{interface.name}",
+            status=f"{interface.status.name}"
         ))
 
     

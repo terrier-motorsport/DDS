@@ -186,12 +186,6 @@ class Interface(ABC):
                 device.update()
                 self.__monitor_device_parameters()
             elif device.status == Device.DeviceStatus.ERROR:
-                # Create warning for device
-                self.parameter_monitor.create_warning(ParameterWarning(
-                    f'{device.name}',
-                    f'Error',
-                    'ERROR'
-                ))
                 try:
                     device.initialize(self.bus)
                 except Exception as e:
@@ -259,9 +253,9 @@ class Interface(ABC):
 
             # Create warning for device
             self.parameter_monitor.create_warning(ParameterWarning.standardMsg(
-                'DeviceStatusWarning',
-                dev_name=f"{device.name}",
-                dev_status=f"{device.status.name}"
+                'StatusWarning',
+                name=f"{device.name}",
+                status=f"{device.status.name}"
             ))
             return
             
