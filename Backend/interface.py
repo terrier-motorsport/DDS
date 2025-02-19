@@ -178,20 +178,34 @@ class Interface(ABC):
         Updates each device on the interface and monitors the parameters of the device.
         """
 
+        # Check if the interface is active
         if self.__status != self.InterfaceStatus.ACTIVE:
             raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
         
         for key, device in self.devices.items():
+            
+            # Check if the device is active
             if device.status == Device.DeviceStatus.ACTIVE:
                 device.update()
                 self.__monitor_device_parameters()
+            
+            # Handle error state: Try reinitializing
             elif device.status == Device.DeviceStatus.ERROR:
                 try:
                     device.initialize(self.bus)
                 except Exception as e:
-                    self._log(f'Couldn\'t init {device.name}, {e}', DataLogger.LogSeverity.DEBUG)
-                    # print(f'Err init dev {device.name}, {e}')
-                pass
+                    self._log(f"Couldn't initialize {device.name}, {e}", DataLogger.LogSeverity.DEBUG)
+
+            # Blanket case if device is not active
+            if device.status not in [Device.DeviceStatus.ACTIVE]:
+                # Create a warning using ParameterMonitor
+                self.parameter_monitor.create_warning(
+                    ParameterWarning.standardMsg(
+                        'StatusWarning',
+                        name=f"{device.name}",
+                        status=f"{device.status.name}"
+                    )
+                )
              
 
     def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:
