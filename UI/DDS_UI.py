@@ -484,14 +484,14 @@ class Center(FloatLayout):
         self.speed_label = Label(
             text=f"{self.get_speed()}",
             font_size='100sp',
-            pos=(106, 60)
+            pos=(106, 80)
         )
         self.center_block.add_widget(self.speed_label)
 
         self.speed_label_mph = Label(
             text="MPH",
             font_size='50sp',
-            pos=(106, 40)
+            pos=(106, 30)
         )
         self.center_block.add_widget(self.speed_label_mph)
     
