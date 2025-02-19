@@ -312,6 +312,7 @@ class DDS_IO:
         This method takes care of handling the failed initialization
         The interface is set to the ERROR state and the DDS_IO will 
         continously attempt to inialize the interface.
+        It also creates a warning that the device has failed.
 
         Parameters:
             interface (Interface): The interface that failed being initialized.
@@ -330,6 +331,13 @@ class DDS_IO:
 
         # Mark the device as having an error
         self.interfaces[interface.name].status = Interface.InterfaceStatus.ERROR
+
+        # Create warning
+        self.parameter_monitor.create_warning(ParameterWarning(
+            f'{interface.name}',
+            'FAIL INIT',
+            'FAILED TO INIT'
+        ))
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO, name="DDS_IO"):

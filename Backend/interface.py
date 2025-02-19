@@ -4,7 +4,7 @@
 from enum import Enum
 from Backend.data_logger import DataLogger
 from Backend.device import Device, CANDevice, I2CDevice
-from Backend.value_monitor import ParameterMonitor
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from typing import Any, Dict, Union, List
 from abc import ABC, abstractmethod
 
@@ -186,6 +186,12 @@ class Interface(ABC):
                 device.update()
                 self.__monitor_device_parameters()
             elif device.status == Device.DeviceStatus.ERROR:
+                # Create warning for device
+                self.parameter_monitor.create_warning(ParameterWarning(
+                    f'{device.name}',
+                    f'Error',
+                    'ERROR'
+                ))
                 try:
                     device.initialize(self.bus)
                 except Exception as e:
