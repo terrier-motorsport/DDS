@@ -188,6 +188,9 @@ class Interface(ABC):
             if device.status == Device.DeviceStatus.ACTIVE:
                 device.update()
                 self.__monitor_device_parameters()
+
+                # Clear any active warnings:
+                self.parameter_monitor.clear_warning(device.name)
             
             # Handle error state: Try reinitializing
             elif device.status == Device.DeviceStatus.ERROR:
