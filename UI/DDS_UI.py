@@ -714,6 +714,8 @@ class MyApp(App):
 
             # Print the average dt for the past second
             print(f"Average delta time (dt): {average_dt:.6f} seconds")
+            for warning in self.io.get_warnings():
+                print(f'Warning: {warning}')
 
             # Reset the counters for the next second
             self._elapsed_time = 0
