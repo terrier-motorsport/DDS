@@ -482,11 +482,18 @@ class Center(FloatLayout):
 
                 # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{self.get_speed()} MPH",
-            font_size='75sp',
+            text=f"{self.get_speed()}",
+            font_size='100sp',
             pos=(106, 60)
         )
         self.center_block.add_widget(self.speed_label)
+
+        self.speed_label_mph = Label(
+            text="MPH",
+            font_size='50sp',
+            pos=(106, 40)
+        )
+        self.center_block.add_widget(self.speed_label_mph)
     
     
         # Create a label to display the rpm value
