@@ -421,7 +421,7 @@ class Warnings(FloatLayout):
         self.update_warnings()
 
         # Schedule updates every second
-        Clock.schedule_interval(self.update_warnings, 1)
+        Clock.schedule_interval(self.update_warnings, 0.01)
 
     def update_warnings(self, *args):
         """
