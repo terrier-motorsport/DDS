@@ -346,16 +346,16 @@ class Battery (FloatLayout):
 
         # Add content to the battery
         # Percentage label
-        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='20', pos=(20, (rect_height/2)+10))
+        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='35sp', pos=(20, (rect_height/2)+10))
         
         # Percentage icon (TO BE CHANGED)
         battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', pos=(20, (rect_height/2)-80))
         
         # Temperature
-        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='20sp', pos=(100, (rect_height/2)-200))
+        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='25sp', pos=(100, (rect_height/2)-200))
         
         # Discharge rate 
-        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='20sp', pos=(80, (rect_height/2)-300))
+        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='25sp', pos=(80, (rect_height/2)-300))
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(battery_label)  
@@ -483,7 +483,7 @@ class Center(FloatLayout):
                 # Create a label to display the speed value
         self.speed_label = Label(
             text=f"{self.get_speed()} MPH",
-            font_size='60sp',
+            font_size='75sp',
             pos=(106, 60)
         )
         self.center_block.add_widget(self.speed_label)
@@ -492,7 +492,7 @@ class Center(FloatLayout):
         # Create a label to display the rpm value
         self.rpm_label = Label(
             text=f"{self.get_rpm()} RPM",
-            font_size='20sp',
+            font_size='35sp',
             pos=(106, -40)
         )
         self.center_block.add_widget(self.rpm_label)
