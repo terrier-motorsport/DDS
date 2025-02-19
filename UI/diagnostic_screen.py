@@ -348,7 +348,7 @@ class DiagnosticScreen(FloatLayout):
         self.line, = self.ax.plot([], [], lw=2)
 
         # Set up axes labels
-        self.ax.set_xlabel("Time (s)")
+        self.ax.set_xlabel("Parameter Name")
         self.ax.set_ylabel("Parameter Value")
         self.ax.grid()
 
