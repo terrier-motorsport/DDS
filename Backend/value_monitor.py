@@ -173,7 +173,7 @@ class ParameterWarning:
             return ParameterWarning(
                 param_name=name,
                 param_value=status,
-                msg=f"{name} has status {status}",
+                msg=f"{name} is {status}",
                 priority=100
             )
 
