@@ -256,6 +256,13 @@ class Interface(ABC):
 
             # If the device throws an error at runtime, it will be disabled for the rest of the session.
             device.status = Device.DeviceStatus.DISABLED
+
+            # Create warning for device
+            self.parameter_monitor.create_warning(ParameterWarning(
+                f'{device.name}',
+                f'Error',
+                'ERROR'
+            ))
             return
 
         # ===== FINISHED ===== 
