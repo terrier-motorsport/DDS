@@ -199,6 +199,7 @@ class Interface(ABC):
             # Blanket case if device is not active
             if device.status not in [Device.DeviceStatus.ACTIVE]:
                 # Create a warning using ParameterMonitor
+                print('Creating error code')
                 self.parameter_monitor.create_warning(
                     ParameterWarning.standardMsg(
                         'StatusWarning',
