@@ -592,7 +592,7 @@ class Center(FloatLayout):
         else:
             self.rpm_label.text = f"RPM: {self.rpm:.2f}" if self.rpm != -1 else "RPM: --"
 
-        print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
+        # print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
 
 
 
