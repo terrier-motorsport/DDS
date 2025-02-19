@@ -151,29 +151,29 @@ class ParameterWarning:
     def standardMsg(type: str, **kwargs) -> 'ParameterWarning':
         """
         Returns a ParameterWarning instance with a standard message.
-        This is a way to ensure consistency accross different places creating warnings.
+        This is a way to ensure consistency across different places creating warnings.
 
         Params:
-            type (str): the type of standard message wanted
-            **kwargs: the keywords required to form the message
+            type (str): The type of standard message wanted
+            **kwargs: The keywords required to form the message
 
         Returns:
-            ParameterWarning: An instance of ParameterWarning with a predefined message.
+            ParameterWarning: name, status
 
-        Types of msg w/ req params:
+        Types of msg w/ required params:
             StatusWarning: name, status
         """
-        # Set defaults for undefined values
-        if kwargs["param_name"] is None: kwargs["param_name"] = "WarningTemplate"
-        if kwargs["param_value"] is None: kwargs["param_value"] = "DummyValue"
-        if kwargs["name"] is None: kwargs["name"] = "DummyName"
-        if kwargs["status"] is None: kwargs["status"] = "DummyStatus"
+        # Set defaults using .get() to prevent KeyError
+        param_name = kwargs.get("param_name", "WarningTemplate")
+        param_value = kwargs.get("param_value", "DummyValue")
+        name = kwargs.get("name", "DummyName")
+        status = kwargs.get("status", "DummyStatus")
 
-        if (type == 'StatusWarning'):
+        if type == 'StatusWarning':
             return ParameterWarning(
-                param_name=kwargs["name"],
-                param_value=kwargs["status"],
-                msg=kwargs["name"] + " has status " + kwargs["status"],
+                param_name=name,
+                param_value=status,
+                msg=f"{name} has status {status}",
                 priority=100
             )
 
