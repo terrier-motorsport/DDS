@@ -346,7 +346,7 @@ class Battery (FloatLayout):
 
         # Add content to the battery
         # Percentage label
-        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='20sp', pos=(20, (rect_height/2)+10))
+        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='20p', pos=(20, (rect_height/2)+10))
         
         # Percentage icon (TO BE CHANGED)
         battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', pos=(20, (rect_height/2)-80))
