@@ -171,8 +171,8 @@ class ParameterWarning:
 
         if (type == 'DeviceStatusWarning'):
             return ParameterWarning(
-                param_name=f"{kwargs["dev_name"]}",
-                param_value=f"{kwargs["dev_status"]}",
+                param_name=kwargs["dev_name"],
+                param_value=kwargs["dev_status"],
                 msg=f"{kwargs["dev_name"]} has status {kwargs["dev_status"]}",
                 priority=100
             )
