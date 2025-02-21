@@ -106,6 +106,8 @@ class DataLogger:
         # Generate a timestamp for the entry
         time = currentTime()
 
+        self.sendTelemetry(time, device_name, param_name, value, units)
+
         # Open the file in append ('a') mode
         with open(self.telemetryPath, "a", newline='') as file:
 
@@ -115,6 +117,10 @@ class DataLogger:
             # Write the data
             writer.writerow([time, device_name, param_name, value, units])
 
+
+    def sendTelemetry(time, device_name, param_name, value, units):
+        """ Sends telemetry data on network"""
+        
 
     def getTelemetry(self) -> list[list]:
         '''Returns a list of lines, which contain data in the following format:
