@@ -290,7 +290,9 @@ class DataLogger:
 if __name__ == '__main__':
 
     # Initialize the DataLogger with a valid file name
-    data_logger = DataLogger("example_log")
+    tcp = TCPClient()
+
+    data_logger = DataLogger("example_log", tcp)
 
 
     print(data_logger.telemetryPath)
