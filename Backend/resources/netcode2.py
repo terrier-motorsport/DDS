@@ -1,16 +1,14 @@
 import socket
-import DDS.DDS.Backend.resources.constants as constants
 import time
 import csv
-import random
 import json
 
 class TCPClient:
     # This class enables a TCP Network connection with a TCP Server
 
     connection = None               # Socket object
-    server_ip = constants.pi_IP_ADDRESS
-    server_port = constants.router_to_PI_PORT
+    server_ip = '192.168.1.2'
+    server_port = 65432
 
     connection_active = False
 
