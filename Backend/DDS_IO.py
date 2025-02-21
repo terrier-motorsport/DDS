@@ -15,6 +15,7 @@ from typing import Union, Dict, List
 import Backend.config.device_config
 import smbus2
 import can
+from Backend.resources.netcode2 import TCPClient
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -54,7 +55,8 @@ class DDS_IO:
             demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
 
         '''
-        self.log = DataLogger('DDS_Log', baseDirectoryPath='/media/butm/JacksUSB/DDSLogs')
+        client = TCPClient()
+        self.log = DataLogger('DDS_Log', client, baseDirectoryPath='/media/butm/JacksUSB/DDSLogs')
 
         self.debug = debug
         self.demo_mode = demo_mode
