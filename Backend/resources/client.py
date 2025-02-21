@@ -1,11 +1,10 @@
 import DDS.DDS.Backend.resources.netcode2 as net
 import time
-import DDS.DDS.Backend.resources.constants as constants
 
 
 # ---------------CLIENT SETUP------------------
 client = net.TCPClient()
-client.set_server_address(constants.pi_IP_ADDRESS, constants.router_to_PI_PORT)
+client.set_server_address('128.197.50.90', 65432)
 client.connect_to_server()
 
 # ---------------RECEIVE DATA------------------
