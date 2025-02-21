@@ -44,12 +44,13 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str, tcpClient, baseDirectoryPath = './Backend/logs/'):
+    def __init__(self, directoryName: str, tcpClient: TCPClient, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
         # Initialize variables
+        self.tcpClient = tcpClient
         self.__validateFileName(directoryName)
         self.parentDirectoryPath = baseDirectoryPath
 
@@ -119,7 +120,7 @@ class DataLogger:
             writer.writerow([time, device_name, param_name, value, units])
 
 
-    def sendTelemetry(self, time, device_name, param_name, value, units, tcpClient: TCPClient):
+    def sendTelemetry(self, time, device_name, param_name, value, units):
         """ Sends telemetry data on network"""
         self.tcpClient.send_message([time, device_name, param_name, value, units])
 
