@@ -3,6 +3,7 @@ import DDS.DDS.Backend.resources.constants as constants
 import time
 import csv
 import random
+import json
 
 class TCPClient:
     # This class enables a TCP Network connection with a TCP Server
@@ -41,20 +42,14 @@ class TCPClient:
                 print("Connection failed. Retrying in 5 seconds...")
                 time.sleep(5) #Wait 5 seconds before retrying connection
 
-    def send_request(self, request):
+    def send_message(self, message:list):
         try:
             # Encode the request
-            request = request.encode()
+            message = json.dumps(message).encode()
 
             # Send the request to the server
-            self.connection.send(request)
+            self.connection.send(message)
 
-            # Wait for the response
-            response = self.connection.recv(1024).decode()
-
-            print(f'Data received: {response}') #comment out?
-            self.save_to_csv(response)
-            return response
 
         except BrokenPipeError:
             print("Connection lost. Attempting to reconnect...")
@@ -117,11 +112,7 @@ class TCPServer:
             print("Client disconnected.")
             self.connection_active = False
             return None  # Prevents crashing
-
-    def read_data(self):
-        # Recieves data from socket (up to 1024 bytes).
-        #replace with sensor data
-        return random.randint(0,100)
+        
     
     def send_response(self, response):
 

@@ -11,7 +11,7 @@ client.connect_to_server()
 # ---------------RECEIVE DATA------------------
 while True:
     try:
-        response = client.send_request("GET_SENSOR_DATA")
+        response = client.send_message("GET_SENSOR_DATA")
         
         if response is None:
             print("No response received. Retrying connection...")

@@ -11,6 +11,7 @@ import os
 import logging
 import time
 from typing import Dict, List
+from Backend.resources.netcode2 import TCPClient
 
 class DataLogger:
     '''
@@ -43,7 +44,7 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str, baseDirectoryPath = './Backend/logs/'):
+    def __init__(self, directoryName: str, tcpClient, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
@@ -118,9 +119,10 @@ class DataLogger:
             writer.writerow([time, device_name, param_name, value, units])
 
 
-    def sendTelemetry(time, device_name, param_name, value, units):
+    def sendTelemetry(self, time, device_name, param_name, value, units, tcpClient: TCPClient):
         """ Sends telemetry data on network"""
-        
+        self.tcpClient.send_message([time, device_name, param_name, value, units])
+
 
     def getTelemetry(self) -> list[list]:
         '''Returns a list of lines, which contain data in the following format:
