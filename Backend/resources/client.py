@@ -1,6 +1,10 @@
-import DDS.DDS.Backend.resources.netcode2 as net
-import time
 
+raise NotImplementedError()
+f'''
+DO NOT USE THIS FILE. IT IS FOR REFERENCE ONLY.
+'''
+
+import time
 
 # ---------------CLIENT SETUP------------------
 client = net.TCPClient()
