@@ -1,0 +1,110 @@
+VERSION ""
+
+
+NS_ : 
+		NS_DESC_
+		CM_
+		BA_DEF_
+		BA_
+		VAL_
+		CAT_DEF_
+		CAT_
+		FILTER
+		BA_DEF_DEF_
+		EV_DATA_
+		ENVVAR_DATA_
+		SGTYPE_
+		SGTYPE_VAL_
+		BA_DEF_SGTYPE_
+		BA_SGTYPE_
+		SIG_TYPE_REF_
+		VAL_TABLE_
+		SIG_GROUP_
+		SIG_VALTYPE_
+		SIGTYPE_VALTYPE_
+		BO_TX_BU_
+		BA_DEF_REL_
+		BA_REL_
+		BA_DEF_DEF_REL_
+		BU_SG_REL_
+		BU_EV_REL_
+		BU_BO_REL_
+		SG_MUL_VAL_
+
+BS_:
+
+BU_:
+
+
+BO_ 2550588916 msg1: 8 Vector__XXX
+	SG_ MaxAllowChargeTermVoltage : 7|16@0+ (0.1,0) [0|0] "V" Vector__XXX
+	SG_ MaxAllowChargingCurrent : 23|16@0+ (0.1,0) [0|0] "A" Vector__XXX
+	SG_ Control : 39|1@0+ (0,0) [0|0] "*" Vector__XXX
+
+
+BO_ 2566869221 msg2: 8 Vector__XXX
+	SG_ OutputVoltage : 7|16@0+ (0.1,0) [0|0] "V" Vector__XXX
+	SG_ OutputCurrent : 23|16@0+ (0.1,0) [0|0] "A" Vector__XXX
+	SG_ HardwareFailure : 39|1@0+ (1,0) [0|0] "*" Vector__XXX
+	SG_ ChargerOvertemp : 38|1@0+ (1,0) [0|0] "*" Vector__XXX
+	SG_ InputVoltage : 37|1@0+ (1,0) [0|0] "*" Vector__XXX
+	SG_ StatingState : 36|1@0+ (1,0) [0|0] "*" Vector__XXX
+	SG_ CommunicationState : 35|1@0+ (1,0) [0|0] "*" Vector__XXX
+
+BO_ 2550589172 msg10: 8 Vector__XXX
+	SG_ MaxAllowedChargintTermVoltage : 7|16@0+ (0.1,0) [0|0] "V" Vector__XXX
+	SG_ MaxAllowedChargingCurrent : 23|16@0+ (0.1,0) [0|0] "A" Vector__XXX
+	SG_ ControlFlag : 39|1@0+ (1,0) [0|0] "*" Vector__XXX
+	SG_ MaxAllowedDischargeCurrent : 47|8@0+ (10,0) [0|0] "A" Vector__XXX
+
+BO_ 2550589172 msg11: 8 Vector__XXX
+	SG_ BatteryNominalAH : 7|16@0+ (0.1,0) [0|0] "AH" Vector__XXX
+	SG_ BatteryActualAH : 23|16@0+ (0.1,0) [0|0] "AH" Vector__XXX
+	SG_ SingleBatteryMaxProtection : 39|16@0+ (1,0) [0|0] "mV" Vector__XXX
+	SG_ BatteryNumbers : 55|8@0+ (1,0) [0|0] "#" Vector__XXX
+
+BO_ 2550589172 msg12: 8 Vector__XXX
+	SG_ SingleBattMaxVoltage : 7|16@0+ (1,0) [0|0] "mV" Vector__XXX
+	SG_ SingleBatteryMinVoltage : 23|16@0+ (1,0) [0|0] "mV" Vector__XXX
+	SG_ SingleBatteryMinProtectionVoltag : 39|16@0+ (1,0) [0|0] "mV" Vector__XXX
+	SG_ BatteryState : 55|8@0+ (1,0) [0|0] "*" Vector__XXX
+
+BO_ 2550589172 msg13: 8 Vector__XXX
+	SG_ BatteryPackTotalVoltage : 7|16@0+ (0.1,0) [0|0] "V" Vector__XXX
+	SG_ ActualChargingCurrent : 23|16@0+ (0.1,0) [0|0] "A" Vector__XXX
+	SG_ PresentSOC : 39|8@0+ (1,0) [0|100] "%" Vector__XXX
+	SG_ BatteryMaxTemp : 47|8@0+ (1,-100) [0|0] "deg" Vector__XXX
+	SG_ BatteryMinTemp : 55|8@0+ (1,-100) [0|0] "deg" Vector__XXX
+
+BO_ 2550589172 msg14: 8 Vector__XXX
+	SG_ BatteryNums : 7|16@0+ (1,0) [0|0] "#" Vector__XXX
+
+
+CM_ BO_ 2550588916 "Battery Management System ";
+CM_ BO_ 2566869221 "Charger Control System,";
+CM_ SG_ 2566869221 HardwareFailure "0: Normal";
+CM_ SG_ 2566869221 ChargerOvertemp "0: Normal";
+CM_ SG_ 2566869221 InputVoltage "0: Normal";
+CM_ SG_ 2566869221 StatingState "0: The charger detects the voltage of the battery and enter into starting state. 1: The charger stays closed (to prevent reverse polarity)";
+CM_ SG_ 2566869221 CommunicationState "0: Communication is normal. 1: Communication receive time-out.";
+CM_ SG_ 2550589172 ControlFlag "0: Charger is open and on charge. 1:Battery protection, the charger closes its output.";
+CM_ SG_ 2550589172 BatteryNumbers "1-255 0: Invalid Information, refer to page 5.";
+CM_ SG_ 2550589172 BatteryState "Byte0：over-voltage mark, Byte1:under-voltage mark. Normal:0x00";
+BA_DEF_ SG_  "SPN" INT 0 524287;
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";
+BA_DEF_  "DatabaseVersion" STRING ;
+BA_DEF_  "BusType" STRING ;
+BA_DEF_  "ProtocolType" STRING ;
+BA_DEF_  "DatabaseCompiler" STRING ;
+BA_DEF_DEF_  "SPN" 0;
+BA_DEF_DEF_  "VFrameFormat" "J1939PG";
+BA_DEF_DEF_  "DatabaseVersion" "DEMO PLUS";
+BA_DEF_DEF_  "BusType" "";
+BA_DEF_DEF_  "ProtocolType" "";
+BA_DEF_DEF_  "DatabaseCompiler" "";
+BA_ "ProtocolType" "J1939";
+BA_ "BusType" "CAN";
+BA_ "DatabaseCompiler" "CSS ELECTRONICS (WWW.CSSELECTRONICS.COM)";
+BA_ "DatabaseVersion" "1.0.0";
+BA_ "VFrameFormat" BO_ 2364540158 3;
+BA_ "SPN" SG_ 2364540158 EngineSpeed 190;
