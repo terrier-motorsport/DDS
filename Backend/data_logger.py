@@ -11,6 +11,7 @@ import os
 import logging
 import time
 from typing import Dict, List
+from Backend.resources.netcode2 import TCPClient
 
 class DataLogger:
     '''
@@ -25,12 +26,13 @@ class DataLogger:
                 - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    logDirectoryPath = './Backend/logs/'
-    directoryPath: str        # Path of the parent directory
+    childDirectoryPath: str        # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
+    FALLBACK_DIR_PATH = './Backend/logs/'
 
     LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
+    TIMEOUT_THRESH = 1
 
     
     class LogSeverity(Enum):
@@ -42,21 +44,35 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str):
+    def __init__(self, directoryName: str, tcpClient: TCPClient, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
         # Initialize variables
+        self.tcpClient = tcpClient
         self.__validateFileName(directoryName)
+        self.parentDirectoryPath = baseDirectoryPath
 
         # Make the directory & save the path
-        self.directoryPath = self.__make_directory(directoryName)
+        try:
+            self.childDirectoryPath = self.__make_directory(directoryName)
+        except OSError as e:
+            # Warn user of failure
+            print(f'&&&&&&&&&&& ~~~WARNING~~~ Data logger package failed to create log directory. ~~~WARNING~~~ &&&&&&&&&&&')
+            print(f'\n Writing logs to {directoryName} will be disabled.')
+            print(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
+            print('Waiting 3 seconds.')
+            time.sleep(3)
+
+            # Set new path to local directory
+            self.parentDirectoryPath = self.FALLBACK_DIR_PATH
+            self.childDirectoryPath = self.__make_directory(directoryName)
 
         # Paths for telemetry and system logs
-        self.telemetryPath = os.path.join(self.directoryPath, "Telemetry.csv")
-        self.systemLogPath = os.path.join(self.directoryPath, "System.log")
-        self.debugLogPath = os.path.join(self.directoryPath, "debug.log")
+        self.telemetryPath = os.path.join(self.childDirectoryPath, "Telemetry.csv")
+        self.systemLogPath = os.path.join(self.childDirectoryPath, "System.log")
+        self.debugLogPath = os.path.join(self.childDirectoryPath, "debug.log")
 
         # Create files
         self.__createCSVFile("Telemetry.csv")
@@ -92,6 +108,8 @@ class DataLogger:
         # Generate a timestamp for the entry
         time = currentTime()
 
+        self.sendTelemetry(time, device_name, param_name, value, units)
+
         # Open the file in append ('a') mode
         with open(self.telemetryPath, "a", newline='') as file:
 
@@ -100,6 +118,11 @@ class DataLogger:
 
             # Write the data
             writer.writerow([time, device_name, param_name, value, units])
+
+
+    def sendTelemetry(self, time, device_name, param_name, value, units):
+        """ Sends telemetry data on network"""
+        self.tcpClient.send_message([time, device_name, param_name, value, units])
 
 
     def getTelemetry(self) -> list[list]:
@@ -127,9 +150,29 @@ class DataLogger:
             msg (str): The content to be logged
             severity (LogSeverity): The level of the log
         """
+        # Dictionary to track the last time each message was logged
+        if not hasattr(self, "_last_log_times"):
+            self._last_log_times = {}
 
+        # Create a unique key for the logger and message
+        log_key = f"{loggerName}:{msg}"
+
+        # Get the current time
+        current_time = time.time()
+
+        # Check if the message was recently logged
+        if log_key in self._last_log_times:
+            last_log_time = self._last_log_times[log_key]
+            # Skip logging if less than 1 second has passed
+            if current_time - last_log_time < self.TIMEOUT_THRESH:
+                return
+
+        # Update the last logged time for the message
+        self._last_log_times[log_key] = current_time
+
+        # Get the logger and log the message
         logger = self.__getLogger(loggerName)
-        logger.log(level=severity.value,msg=f"{msg}")
+        logger.log(level=severity.value, msg=f"{msg}")
 
 
     def __configureLogger(self, systemLogPath: str, debugLogPath: str):
@@ -177,7 +220,7 @@ class DataLogger:
         """
         if timestamp is None:
             timestamp = time.time()  # Use the current time if no timestamp is given
-        return strftime("%Y-%m-%d-%H:%M:%S", localtime(timestamp))
+        return strftime("%Y-%m-%d--%H-%M-%S", localtime(timestamp))
 
 
     def __createCSVFile(self, fileName: str):
@@ -189,7 +232,7 @@ class DataLogger:
             fileName (str): The name of the file to be created.
         '''
 
-        filePath = os.path.join(self.directoryPath, fileName)
+        filePath = os.path.join(self.childDirectoryPath, fileName)
 
         with open(filePath, "w") as file:
             # Create the CSV writer
@@ -231,9 +274,10 @@ class DataLogger:
 
         # Make the path to the directory
         current_time = self.__getFormattedTime()
-        directoryPath = os.path.join(self.logDirectoryPath, f"{current_time}-{directoryName}")
+        directoryPath = os.path.join(self.parentDirectoryPath, f"{current_time}-{directoryName}")
 
-        # Make the directory
+        # Make the directory (if it doesn't already exist)
+        print(f'making dir {directoryPath}')
         if not os.path.exists(directoryPath):
             os.makedirs(directoryPath)
 
@@ -247,7 +291,9 @@ class DataLogger:
 if __name__ == '__main__':
 
     # Initialize the DataLogger with a valid file name
-    data_logger = DataLogger("example_log")
+    tcp = TCPClient()
+
+    data_logger = DataLogger("example_log", tcp)
 
 
     print(data_logger.telemetryPath)

@@ -146,6 +146,36 @@ class ParameterWarning:
 
     def __str__(self) -> str:
         return self.msg
+    
+    @staticmethod
+    def standardMsg(type: str, **kwargs) -> 'ParameterWarning':
+        """
+        Returns a ParameterWarning instance with a standard message.
+        This is a way to ensure consistency across different places creating warnings.
+
+        Params:
+            type (str): The type of standard message wanted
+            **kwargs: The keywords required to form the message
+
+        Returns:
+            ParameterWarning: name, status
+
+        Types of msg w/ required params:
+            StatusWarning: name, status
+        """
+        # Set defaults using .get() to prevent KeyError
+        param_name = kwargs.get("param_name", "WarningTemplate")
+        param_value = kwargs.get("param_value", "DummyValue")
+        name = kwargs.get("name", "DummyName")
+        status = kwargs.get("status", "DummyStatus")
+
+        if type == 'StatusWarning':
+            return ParameterWarning(
+                param_name=name,
+                param_value=status,
+                msg=f"{name} is {status}",
+                priority=100
+            )
 
 
 VALID_RETURN_STR = ""
@@ -402,7 +432,6 @@ class ParameterMonitor:
         # If the value is not recognized, return a error
         return self.__log_and_return_err(f"{param_name} has unknown code '{param_value}'.")
 
-
     def create_warning(self, warning: ParameterWarning):
         """
         Adds a warning to the warning list if it does not already exist.
@@ -418,7 +447,6 @@ class ParameterMonitor:
 
         # Log creation of warning
         self.__log(f'{warning.getMsg()}', DataLogger.LogSeverity.WARNING)
-
 
     def clear_warning(self, param_name: str):
         """

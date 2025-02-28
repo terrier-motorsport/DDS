@@ -7,15 +7,18 @@
     # Have you installed requirements.txt? (run pip install -r requirements.txt)
     # Do NOT run further that Python 3.12, kivy does not have 3.13 support yet as of 11/16
 
-# This disables kivy logs (interferes with Backend logs)
+# This configures kivy logs (interferes with Backend logs without this)
 import os
 os.environ["KIVY_NO_CONSOLELOG"] = "0"
 os.environ["KIVY_LOG_MODE"] = "PYTHON"
 
+# Run in fullscreen
+from kivy.core.window import Window
+Window.fullscreen = True
 
 from typing import List
-import cv2
 import kivy
+import random
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.label import Label
@@ -26,6 +29,7 @@ from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
 from kivy.uix.button import Button
+
 
 from UI.diagnostic_screen import DiagnosticScreen
 from Backend.DDS_IO import DDS_IO
@@ -251,6 +255,10 @@ class Battery (FloatLayout):
         super().__init__(**kwargs)
 
         self.io = io
+
+        # rectangle dimensions
+        rect_height = 450
+        rect_width = 285  
     
         # Rectangle color (light blue)
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
@@ -261,7 +269,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_pack_state_of_charge() -> str:
             soc = self.io.get_device_data('canInterface', 'Pack_SOC', "BatteryWidget")
-            print(soc)
+            # print(soc)
             if soc is str:
                 # This will happen if there is an error.
                 return soc
@@ -276,7 +284,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_cell_high_temperature():
             highTemp = self.io.get_device_data('canInterface', 'High_Temperature', "BatteryWidget")
-            print(highTemp)  # Debugging print
+            # print(highTemp)  # Debugging print
             if isinstance(highTemp, str):
                 # If an error string is returned, use it directly
                 return highTemp
@@ -291,7 +299,7 @@ class Battery (FloatLayout):
         # Example value source function for demonstration
         def get_pack_current():
             current = self.io.get_device_data('canInterface', 'Pack_Current', "BatteryWidget")
-            print(current)  # Debugging print
+            # print(current)  # Debugging print
             if isinstance(current, str):
                 # If an error string is returned, use it directly
                 return current
@@ -309,70 +317,51 @@ class Battery (FloatLayout):
         self.left_rect.pos_hint = {"x": 0.05, "center_y": 0.5}  # 5% from left, vertically centered
 
         # Draw the white rectangle around the left_rect
-        def draw_white_rectangle(*args):
-            self.left_rect.canvas.before.clear()  # Clear previous drawings
-            with self.left_rect.canvas.before:
-                Color(rect_color)  # White color (RGBA)
-                RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos)
-
-        # Bind the drawing function to the size and position changes
-        self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
-
-        # Initially call the draw function
-        draw_white_rectangle()
-
-        # Add the widget to the parent
+        self.left_rect = FloatLayout(size_hint=(None, None), size=(rect_width, rect_height))
+        self.left_rect.pos = (0+20, (600 - rect_height) // 2)  # Left-aligned, vertically centered (600 is the screen height)
+        with self.left_rect.canvas.before:
+            RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos, radius=[corner_radius], color=rect_color)
         self.add_widget(self.left_rect)
 
+        # TODO: FIX THIS. CURRENTLY UNDEFINED.
+            # Bind the drawing function to the size and position changes
+            # self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
 
-       
+            # Initially call the draw function
+            # draw_white_rectangle()
 
-        
+            # Add the widget to the parent
+            # self.add_widget(self.left_rect)
+
+        # Dummy values:
+        def temp_source():
+            return random.randint(0,100)
+        def temp_source1():
+            return random.randint(0,100)
+        def temp_source2():
+            return random.randint(0,100)
+        def temp_source3():
+            return random.randint(0,100)
 
 
         # Add content to the battery
         # Percentage label
-        self.battery_label = OutlineColorChangingLabel_Battery(
-            value_source=get_pack_state_of_charge,
-            text=f"{get_pack_state_of_charge()}",
-            font_size='40sp',
-            size_hint=(0.8, 0.1),
-            pos_hint={"center_x": 0.5, "top": 0.9}
-        )
-
+        battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='35sp', pos=(20, (rect_height/2)+10))
+        
         # Percentage icon (TO BE CHANGED)
-        self.battery_icon = OutlineColorChangingLabel_Battery(
-            value_source=get_pack_state_of_charge,
-            text="*ICON*",
-            font_size='70sp',
-            size_hint=(0.8, 0.2),
-            pos_hint={"center_x": 0.5, "center_y": 0.6}
-        )
-
+        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', pos=(20, (rect_height/2)-80))
+        
         # Temperature
-        self.battery_temp = OutlineColorChangingLabel_BatteryTemp(
-            value_source=get_cell_high_temperature,
-            text=f"{get_cell_high_temperature()}",
-            font_size='30sp',
-            size_hint=(0.8, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.4}
-        )
-
+        battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='25sp', pos=(100, (rect_height/2)-200))
+        
         # Discharge rate 
-        self.battery_discharge = OutlineColorChangingLabel_BatteryDischarge(
-            value_source=get_pack_current,
-            text=f"{get_pack_current()}",
-            font_size='30sp',
-            size_hint=(0.8, 0.1),
-            pos_hint={"center_x": 0.5, "center_y": 0.2}
-        )
-    
+        battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='25sp', pos=(80, (rect_height/2)-300))
         
         # Adds widgets to the battery rectangle 
-        self.left_rect.add_widget(self.battery_label)
-        self.left_rect.add_widget(self.battery_icon)
-        self.left_rect.add_widget(self.battery_temp)
-        self.left_rect.add_widget(self.battery_discharge)
+        self.left_rect.add_widget(battery_label)  
+        self.left_rect.add_widget(battery_icon)
+        self.left_rect.add_widget(battery_temp)
+        self.left_rect.add_widget(battery_discharge)
         
 
 
@@ -397,52 +386,55 @@ class Warnings(FloatLayout):
         self.io = io
 
         # Rectangle dimensions
-        rect_height = 700
-        rect_width = 550
+        rect_height = 450
+        rect_width = 285
 
         # Rectangle color
         rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
 
-        # How round the corners are
+        # Rounded corners
         corner_radius = 20
 
-        # Establish the rectangle using FloatLayout
-        self.right_rect = FloatLayout(size_hint=(0.25, 0.6))  # 25% width, 60% height of parent
-        self.right_rect.pos_hint = {"right": 0.95, "center_y": 0.5}  # 5% from right, vertically centered
-
-        # Draw the right rectangle
-        def draw_right_rectangle(*args):
-            self.right_rect.canvas.before.clear()  # Clear previous drawings
-            with self.right_rect.canvas.before:
-                Color(rect_color)  # Desired color
-                RoundedRectangle(size=self.right_rect.size, pos=self.right_rect.pos, radius=[corner_radius])
-
-        # Bind the drawing function to the size and position changes
-        self.right_rect.bind(size=draw_right_rectangle, pos=draw_right_rectangle)
-
-        # Initially call the draw function
-        draw_right_rectangle()
-
-        # Add the widget to the parent
+        # Establish rectangle
+        self.right_rect = Widget(size_hint=(None, None), size=(rect_width, rect_height))
+        self.right_rect.pos = ((1024 - rect_width) - 20, (600 - rect_height) // 2)  # Right-aligned
+        with self.right_rect.canvas.before:
+            RoundedRectangle(pos=self.right_rect.pos, size=self.right_rect.size, radius=[corner_radius], color=rect_color)
         self.add_widget(self.right_rect)
 
-        # Scrolling layout constrained to the rectangle
-        layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
-        # Make sure the height is dynamically adjusted
-        layout.bind(minimum_height=layout.setter('height'))
+        # Scrolling layout to contain warnings
+        self.layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        self.layout.bind(minimum_height=self.layout.setter('height'))
 
-        # Temporary source to mock values
-        warnings = io.get_warnings()
-        # [
-        #     "Short warning",
-        #     "This is a much longer warning message that will likely span multiple lines in the UI",
-        #     "Another long message that needs to wrap and dynamically adjust the height of its label.",
-        #     "Small",
-        #     "More warnings to demonstrate dynamic height handling.",
-        # ]
+        # Create the ScrollView
+        self.scrollView = ScrollView(
+            size_hint=(None, None),
+            size=(self.right_rect.size[0], self.right_rect.size[1] - 20),
+            pos=(self.right_rect.pos[0] + 10, self.right_rect.pos[1] + 10)
+        )
+        self.scrollView.add_widget(self.layout)
 
+        # Add ScrollView to the widget
+        self.add_widget(self.scrollView)
 
-        # Add buttons as an example
+        # Update warnings initially
+        self.update_warnings()
+
+        # Schedule updates every second
+        Clock.schedule_interval(self.update_warnings, 0.01)
+
+    def update_warnings(self, *args):
+        """
+        Updates the list of warnings dynamically by fetching new warnings
+        from the DDS_IO instance and repopulating the UI.
+        """
+        # Clear existing widgets
+        self.layout.clear_widgets()
+
+        # Get the latest warnings from the io object
+        warnings = self.io.get_warnings()
+
+        # Repopulate the warning labels
         for warning in warnings:
             label = Label(
                 text=warning,
@@ -450,10 +442,9 @@ class Warnings(FloatLayout):
                 size_hint=(1, None),  # Fixed width, dynamic height
                 halign="left",  # Align text to the left
                 valign="middle",  # Align text vertically to the middle
-                color=(0.8, 0, 0, 1),  # White text
+                color=(0.8, 0, 0, 1),  # Red text for warnings
                 bold=True
             )
-            # Enable text wrapping
             label.text_size = (self.right_rect.size[0] - 20, None)
 
             # Dynamically adjust height based on content
@@ -462,68 +453,9 @@ class Warnings(FloatLayout):
                     instance, 'height', value[1] + 10  # Add padding
                 )
             )
-            layout.add_widget(label)
-
-        # Create the ScrollView and constrain it to the rectangle
-        scrollView = ScrollView(
-            size_hint=(None, None),  # Disable automatic size adjustments
-            size=(self.right_rect.size[0] , self.right_rect.size[1] - 20),  # Match rectangle's dimensions with padding
-            pos=(self.right_rect.pos[0] + 10, self.right_rect.pos[1] + 10)  # Match rectangle's position with padding
-        )
-        scrollView.add_widget(layout)
-
-        # Add the ScrollView to the rectangle
-        self.add_widget(scrollView)
+            self.layout.add_widget(label)
 
 
-        # # Create a ScrollView to contain the warnings
-        # scroll_view = ScrollView(size_hint=(None, None), size=(rect_width - 40, rect_height - 40))
-        # scroll_view.pos = (self.right_rect.pos[0] + 20, self.right_rect.pos[1] + 20)  # Add padding
-
-        # # Create a BoxLayout inside the ScrollView for the warnings
-        # layout = BoxLayout(
-        #     padding=10,
-        #     orientation="vertical",  # Stack labels vertically
-        #     size_hint=(None, None),
-        #     width=scroll_view.width,  # Match width to ScrollView
-        # )
-
-        # # Dynamically calculate height based on content
-        # layout.bind(
-        #     minimum_height=lambda instance, value: setattr(
-        #         layout, 'height', max(value, rect_height)  # Ensure layout is at least as tall as rect_height
-        #     )
-        # )
-
-        # # Add each warning as a Label to the layout
-        # for warning in warnings:
-        #     label = Label(
-        #         text=warning,
-        #         font_size="20sp",
-        #         size_hint=(1, None),  # Allow fixed width and dynamic height
-        #         halign="left",
-        #         valign="middle",
-        #         color=(1, 0, 0, 1),
-        #         bold=True
-        #     )
-        #     # Enable text wrapping and alignment
-        #     label.text_size = (layout.width - 20, None)  # Set the width for text wrapping
-
-        #     # Bind the texture_size to dynamically adjust the height of the label
-        #     label.bind(
-        #         texture_size=lambda instance, value: setattr(
-        #             instance, 'height', value[1] + 10  # Adjust height based on text and add padding
-        #         )
-        #     )
-
-        #     # Add the widget to the layout
-        #     layout.add_widget(label)
-
-        # # Add the layout to the ScrollView
-        # scroll_view.add_widget(layout)
-
-        # # Add the ScrollView to the right rectangle
-        # self.add_widget(scroll_view)
             
 
 #################################
@@ -538,63 +470,97 @@ class Center(FloatLayout):
         super().__init__(**kwargs)
 
         self.io = io
-
-        def get_speed():
-            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-            if isinstance(erpm, str):
-                # If it's a string (e.g., error message), return it directly
-                return erpm
-            elif erpm is None:
-                # If no data is available, return a fallback value
-                return -1
-            else:
-                try:
-                    # Convert to float and calculate speed
-                    return float(erpm) * 5
-                except (ValueError, TypeError):
-                    # Handle invalid data gracefully
-                    return -1
-        
-        def get_rpm():
-            erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
-            if isinstance(erpm, str):
-                # If it's a string (e.g., error message), return it directly
-                return erpm
-            elif erpm is None:
-                # If no data is available, return a fallback value
-                return -1
-            else:
-                try:
-                    # Convert to float and calculate RPM
-                    return float(erpm) * 10
-                except (ValueError, TypeError):
-                    # Handle invalid data gracefully
-                    return -1
+        self.speed = -1
+        self.rpm = -1
 
         # Use FloatLayout for layout behavior
-        self.center_block = FloatLayout(size_hint=(0.9, 1))
-        self.center_block.pos_hint = {"x": 0.0977, "y": 0}
+        self.center_block = FloatLayout(size_hint=(None, None), size=(804, 600))  # Fixed size: (Window.width - 210, Window.height)
+        # Absolute positioning: center the block manually on a 600x1024 screen
+        self.center_block.pos = (212, 0)  # Absolute position for center block
+
         self.add_widget(self.center_block)
 
-        # Create a label to display the speed value
+                # Create a label to display the speed value
         self.speed_label = Label(
-            text=f"{get_speed()} MPH",
+            text=f"{self.get_speed()}",
             font_size='100sp',
-            pos_hint={'center_x': 0.45, 'center_y': 0.60}
+            pos=(106, 80)
         )
         self.center_block.add_widget(self.speed_label)
 
-
-         # Create a label to display the rpm value
-        self.rpm_label = Label(
-            text=f"{get_rpm()} RPM",
+        self.speed_label_mph = Label(
+            text="MPH",
             font_size='50sp',
-            pos_hint={'center_x': 0.45, 'center_y': 0.40}
+            pos=(106, 0)
+        )
+        self.center_block.add_widget(self.speed_label_mph)
+    
+    
+        # Create a label to display the rpm value
+        self.rpm_label = Label(
+            text=f"{self.get_rpm()} RPM",
+            font_size='50sp',
+            pos=(106, -90)
         )
         self.center_block.add_widget(self.rpm_label)
+    
+        # Schedule updates every second
+        Clock.schedule_interval(self.update_value, 0.01)
+
+    # Define getter functions
+    def get_speed(self):
+        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+        if isinstance(erpm, str):
+        # If it's a string (e.g., error message), return it directly
+            return erpm
+        elif erpm is None:
+        # If no data is available, return a fallback value
+            return -1
+        else:
+            try:
+            # Convert to float and calculate speed
+                return float(erpm) * 5
+            except (ValueError, TypeError):
+            # Handle invalid data gracefully
+                return -1
+    
+    def get_rpm(self):
+        erpm = self.io.get_device_data('canInterface', 'ERPM', "CenterWidget")
+        if isinstance(erpm, str):
+        # If it's a string (e.g., error message), return it directly
+            return erpm
+        elif erpm is None:
+        # If no data is available, return a fallback value
+            return -1
+        else:
+            try:
+            # Convert to float and calculate RPM
+                return float(erpm) * 10
+            except (ValueError, TypeError):
+            # Handle invalid data gracefully
+                return -1
+
+    def update_value(self, dt=None):
+        self.speed = self.get_speed()
+        self.rpm = self.get_rpm()
+
+        if isinstance(self.speed, str):
+            self.speed_label.text = self.speed
+        else:
+            self.speed_label.text = f"Speed: {self.speed:.2f} mph" if self.speed != -1 else "Speed: -- mph"
+
+        if isinstance(self.rpm, str):
+            self.rpm_label.text = self.rpm
+        else:
+            self.rpm_label.text = f"RPM: {self.rpm:.2f}" if self.rpm != -1 else "RPM: --"
+
+        # print(f"Updated values - Speed: {self.speed}, RPM: {self.rpm}")
 
 
 
+
+
+        
 
 
 
@@ -632,7 +598,7 @@ class MainLayout(FloatLayout):
         diagnostic_button = Button(
             text="Diagnostics",
             size_hint=(None, None),
-            size=(250, 100),
+            size=(250, 70),
             pos_hint={'right': 1, 'top': 1},  # Top-right corner
         )
         # Bind the button to the method to enable the diagnostic screen
@@ -664,6 +630,7 @@ class MyApp(App):
 
     def __init__(self, io: DDS_IO, demoMode=False, **kwargs):
         super().__init__(**kwargs)
+        self.title = 'Terrier Motorsport DDS'
         self.io = io
         self.demoMode = demoMode
         
@@ -686,8 +653,36 @@ class MyApp(App):
         return self.layout
     
     def update_io(self, dt):
+        # Initialize attributes for tracking elapsed time and dt values
+        if not hasattr(self, '_elapsed_time'):
+            self._elapsed_time = 0
+            self._dt_sum = 0
+            self._dt_count = 0
+
+        # Accumulate the elapsed time
+        self._elapsed_time += dt
+
+        # Update the sum of dt values and count
+        self._dt_sum += dt
+        self._dt_count += 1
+
+        # Update io
         self.io.update()
-        # print(dt)
+
+        # Every second, calculate and print the average dt
+        if self._elapsed_time >= 1.0:
+            # Calculate the average delta time
+            average_dt = self._dt_sum / self._dt_count if self._dt_count > 0 else 0
+
+            # Print the average dt for the past second
+            print(f"Average delta time (dt): {average_dt:.6f} seconds")
+            for warning in self.io.get_warnings():
+                print(f'Warning: {warning}')
+
+            # Reset the counters for the next second
+            self._elapsed_time = 0
+            self._dt_sum = 0
+            self._dt_count = 0
 
 
 

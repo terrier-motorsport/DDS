@@ -4,8 +4,8 @@
 from enum import Enum
 from Backend.data_logger import DataLogger
 from Backend.device import Device, CANDevice, I2CDevice
-from Backend.value_monitor import ParameterMonitor
-from typing import Dict, Union, List
+from Backend.value_monitor import ParameterMonitor, ParameterWarning
+from typing import Any, Dict, Union, List
 from abc import ABC, abstractmethod
 
 import can
@@ -90,6 +90,7 @@ class Interface(ABC):
     name: str
     log: DataLogger
     __status: InterfaceStatus
+    bus: Any             # To be implemented by subclass
 
     # Device variables
     devices: Dict[str, Device]
@@ -168,8 +169,8 @@ class Interface(ABC):
         # Make everything is working
         self.update()
 
-        # Log device initialization
-        self._log(f'Initialized {self.interfaceProtocol.name} device {self.name} successfully.')
+        # Log Interface initialization
+        self._log(f'Finish initializing {self.interfaceProtocol.name} interface {self.name} successfully.')
 
 
     def update(self):
@@ -177,17 +178,38 @@ class Interface(ABC):
         Updates each device on the interface and monitors the parameters of the device.
         """
 
+        # Check if the interface is active
         if self.__status != self.InterfaceStatus.ACTIVE:
             raise InterfaceNotActiveException(f"Cannot update {self.name}: Device is not active.")
         
         for key, device in self.devices.items():
-            if device.status is Device.DeviceStatus.ACTIVE:
+            
+            # Check if the device is active
+            if device.status == Device.DeviceStatus.ACTIVE:
                 device.update()
                 self.__monitor_device_parameters()
-            elif device.status is Device.DeviceStatus.ERROR:
-                # TODO: IMPLEMENT
-                # device.initialize()
-                pass
+
+                # Clear any active warnings:
+                self.parameter_monitor.clear_warning(device.name)
+            
+            # Handle error state: Try reinitializing
+            elif device.status == Device.DeviceStatus.ERROR:
+                try:
+                    device.initialize(self.bus)
+                except Exception as e:
+                    self._log(f"Couldn't initialize {device.name}, {e}", DataLogger.LogSeverity.DEBUG)
+
+            # Blanket case if device is not active
+            if device.status not in [Device.DeviceStatus.ACTIVE]:
+                # Create a warning using ParameterMonitor
+                print('Creating error code')
+                self.parameter_monitor.create_warning(
+                    ParameterWarning.standardMsg(
+                        'StatusWarning',
+                        name=f"{device.name}",
+                        status=f"{device.status.name}"
+                    )
+                )
              
 
     def get_data_from_device(self, device_key: str, data_key: str) -> Union[str, float, int, None]:
@@ -242,10 +264,19 @@ class Interface(ABC):
         except Exception as e:
             # Log the error
             self._log(f'Was unable to intialize device {device.name}: {e}.', DataLogger.LogSeverity.CRITICAL)
+            self._log(f'{device.name} will be disabled since it failed at runtime.', DataLogger.LogSeverity.CRITICAL)
 
-            # Change device status to error
-            device.status = Device.DeviceStatus.ERROR
+            # If the device throws an error at runtime, it will be disabled for the rest of the session.
+            device.status = Device.DeviceStatus.DISABLED
+
+            # Create warning for device
+            self.parameter_monitor.create_warning(ParameterWarning.standardMsg(
+                'StatusWarning',
+                name=f"{device.name}",
+                status=f"{device.status.name}"
+            ))
             return
+            
 
         # ===== FINISHED ===== 
         self._log(f'Finished initializing {device.name}!')

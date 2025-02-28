@@ -3,6 +3,7 @@
 
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
+from Backend.resources.mpu6050 import MPU_6050_x3
 
 
 # ===== M3200 Constants =====
@@ -63,19 +64,11 @@ def define_ADC2(logger) -> ADS_1015:
         return device
 
 
-def define_wheel_MPU_6050(logger) -> None:
-    # TODO: IMPLEMENT
-    pass
+def define_MPU_6050(logger) -> MPU_6050_x3:
+    
+    deviceName = 'Accelerometers'
 
-
-def define_chassis_MPU_6050(logger) -> None:
-    # TODO: IMPLEMENT
-    pass
-
-
-def define_top_MPU_6050(logger) -> None:
-    # TODO: IMPLEMENT
-    pass
+    return MPU_6050_x3(deviceName, logger)
 
 
 def define_GPS(logger) -> None:

@@ -4,7 +4,7 @@
 from Backend.data_logger import DataLogger
 from Backend.resources.analog_in import Analog_In
 from Backend.device import I2CDevice
-from typing import List
+from typing import Dict, List
 from ads1015 import ADS1015 # This is a helper package. This class cusomizes it functionality.
 from smbus2 import SMBus
 import time
@@ -75,19 +75,6 @@ class ADS_1015(I2CDevice):
         # Check if the cache has timed out
         self._check_cache_timeout()
 
-        # Fetch the sensor data from the cache
-        with self.lock:
-            voltages = [self.cached_values.get(input_obj.name, None) for input_obj in self.inputs]
-
-        # If no data is available, skip further processing
-        if voltages is None or any(value is None for value in voltages):
-            return
-
-        # Process the cached voltages
-        for input_obj, voltage in zip(self.inputs, voltages):
-            input_obj.voltage = voltage
-            self._log_telemetry(input_obj.name, input_obj.get_output(), input_obj.units)
-
 
     def _data_collection_worker(self):
         """
@@ -95,74 +82,35 @@ class ADS_1015(I2CDevice):
         Handles slower I/O-dependent communication with the device.
         """
         while self.status == self.DeviceStatus.ACTIVE:
-            try:
-                # Fetch voltages from the sensor
-                voltages = self.__fetch_sensor_data()
 
-                # Prepare new data for the cache
-                new_data = {input_obj.name: voltage for input_obj, voltage in zip(self.inputs, voltages)}
+            try:    
+                # Process the voltages
+                outputs: Dict[str, float] = {}
+                for input_obj, channel in zip(self.inputs, self.CHANNELS):
+                    
+                    # Get the voltage from the ADC
+                    voltage = self.ads.get_voltage(channel=channel)
 
-                # Update the cache in a thread-safe manner
-                self._update_cache(new_data)
+                    # Get the output value
+                    output = input_obj.voltage_to_output(voltage)
+
+                    # Log it
+                    self._log_telemetry(input_obj.name, output, input_obj.units)
+
+                    # Add it to list of outputs
+                    outputs[input_obj.name] = output
+
+                # Update the cache
+                self._update_cache(outputs)
             except Exception as e:
-                self._log(f"Error fetching sensor data: {e}", self.log.LogSeverity.ERROR)
+                self.status = self.DeviceStatus.ERROR
+                
 
         # Log error if the data collection worker stops unexpectedly
         self._log('Data collection worker stopped.', self.log.LogSeverity.ERROR)
         self.status = self.DeviceStatus.ERROR
-    
-
-    def __fetch_sensor_data(self) -> List[float]:
-        """
-        Reads voltages from the ADC for each channel and returns a list of voltages.
-        Returns:
-            List[float]: A list of voltages read from each channel.
-        """
-        voltages = []
-
-        for channel, input_obj in zip(self.CHANNELS, self.inputs):
-            try:
-                # Read voltage from the current channel
-                voltage = self.ads.get_voltage(channel=channel)
-            except OSError as e:
-                # Handle occasional I2C errors
-                self._log(f"Failed to get ADC data from {channel}: {e}", self.log.LogSeverity.ERROR)
-                voltage = None
-
-            # Validate and clamp the voltage
-            input_obj.voltage = self.__validate_voltage(input_obj, voltage)
-
-            # Store the validated voltage
-            voltages.append(input_obj.voltage)
-
-        return voltages
 
 
-    def __validate_voltage(self, analog_in: Analog_In, voltage: float) -> float:
-        """
-        Validates and clamps the voltage within the Analog_In's valid range.
-        Args:
-            analog_in (Analog_In): The Analog_In object associated with the voltage.
-            voltage (float): The voltage to validate.
-        Returns:
-            float: The clamped voltage.
-        """
-        # Clamp the voltage to the valid range
-        return self.__clamp(voltage, analog_in.min_voltage, analog_in.max_voltage)
-
-
-
-    def __clamp(self, value, min_value, max_value) -> float:
-        """
-        Clamps a value between a minimum and maximum.
-        Args:
-            value (float): The value to clamp.
-            min_value (float): The minimum allowable value.
-            max_value (float): The maximum allowable value.
-        Returns:
-            float: The clamped value.
-        """
-        return max(min_value, min(value, max_value))
 
 # Example usage
 from Backend.resources.analog_in import ValueMapper

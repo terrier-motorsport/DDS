@@ -8,12 +8,14 @@ from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
+from Backend.resources.mpu6050 import MPU_6050_x3
 from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.orionbms2 import Orion_BMS_2
 from typing import Union, Dict, List
 import Backend.config.device_config
 import smbus2
 import can
+from Backend.resources.netcode2 import TCPClient
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -25,7 +27,7 @@ EX. The UI calls functions from here which pulls data from sensor objects.
 class DDS_IO:
 
     # ===== Debugging Variables =====
-    CAN_ENABLED = False
+    CAN_ENABLED = True
     I2C_ENABLED = True
 
 
@@ -53,7 +55,9 @@ class DDS_IO:
             demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
 
         '''
-        self.log = DataLogger('DDS_Log')
+        client = TCPClient()
+        self.log = DataLogger('DDS_Log', client, baseDirectoryPath='/media/butm/JacksUSB/DDSLogs')
+
         self.debug = debug
         self.demo_mode = demo_mode
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
@@ -100,6 +104,10 @@ class DDS_IO:
             param_key `(str)`: The key of the parameter that you are requesting
             caller `(str)`: The name of the entity calling this function. Used for logging purposes.
         '''
+
+        # Return a random value if we are in demo mode.
+        if self.demo_mode:
+            return random.random() * 100
         
         # 1) Get the device at the specified key by checking each interface for it.
         device: Device = None
@@ -109,9 +117,6 @@ class DDS_IO:
                 break
             # If the device is None, we can return early
         if device is None:
-            # Return a random value if we are in demo mode.
-            if self.demo_mode:
-                return random.random() * 100
             # Log the mistake and return.
             self.__log(f'Device {device_key} not found. (Data Req: {param_key})', DataLogger.LogSeverity.DEBUG, caller)
             return "UKNDEV"
@@ -121,7 +126,7 @@ class DDS_IO:
         if device.status is not Device.DeviceStatus.ACTIVE:
 
             # Log the warning
-            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.WARNING)
+            self.__log(f'Device {device_key} is {device.status.name}. Could not get requested data: {param_key}', DataLogger.LogSeverity.DEBUG)
 
             # Return a value that represents the current state of the device
             if device.status is Device.DeviceStatus.DISABLED:
@@ -233,7 +238,7 @@ class DDS_IO:
                     Backend.config.device_config.define_ADC1(self.log),
                     Backend.config.device_config.define_ADC2(self.log),
                     # TODO: Implement
-                    # Backend.config.device_config.define_chassis_MPU_6050(self.log),
+                    Backend.config.device_config.define_MPU_6050(self.log),
                     # Backend.config.device_config.define_top_MPU_6050(self.log),
                     # Backend.config.device_config.define_wheel_MPU_6050(self.log),
                 ],
@@ -309,6 +314,7 @@ class DDS_IO:
         This method takes care of handling the failed initialization
         The interface is set to the ERROR state and the DDS_IO will 
         continously attempt to inialize the interface.
+        It also creates a warning that the device has failed.
 
         Parameters:
             interface (Interface): The interface that failed being initialized.
@@ -327,6 +333,13 @@ class DDS_IO:
 
         # Mark the device as having an error
         self.interfaces[interface.name].status = Interface.InterfaceStatus.ERROR
+
+        # Create warning
+        self.parameter_monitor.create_warning(ParameterWarning.standardMsg(
+            'StatusWarning',
+            name=f"{interface.name}",
+            status=f"{interface.status.name}"
+        ))
 
     
     def __log(self, msg: str, severity=DataLogger.LogSeverity.INFO, name="DDS_IO"):
