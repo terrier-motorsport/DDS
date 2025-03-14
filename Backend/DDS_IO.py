@@ -11,6 +11,7 @@ from Backend.resources.ads_1015 import ADS_1015
 from Backend.resources.mpu6050 import MPU_6050_x3
 from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.orionbms2 import Orion_BMS_2
+from Backend.resources.elconuhf import Elcon_UHF
 from typing import Union, Dict, List
 import Backend.config.device_config
 import smbus2
@@ -150,9 +151,9 @@ class DDS_IO:
     
 
     def get_warnings(self) -> List[str]:
-        '''Returns a list of active warnings'''
+        '''Returns a list of active warnings''' 
         warnings = self.parameter_monitor.get_warnings_as_str()
-        print(f'{warnings}, {self.demo_mode}')
+        # print(f'{warnings}, {self.demo_mode}')
 
         if not self.demo_mode:
             return warnings
@@ -215,7 +216,8 @@ class DDS_IO:
                 can_channel=self.CAN_BUS,
                 devices=[
                     Orion_BMS_2('Backend/candatabase/Orion_BMS2_CANBUSv7.dbc', self.log),
-                    DTI_HV_500('Backend/candatabase/DTI_HV_500_CANBUSv3.dbc', self.log)
+                    DTI_HV_500('Backend/candatabase/DTI_HV_500_CANBUSv3.dbc', self.log),
+                    Elcon_UHF('Backend/candatabase/evolve_elcon_uhf_charger.dbc', self.log)
                 ],
                 logger=self.log,
                 parameter_monitor=self.parameter_monitor
