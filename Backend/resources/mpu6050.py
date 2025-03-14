@@ -8,6 +8,8 @@
 # This code is designed to work with the MPU-6000_I2CS I2C Mini Module available from ControlEverything.com.
 # https://www.controleverything.com/content/Accelorometer?sku=MPU-6000_I2CS#tabs-0-product_tabset-2
 
+import logging
+log = logging.getLogger('MPU6050')
 
 from typing import List
 from Backend.device import I2CDevice
@@ -17,7 +19,7 @@ try:
     from gpiozero.pins.lgpio import LGPIOFactory
     from gpiozero import Device, LED
 except Exception as e:
-    print(f"Failed to init gpiozero: {e}.\n If this is unexpected, make sure requirements.txt is installed.")
+    log.error(f"Failed to init gpiozero: {e}. If this is unexpected, make sure requirements.txt is installed.")
 import time
 
 class Internal_MPU_6050(InternalDevice):

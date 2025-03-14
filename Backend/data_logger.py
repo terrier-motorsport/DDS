@@ -8,10 +8,17 @@ from csv import writer as csvWriter
 from csv import reader as csvReader
 from enum import Enum
 import os
-import logging
 import time
 from typing import Dict, List
 from Backend.resources.netcode2 import TCPClient
+
+# Config logging
+LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
+import logging
+logging.basicConfig(
+    level=logging.INFO,     # Logs anything with a level above INFO
+    format=LOG_FORMAT
+    )
 
 class DataLogger:
     '''
@@ -30,8 +37,6 @@ class DataLogger:
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
     FALLBACK_DIR_PATH = './Backend/logs/'
-
-    LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
     TIMEOUT_THRESH = 1
 
     
@@ -49,6 +54,9 @@ class DataLogger:
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
+        # Init logger
+        self.log = logging.getLogger('DataLogger')
+
         # Initialize variables
         self.tcpClient = tcpClient
         self.__validateFileName(directoryName)
@@ -59,10 +67,10 @@ class DataLogger:
             self.childDirectoryPath = self.__make_directory(directoryName)
         except OSError as e:
             # Warn user of failure
-            print(f'&&&&&&&&&&& ~~~WARNING~~~ Data logger package failed to create log directory. ~~~WARNING~~~ &&&&&&&&&&&')
-            print(f'\n Writing logs to {directoryName} will be disabled.')
-            print(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
-            print('Waiting 3 seconds.')
+            self.log.error(f'Data logger package failed to create log directory.')
+            self.log.error(f'\n Writing logs to {directoryName} will be disabled.')
+            self.log.error(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
+            self.log.error('Waiting 3 seconds.')
             time.sleep(3)
 
             # Set new path to local directory
@@ -203,7 +211,7 @@ class DataLogger:
         # Write to the logging config
         logging.basicConfig(
             level=logging.INFO,     # Logs anything with a level above INFO
-            format=self.LOG_FORMAT, 
+            format=LOG_FORMAT, 
             handlers=[
                 systemLogFileHandler,
                 debugLogFileHandler,
@@ -277,7 +285,7 @@ class DataLogger:
         directoryPath = os.path.join(self.parentDirectoryPath, f"{current_time}-{directoryName}")
 
         # Make the directory (if it doesn't already exist)
-        print(f'making dir {directoryPath}')
+        self.log.info(f'Making directory {directoryPath}')
         if not os.path.exists(directoryPath):
             os.makedirs(directoryPath)
 
