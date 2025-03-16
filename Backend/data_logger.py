@@ -11,6 +11,7 @@ import os
 import time
 from typing import Dict, List
 from Backend.resources.netcode import TCPClient
+from Backend.config.config_loader import CONFIG
 
 # Config logging
 LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
@@ -49,7 +50,7 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str, tcpClient: TCPClient, baseDirectoryPath = './Backend/logs/'):
+    def __init__(self, directoryName: str, tcpClient: TCPClient = None, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
@@ -57,8 +58,16 @@ class DataLogger:
         # Init logger
         self.log = logging.getLogger('DataLogger')
 
+        # Init TCP Client
+        if tcpClient is None:
+            self.log.warning('Wireless data is disabled; No TCPClient provided.')
+            self.TCP_ENABLED = False
+        else:
+            self.TCP_ENABLED = True
+            self.tcpClient = tcpClient
+
+
         # Initialize variables
-        self.tcpClient = tcpClient
         self.__validateFileName(directoryName)
         self.parentDirectoryPath = baseDirectoryPath
 
@@ -67,15 +76,18 @@ class DataLogger:
             self.childDirectoryPath = self.__make_directory(directoryName)
         except OSError as e:
             # Warn user of failure
-            self.log.error(f'Data logger package failed to create log directory.')
-            self.log.error(f'\n Writing logs to {directoryName} will be disabled.')
-            self.log.error(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
-            self.log.error('Waiting 3 seconds.')
-            time.sleep(3)
+            self.log.error(f'Data logger package failed to create log directory at {os.path.join(self.parentDirectoryPath, f"{directoryName}")}')
+            self.log.error(f'{e}')
+            self.log.error(f'Writing logs to {directoryName} will be disabled.')
 
             # Set new path to local directory
             self.parentDirectoryPath = self.FALLBACK_DIR_PATH
             self.childDirectoryPath = self.__make_directory(directoryName)
+
+            self.log.error(f'Logs will be written to {self.childDirectoryPath}.')
+            self.log.error('Waiting 1 second.')
+            time.sleep(1)
+
 
         # Paths for telemetry and system logs
         self.telemetryPath = os.path.join(self.childDirectoryPath, "Telemetry.csv")
@@ -111,7 +123,16 @@ class DataLogger:
 
 
     def writeTelemetry(self, device_name: str, param_name: str, value, units: str):
-        '''Writes to the telemetry data with the specified parameters'''
+        '''
+        This function is called by different DDS Devices when new data is read.
+        It logs the telemetry data to a csv file using the following data parameters:
+
+        Params:
+            device_name (str): The name of the device which is logging telemetry.
+            param_name (str): The name of the parameter which is being logged.
+            value (any): The value of the parameter.
+            units (str): The unit of the value given.
+        '''
 
         # Generate a timestamp for the entry
         time = currentTime()
@@ -129,8 +150,15 @@ class DataLogger:
 
 
     def sendTelemetry(self, time, device_name, param_name, value, units):
-        """ Sends telemetry data on network"""
-        self.tcpClient.send_message([time, device_name, param_name, value, units])
+        """Sends telemetry data on network"""
+        # Return early if TCP is disabled
+        if not self.TCP_ENABLED:
+            return
+        
+        try:
+            self.tcpClient.send_message([time, device_name, param_name, value, units])
+        except OSError as e:
+            self.writeLog('Netcode',f'Error talking to PCC: {e}', DataLogger.LogSeverity.ERROR)
 
 
     def getTelemetry(self) -> list[list]:

@@ -3,8 +3,12 @@ import time
 import csv
 import json
 
+"""
+The purpose of this file is to transmit telemetry data from the DDS to a Pit Control Center.
+"""
 
 class TCPClient:
+    
     # This class enables a TCP Network connection with a TCP Server
 
     connection: socket.socket              # Socket object
@@ -17,11 +21,6 @@ class TCPClient:
         # Create a TCP/IP Socket
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   # AF_INET = IPv4, SOCK_STREAM = TCP
 
-        # Create CSV file and write header if it doesn't exist
-        self.csv_file = "sensor_data.csv"
-        with open(self.csv_file, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["Data"])
 
     def connect_to_server(self):
         while not self.connection_active:

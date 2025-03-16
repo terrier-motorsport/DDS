@@ -1,4 +1,4 @@
-import resources.netcode2 as net
+import Backend.resources.netcode as net
 import random
 
 # NETWORK CONSTANTS

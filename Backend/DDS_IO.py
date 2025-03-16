@@ -17,6 +17,7 @@ import Backend.config.device_config
 import smbus2
 import can
 from Backend.resources.netcode import TCPClient
+from Backend.config.config_loader import CONFIG
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -57,7 +58,7 @@ class DDS_IO:
 
         '''
         client = TCPClient()
-        self.log = DataLogger('DDS_Log', client, baseDirectoryPath='/media/butm/JacksUSB/DDSLogs')
+        self.log = DataLogger('DDS_Log', client, baseDirectoryPath=CONFIG["log_settings"]["external_storage_path"])
 
         self.debug = debug
         self.demo_mode = demo_mode
