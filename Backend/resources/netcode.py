@@ -3,12 +3,13 @@ import time
 import csv
 import json
 
+
 class TCPClient:
     # This class enables a TCP Network connection with a TCP Server
 
-    connection = None               # Socket object
-    server_ip = '192.168.1.2'
-    server_port = 65432
+    connection: socket.socket              # Socket object
+    server_ip: str = '192.168.1.2'
+    server_port: int = 65432
 
     connection_active = False
 

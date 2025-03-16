@@ -16,7 +16,7 @@ from typing import Union, Dict, List
 import Backend.config.device_config
 import smbus2
 import can
-from Backend.resources.netcode2 import TCPClient
+from Backend.resources.netcode import TCPClient
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs

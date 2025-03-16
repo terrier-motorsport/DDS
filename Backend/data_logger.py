@@ -10,7 +10,7 @@ from enum import Enum
 import os
 import time
 from typing import Dict, List
-from Backend.resources.netcode2 import TCPClient
+from Backend.resources.netcode import TCPClient
 
 # Config logging
 LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
