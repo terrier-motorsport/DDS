@@ -29,8 +29,10 @@ opencv-python==4.10.0.84
 packaging==24.2
 pillow==11.1.0
 pluggy==1.5.0
+pycrc==0.10.0
 Pygments==2.18.0
 pyparsing==3.2.1
+pyserial==3.5
 pytest==8.3.4
 python-can==4.5.0
 python-dateutil==2.9.0.post0
