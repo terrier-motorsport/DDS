@@ -9,8 +9,6 @@ from csv import reader as csvReader
 from enum import Enum
 import os
 import time
-from typing import Dict, List
-from Backend.resources.netcode import TCPClient
 from Backend.config.config_loader import CONFIG
 
 # Config logging
@@ -50,21 +48,13 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str, tcpClient: TCPClient = None, baseDirectoryPath = './Backend/logs/'):
+    def __init__(self, directoryName: str, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
         # Init logger
         self.log = logging.getLogger('DataLogger')
-
-        # Init TCP Client
-        if tcpClient is None:
-            self.log.warning('Wireless data is disabled; No TCPClient provided.')
-            self.TCP_ENABLED = False
-        else:
-            self.TCP_ENABLED = True
-            self.tcpClient = tcpClient
 
 
         # Initialize variables
@@ -137,8 +127,6 @@ class DataLogger:
         # Generate a timestamp for the entry
         time = currentTime()
 
-        self.sendTelemetry(time, device_name, param_name, value, units)
-
         # Open the file in append ('a') mode
         with open(self.telemetryPath, "a", newline='') as file:
 
@@ -147,18 +135,6 @@ class DataLogger:
 
             # Write the data
             writer.writerow([time, device_name, param_name, value, units])
-
-
-    def sendTelemetry(self, time, device_name, param_name, value, units):
-        """Sends telemetry data on network"""
-        # Return early if TCP is disabled
-        if not self.TCP_ENABLED:
-            return
-        
-        try:
-            self.tcpClient.send_message([time, device_name, param_name, value, units])
-        except OSError as e:
-            self.writeLog('Netcode',f'Error talking to PCC: {e}', DataLogger.LogSeverity.ERROR)
 
 
     def getTelemetry(self) -> list[list]:
@@ -326,10 +302,8 @@ class DataLogger:
 # Example Usage of DataLogger
 if __name__ == '__main__':
 
-    # Initialize the DataLogger with a valid file name
-    tcp = TCPClient()
 
-    data_logger = DataLogger("example_log", tcp)
+    data_logger = DataLogger("example_log")
 
 
     print(data_logger.telemetryPath)

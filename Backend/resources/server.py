@@ -1,3 +1,8 @@
+"""
+THIS EXISTS FOR REFERENCE ONLY; SHOULD NOT BE RUN.
+"""
+
+raise NotImplementedError()
 import Backend.resources.netcode as net
 import random
 

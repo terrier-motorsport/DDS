@@ -2,10 +2,13 @@
     # Code by Jackson Justus (jackjust@bu.edu)
 
 import random
+import Backend.config.device_config
+from Backend.config.config_loader import CONFIG
 from Backend.interface import Interface, CANInterface, I2CInterface, InterfaceProtocol
 from Backend.device import Device
 from Backend.data_logger import DataLogger
 from Backend.value_monitor import ParameterMonitor, ParameterWarning
+from Backend.PCCclient import PCCClient
 from Backend.resources.analog_in import Analog_In, ValueMapper, ExponentialValueMapper
 from Backend.resources.ads_1015 import ADS_1015
 from Backend.resources.mpu6050 import MPU_6050_x3
@@ -13,11 +16,8 @@ from Backend.resources.dtihv500 import DTI_HV_500
 from Backend.resources.orionbms2 import Orion_BMS_2
 from Backend.resources.elconuhf import Elcon_UHF
 from typing import Union, Dict, List
-import Backend.config.device_config
-import smbus2
-import can
-from Backend.resources.netcode import TCPClient
-from Backend.config.config_loader import CONFIG
+
+
 
 """
 The purpose of this class is to handle all the low level data that the DDS Needs
@@ -57,16 +57,19 @@ class DDS_IO:
             demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
 
         '''
-        client = TCPClient()
-        self.log = DataLogger('DDS_Log', client, baseDirectoryPath=CONFIG["log_settings"]["external_storage_path"])
-
+        # Set up fancy things
+        self.__log('Starting Dash Display System Dependencies...')
+        self.log = DataLogger('DDS_Log', baseDirectoryPath=CONFIG["log_settings"]["external_storage_path"])
+        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
+        self.pcc = PCCClient(get_data_callable=lambda device, param: self.get_device_data(device, param, caller="PCC Client"))
+        self.pcc.run()
+        
+        # Set up not fancy things
         self.debug = debug
         self.demo_mode = demo_mode
-        self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
         self.interfaces = {}
 
         self.__log('Starting Dash Display System Backend...')
-
         self.__initialize_io()
 
 
