@@ -58,7 +58,6 @@ class DDS_IO:
 
         '''
         # Set up fancy things
-        self.__log('Starting Dash Display System Dependencies...')
         self.log = DataLogger('DDS_Log', baseDirectoryPath=CONFIG["log_settings"]["external_storage_path"])
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
         self.pcc = PCCClient(get_data_callable=lambda device, param: self.get_device_data(device, param, caller="PCC Client"))
