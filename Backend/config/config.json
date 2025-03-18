@@ -1,5 +1,10 @@
 {
     "log_settings": {
         "external_storage_path": "/media/butm/USB321FD"
+    },
+    "network_settings": {
+        "ip": "192.168.0.1",
+        "port": 8765
+>>>>>>> 765333353459b7e5fdfced1b0db795035af67231
     }
 }
