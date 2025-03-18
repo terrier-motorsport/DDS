@@ -127,9 +127,7 @@ class PCCClient:
 
                 # Establish a connection with the TCP server at server_address
                 self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates new socket for each attempt of connection
-                print('hi')
                 self.connection.connect(server_address)
-                print('bye')
                 self.connected_to_server = True
                 return True
 
