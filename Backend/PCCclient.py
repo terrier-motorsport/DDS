@@ -27,6 +27,7 @@ class PCCClient:
         self.server_port = CONFIG["network_settings"]["port"]
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connected_to_server = False
+        socket.setdefaulttimeout(5)
 
     def run(self):
         """
@@ -142,6 +143,7 @@ class PCCClient:
         # Establish socket
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(1)
             self.socket.connect((server_ip, server_port))
             self.socket.sendall('START_COMMUNICATION_DDS'.encode())
             data = self.socket.recv(1024).decode()

@@ -10,6 +10,7 @@ THIS EXISTS FOR REFERENCE ONLY; SHOULD NOT BE RUN.
 
 
 import socket
+import time
 
 HOST = ''                 # Symbolic name meaning all available interfaces
 PORT = 8765              # Arbitrary non-privileged port
@@ -26,6 +27,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 data = conn.recv(1024)
                 if not data: break
                 conn.sendall("coolingLoopSensors1|hotTemp".encode())
+                time.sleep(0.1)
     except KeyboardInterrupt:
         s.close()
 
