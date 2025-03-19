@@ -65,7 +65,7 @@ class PCCClient:
             requested_device, requested_param = request_parsed
 
             # Fetch device data from DDS_IO
-            requested_data = self.get_data_callable(requested_device, requested_data)
+            requested_data = self.get_data_callable(requested_device, requested_param)
 
             # Send device data back to server
             self.send_message_to_server({"device": requested_device, "parameter": requested_param, "value": requested_data})
