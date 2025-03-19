@@ -47,7 +47,6 @@ class PCCClient:
         while True:
             if not self.connected_to_server:
                 time.sleep(1)
-                self.log.debug("Not Connected, retrying")
                 self.connected_to_server = self.connect_to_server(self.server_ip, self.server_port)
                 continue
 
@@ -138,12 +137,17 @@ class PCCClient:
 
         # HOST = 'daring.cwi.nl'    # The remote host
         # PORT = 50007              # The same port as used by the server
+        self.log.debug(f"Attempting to connect to PCC on {server_ip}:{server_port}")
 
         # Establish socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.socket.connect((server_ip, server_port))
-        except ConnectionRefusedError:
+        except ConnectionRefusedError as e:
+            self.log.debug(f"Attempt Failed: {e}")
+            return False
+        except ConnectionResetError as e:
+            self.log.debug(f"Attempt Failed: {e}")
             return False
         
         self.socket.sendall('START_COMMUNICATION_DDS'.encode())
