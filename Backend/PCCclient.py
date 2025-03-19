@@ -71,6 +71,7 @@ class PCCClient:
             requested_data = self.get_data_callable(requested_device, requested_param)
 
             # Send device data back to server
+            self.log.debug(f"Sending response {requested_data} to request {request_parsed}")
             self.send_message_to_server(requested_data)
         #     except (KeyboardInterrupt, SystemExit):
         #         self.log.info("Closing connection...")
