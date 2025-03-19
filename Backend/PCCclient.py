@@ -53,7 +53,7 @@ class PCCClient:
 
             # Get requested device data from server
             requested_device_data = self.get_message_from_server()
-            if requested_device_data is None or requested_device_data == "":
+            if requested_device_data is None:
                 self.connected_to_server = False
                 self.log.warning(f"Lost connection to server")
                 continue
@@ -62,6 +62,7 @@ class PCCClient:
             request_parsed = self.parse_requested_data_from_server(requested_device_data)
             if not isinstance(request_parsed, tuple):
                 self.log.error(f"Failed to parse requested data: {requested_device_data}")
+                self.connected_to_server = False
                 continue
             requested_device, requested_param = request_parsed
 
