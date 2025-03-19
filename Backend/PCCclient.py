@@ -171,7 +171,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         client.log.info("KeyboardInterrupt received, shutting down.")
         client.stop()
-
-
-if __name__ == '__main__':
-    main()
