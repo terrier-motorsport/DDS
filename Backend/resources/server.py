@@ -21,7 +21,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         conn, addr = s.accept()
         with conn:
             print('Connected by', addr)
-            conn.sendall("GOOD_TO_START_OMMUNICATION_PCC".encode())
+            conn.sendall("GOOD_TO_START_COMMUNICATION_PCC".encode())
             while True:
                 data = conn.recv(1024)
                 if not data: break

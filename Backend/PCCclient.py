@@ -160,7 +160,7 @@ class PCCClient:
             return False
             
     
-    def parse_requested_data_from_server(data: str) -> tuple[str, str] | None:
+    def parse_requested_data_from_server(self, data: str) -> tuple[str, str] | None:
         """
         Parse the requested data string into its device and parameter parts.
         
