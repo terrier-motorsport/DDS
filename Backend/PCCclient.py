@@ -63,6 +63,7 @@ class PCCClient:
             if not isinstance(request_parsed, tuple):
                 self.log.error(f"Failed to parse requested data: {requested_device_data}")
                 self.connected_to_server = False
+                self.log.warning(f"Lost connection to server")
                 continue
             requested_device, requested_param = request_parsed
 
@@ -70,7 +71,7 @@ class PCCClient:
             requested_data = self.get_data_callable(requested_device, requested_param)
 
             # Send device data back to server
-            self.send_message_to_server({"device": requested_device, "parameter": requested_param, "value": requested_data})
+            self.send_message_to_server(requested_data)
         #     except (KeyboardInterrupt, SystemExit):
         #         self.log.info("Closing connection...")
         #         self.close_connection()

@@ -24,8 +24,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print('Connected by', addr)
             conn.sendall("GOOD_TO_START_COMMUNICATION_PCC".encode())
             while True:
-                data = conn.recv(1024)
+                data = conn.recv(1024).decode()
                 if not data: break
+                print(f"{data}, {data.__class__}")
                 conn.sendall("coolingLoopSensors1|hotTemp".encode())
                 time.sleep(0.1)
     except KeyboardInterrupt:
