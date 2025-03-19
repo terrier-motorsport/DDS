@@ -112,6 +112,10 @@ class PCCClient:
             self.log.error("Client disconnected.")
             self.connected_to_server = False
             return None
+        except TimeoutError as e:
+            self.log.error(f"Client disconnected.: {e}")
+            self.connected_to_server = False
+            return None
         
     def connect_to_server(self, server_ip, server_port) -> bool:
         """
@@ -159,9 +163,9 @@ class PCCClient:
         except ConnectionResetError as e:
             self.log.debug(f"Attempt Failed: {e}")
             return False
-        
-
-            
+        except TimeoutError as e:
+            self.log.debug(f"Attempt Failed: {e}")
+            return False
     
     def parse_requested_data_from_server(self, data: str) -> tuple[str, str] | None:
         """
