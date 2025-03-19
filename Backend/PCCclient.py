@@ -25,7 +25,7 @@ class PCCClient:
         self.get_data_callable = get_data_callable  # Function to get parameter data from the DDS_IO
         self.server_ip = CONFIG["network_settings"]["ip"]
         self.server_port = CONFIG["network_settings"]["port"]
-        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connected_to_server = False
 
     def run(self):
@@ -92,7 +92,7 @@ class PCCClient:
             message = json.dumps(message).encode()
 
             # Send the request to the server
-            self.connection.send(message)
+            self.socket.send(message)
 
         except BrokenPipeError:
             self.log.info("Connection lost. Attempting to reconnect...")
@@ -105,7 +105,7 @@ class PCCClient:
         """
         try:
             # Gets a message from the TCP Buffer
-            message = self.connection.recv(1024).decode() # Valid format for requested data is device|parameter
+            message = self.socket.recv(1024).decode() # Valid format for requested data is device|parameter
             return message
         except ConnectionResetError:
             self.log.error("Client disconnected.")
@@ -137,11 +137,18 @@ class PCCClient:
 
         # HOST = 'daring.cwi.nl'    # The remote host
         # PORT = 50007              # The same port as used by the server
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.server_ip, self.server_port))
-            s.sendall(b'Hello, world')
-            data = s.recv(1024)
-        print('Received', repr(data))
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((server_ip, server_port))
+        self.socket.sendall(b'START_COMMUNICATION_DDS')
+        data = self.socket.recv(1024)
+        if data == "GOOD_TO_START_COMMUNICATION_PCC":
+            self.log.info(f"Successfully established connection with PCC on {(server_port, server_port)}")
+            self.connected_to_server = True
+            return
+        else:
+            self.log.warning(f"PCC Failed Handshake - Received: {data}")
+            self.connected_to_server = False
+            self.connect_to_server(server_ip, server_port)
             
     
     def parse_requested_data_from_server(data: str) -> tuple[str, str] | None:
@@ -188,7 +195,7 @@ class PCCClient:
             return None
             
     def close_connection(self):
-        self.connection.close()
+        self.socket.close()
 
 
 
