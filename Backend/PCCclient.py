@@ -3,241 +3,175 @@ import threading
 import logging
 import socket
 import json
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, Optional, Tuple
 from Backend.config.config_loader import CONFIG
 
 
-NotConnectedException = Exception()
+class NotConnectedException(Exception):
+    pass
 
-"""
-PCCClient continuously attempts to establish and maintain a connection to the PCC Server.
-It periodically sends requests for sensor data and handles reconnections in case of failure.
-"""
 
 class PCCClient:
-
-    def __init__(self, get_data_callable: Callable[[str, str], Any]):
+    def __init__(self, get_data_callable: Callable[[str, str], Any]) -> None:
         """
         Initializes the PCCClient by setting up the TCP client connection to the server.
         The server address and port are retrieved from the configuration file.
         """
         self.log = logging.getLogger("PCC_Client")
-        self.get_data_callable = get_data_callable  # Function to get parameter data from the DDS_IO
+        self.get_data_callable = get_data_callable
         self.server_ip = CONFIG["network_settings"]["ip"]
         self.server_port = CONFIG["network_settings"]["port"]
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket: Optional[socket.socket] = None
         self.connected_to_server = False
         socket.setdefaulttimeout(5)
+        self._stop_event = threading.Event()
 
-    def run(self):
-        """
-        Starts the client loop in a separate thread.
-        This function is responsible for initiating the background process 
-        that handles communication with the PCC Server.
-        """
-        # Start the client loop in a separate thread
-        self.thread = threading.Thread(target=self.__run, daemon=True)
+    def start(self) -> None:
+        """Starts the client loop in a separate daemon thread."""
+        self.thread = threading.Thread(target=self._run, daemon=True)
         self.thread.start()
 
-    def __run(self):
+    def stop(self) -> None:
+        """Stops the client loop and closes the connection."""
+        self._stop_event.set()
+        self.close_connection()
+        if hasattr(self, "thread"):
+            self.thread.join()
+
+    def _run(self) -> None:
         """
-        Runs in a background thread, continuously requesting sensor data 
-        and handling reconnections if the connection is lost.
+        Background thread that continuously manages connection,
+        receives requests from the server, and sends sensor data responses.
         """
-        
-        while True:
+        while not self._stop_event.is_set():
             if not self.connected_to_server:
                 time.sleep(1)
-                self.connected_to_server = self.connect_to_server(self.server_ip, self.server_port)
+                self.connected_to_server = self._connect_to_server(self.server_ip, self.server_port)
                 continue
 
-            # Get requested device data from server
-            requested_device_data = self.get_message_from_server()
-            if requested_device_data is None:
+            request_message = self._receive_message()
+            if request_message is None:
+                self.log.warning("Lost connection to server")
                 self.connected_to_server = False
-                self.log.warning(f"Lost connection to server")
                 continue
-            
-            # Parse the data 
-            request_parsed = self.parse_requested_data_from_server(requested_device_data)
-            if not isinstance(request_parsed, tuple):
-                self.log.error(f"Failed to parse requested data: {requested_device_data}")
+
+            request_parsed = self._parse_request(request_message)
+            if not request_parsed:
+                self.log.error(f"Failed to parse request: {request_message}")
                 self.connected_to_server = False
-                self.log.warning(f"Lost connection to server")
                 continue
-            requested_device, requested_param = request_parsed
 
-            # Fetch device data from DDS_IO
-            requested_data = self.get_data_callable(requested_device, requested_param)
+            device, parameter = request_parsed
+            sensor_data = self.get_data_callable(device, parameter)
+            self.log.debug(f"Sending response {sensor_data} for request {request_parsed}")
+            self._send_message(sensor_data)
 
-            # Send device data back to server
-            self.log.debug(f"Sending response {requested_data} to request {request_parsed}")
-            self.send_message_to_server(requested_data)
-        #     except (KeyboardInterrupt, SystemExit):
-        #         self.log.info("Closing connection...")
-        #         self.close_connection()
-        #         break
-        #     except Exception as e:
-        #         self.log.info(f"Unexpected error: {e}. Retrying in 5 seconds...")
-        #         time.sleep(5)
-        #         self.connected_to_server = False
-        #         self.connect_to_server()
+        self.log.critical("Client thread stopped running.")
 
-        self.log.critical("Thread stopped running.")
-
-
-    def send_message_to_server(self, message:dict):
+    def _connect_to_server(self, ip: str, port: int) -> bool:
         """
-        Sends a message to the TCP server
+        Attempts to establish a connection with the server and perform handshake.
+        Returns True if connection and handshake are successful, False otherwise.
         """
+        self.log.debug(f"Attempting to connect to PCC at {ip}:{port}")
         try:
-            # Encode the request
-            message = json.dumps(message).encode()
-
-            # Send the request to the server
-            self.socket.send(message)
-
-        except BrokenPipeError:
-            self.log.info("Connection lost. Attempting to reconnect...")
-            self.connected_to_server = False
-            self.connect_to_server()
-
-    def get_message_from_server(self) -> str | None:
-        """
-        Gets a message from the TCP Server
-        """
-        try:
-            # Gets a message from the TCP Buffer
-            message = self.socket.recv(1024).decode() # Valid format for requested data is device|parameter
-            self.log.debug(f'Recv msg from PCC: {message}')
-            return message
-        except ConnectionResetError:
-            self.log.error("Client disconnected.")
-            self.connected_to_server = False
-            return None
-        except TimeoutError as e:
-            self.log.error(f"Client disconnected.: {e}")
-            self.connected_to_server = False
-            return None
-        
-    def connect_to_server(self, server_ip, server_port) -> bool:
-        """
-        Tries to connect to the TCP Server.
-
-        Returns:
-            bool: whether the connection was successful or not.
-        """
-        # while not self.connected_to_server:
-        #     try:
-        #         self.log.info(f"Attempting to connect to {server_ip}:{server_port}...")
-        #         # print(f"Attempting to connect to {self.server_ip}:{self.server_port}...")
-        #         server_address = (server_ip, server_port)
-
-        #         # Establish a connection with the TCP server at server_address
-        #         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates new socket for each attempt of connection
-        #         self.connection.connect(server_address)
-        #         self.connected_to_server = True
-        #         return True
-
-        #     except ConnectionRefusedError:
-        #         # If there is no TCP Server at the address, this will run.
-        #         return False
-
-        # HOST = 'daring.cwi.nl'    # The remote host
-        # PORT = 50007              # The same port as used by the server
-        self.log.debug(f"Attempting to connect to PCC on {server_ip}:{server_port}")
-
-        # Establish socket
-        try:
-            # Establish socket connection
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(1)
-            self.socket.connect((server_ip, server_port))
-            self.socket.sendall('START_COMMUNICATION_DDS'.encode())
+            self.socket.connect((ip, port))
+            self.socket.sendall("START_COMMUNICATION_DDS".encode())
 
-            # Receive handshake response
-            data = self.socket.recv(1024).decode()
-            if data == "GOOD_TO_START_COMMUNICATION_PCC":
-                self.log.info(f"Successfully established connection with PCC on {server_ip}:{server_port}")
+            handshake = self.socket.recv(1024).decode()
+            if handshake == "GOOD_TO_START_COMMUNICATION_PCC":
+                self.log.info(f"Connected to PCC at {ip}:{port}")
                 return True
             else:
-                self.log.warning(f"PCC Failed Handshake - Received: {data}")
+                self.log.warning(f"Handshake failed. Received: {handshake}")
+                self.close_connection()
                 return False
-
         except (ConnectionRefusedError, ConnectionResetError, TimeoutError, OSError) as e:
             self.log.warning(f"Connection attempt failed: {e}")
+            self.close_connection()
             return False
-    
-    def parse_requested_data_from_server(self, data: str) -> tuple[str, str] | None:
+
+    def _send_message(self, message: Dict[str, Any]) -> None:
+        """Encodes and sends a message to the server."""
+        try:
+            encoded_message = json.dumps(message).encode()
+            self.socket.sendall(encoded_message)
+        except (BrokenPipeError, OSError) as e:
+            self.log.warning(f"Error sending message: {e}")
+            self.connected_to_server = False
+            self.close_connection()
+
+    def _receive_message(self) -> Optional[str]:
         """
-        Parse the requested data string into its device and parameter parts.
-        
-        Expected format: "device|parameter"
-        
-        Args:
-            data (str): The input string containing the requested data.
-            
-        Returns:
-            tuple[str, str] | None: A tuple (device, parameter) if parsing is successful,
-                                    or None if an error occurs.
-        
-        Error Handling:
-            - Raises a ValueError if the string does not contain exactly one '|' character.
-            - Raises a ValueError if either the device or parameter is empty.
-            - Catches any exceptions, logs an error, and returns None.
+        Receives a message from the server.
+        Returns the message string if successful, or None if there is an error.
         """
         try:
-            # Remove leading/trailing whitespace
-            data = data.strip()
-            
-            # Ensure the separator exists
-            if '|' not in data:
-                raise ValueError("Invalid format: Missing '|' separator.")
-            
-            # Split the string into parts
-            parts = data.split('|')
-            
-            if len(parts) != 2:
-                raise ValueError("Invalid format: Expected exactly one '|' separator.")
-            
-            device, parameter = parts[0].strip(), parts[1].strip()
-            
-            if not device or not parameter:
-                raise ValueError("Invalid format: Device or parameter is empty.")
-            
-            return device, parameter
-
-        except Exception as e:
-            logging.error(f"Error parsing data from server: {e}")
+            message = self.socket.recv(1024).decode()
+            self.log.debug(f"Received message: {message}")
+            return message
+        except (ConnectionResetError, TimeoutError, OSError) as e:
+            self.log.error(f"Error receiving message: {e}")
+            self.connected_to_server = False
+            self.close_connection()
             return None
-            
-    def close_connection(self):
-        self.socket.close()
+
+    def _parse_request(self, data: str) -> Optional[Tuple[str, str]]:
+        """
+        Parses the incoming request string into a tuple of (device, parameter).
+        Expected format: "device|parameter".
+        Returns a tuple if successful, or None if parsing fails.
+        """
+        try:
+            data = data.strip()
+            if '|' not in data:
+                raise ValueError("Missing '|' separator in request")
+            parts = data.split('|')
+            if len(parts) != 2:
+                raise ValueError("Expected exactly one '|' separator")
+            device, parameter = parts[0].strip(), parts[1].strip()
+            if not device or not parameter:
+                raise ValueError("Device or parameter is empty")
+            return device, parameter
+        except Exception as e:
+            self.log.error(f"Error parsing request: {e}")
+            return None
+
+    def close_connection(self) -> None:
+        """Closes the socket connection if it exists."""
+        if self.socket:
+            try:
+                self.socket.close()
+            except Exception as e:
+                self.log.error(f"Error closing socket: {e}")
+            finally:
+                self.socket = None
+                self.connected_to_server = False
 
 
-
-
-if __name__ == '__main__':
-
-    def fetch_device_data(device: str, parameter: str):
-        # Replace the following logic with actual data retrieval code
+def main() -> None:
+    def fetch_device_data(device: str, parameter: str) -> Dict[str, Any]:
+        # Replace with actual data retrieval logic.
         return {"device": device, "parameter": parameter, "value": 42}
-    
-    
-    # Configure logging for the main process
+
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s [%(name)s]: %(levelname)s - %(message)s',
         handlers=[logging.StreamHandler()]
     )
-    
-    # Instantiate and run the PCCClient
-    client = PCCClient(fetch_device_data)
-    client.run()
 
-    # Keep the main thread alive to allow the client thread to run
-    # try:
-    while True:
-        time.sleep(1)
-    # except KeyboardInterrupt:
-    #     client.log.info("KeyboardInterrupt received, shutting down.")
+    client = PCCClient(fetch_device_data)
+    client.start()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        client.log.info("KeyboardInterrupt received, shutting down.")
+        client.stop()
+
+
+if __name__ == '__main__':
+    main()
