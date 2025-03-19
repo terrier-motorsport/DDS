@@ -139,8 +139,8 @@ class PCCClient:
         # PORT = 50007              # The same port as used by the server
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((server_ip, server_port))
-        self.socket.sendall(b'START_COMMUNICATION_DDS')
-        data = self.socket.recv(1024)
+        self.socket.sendall('START_COMMUNICATION_DDS'.encode())
+        data = self.socket.recv(1024).decode()
         if data == "GOOD_TO_START_COMMUNICATION_PCC":
             self.log.info(f"Successfully established connection with PCC on {(server_port, server_port)}")
             self.connected_to_server = True

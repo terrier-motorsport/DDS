@@ -22,7 +22,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         while True:
             data = conn.recv(1024)
             if not data: break
-            conn.sendall("GOOD_TO_START_COMMUNICATION_PCC")
+            conn.sendall("GOOD_TO_START_COMMUNICATION_PCC".encode())
 
 
 # NETWORK CONSTANTS
