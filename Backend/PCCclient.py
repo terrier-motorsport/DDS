@@ -106,6 +106,7 @@ class PCCClient:
         try:
             # Gets a message from the TCP Buffer
             message = self.socket.recv(1024).decode() # Valid format for requested data is device|parameter
+            self.log.debug(f'Recv msg from PCC: {message}')
             return message
         except ConnectionResetError:
             self.log.error("Client disconnected.")
@@ -138,17 +139,18 @@ class PCCClient:
         # HOST = 'daring.cwi.nl'    # The remote host
         # PORT = 50007              # The same port as used by the server
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((server_ip, server_port))
+        try:
+            self.socket.connect((server_ip, server_port))
+        except ConnectionRefusedError:
+            return False
         self.socket.sendall('START_COMMUNICATION_DDS'.encode())
         data = self.socket.recv(1024).decode()
         if data == "GOOD_TO_START_COMMUNICATION_PCC":
-            self.log.info(f"Successfully established connection with PCC on {(server_port, server_port)}")
-            self.connected_to_server = True
-            return
+            self.log.info(f"Successfully established connection with PCC on {server_ip}:{server_port}")
+            return True
         else:
             self.log.warning(f"PCC Failed Handshake - Received: {data}")
-            self.connected_to_server = False
-            self.connect_to_server(server_ip, server_port)
+            return False
             
     
     def parse_requested_data_from_server(data: str) -> tuple[str, str] | None:

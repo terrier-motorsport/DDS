@@ -13,16 +13,21 @@ import socket
 
 HOST = ''                 # Symbolic name meaning all available interfaces
 PORT = 8765              # Arbitrary non-privileged port
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen(1)
-    conn, addr = s.accept()
-    with conn:
-        print('Connected by', addr)
-        while True:
-            data = conn.recv(1024)
-            if not data: break
-            conn.sendall("GOOD_TO_START_COMMUNICATION_PCC".encode())
+    try:
+        s.bind((HOST, PORT))
+        s.listen(1)
+        conn, addr = s.accept()
+        with conn:
+            print('Connected by', addr)
+            conn.sendall("GOOD_TO_START_OMMUNICATION_PCC".encode())
+            while True:
+                data = conn.recv(1024)
+                if not data: break
+                conn.sendall("coolingLoopSensors1|hotTemp".encode())
+    except KeyboardInterrupt:
+        s.close()
 
 
 # NETWORK CONSTANTS
