@@ -119,21 +119,29 @@ class PCCClient:
         Returns:
             bool: whether the connection was successful or not.
         """
-        while not self.connected_to_server:
-            try:
-                self.log.info(f"Attempting to connect to {server_ip}:{server_port}...")
-                # print(f"Attempting to connect to {self.server_ip}:{self.server_port}...")
-                server_address = (server_ip, server_port)
+        # while not self.connected_to_server:
+        #     try:
+        #         self.log.info(f"Attempting to connect to {server_ip}:{server_port}...")
+        #         # print(f"Attempting to connect to {self.server_ip}:{self.server_port}...")
+        #         server_address = (server_ip, server_port)
 
-                # Establish a connection with the TCP server at server_address
-                self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates new socket for each attempt of connection
-                self.connection.connect(server_address)
-                self.connected_to_server = True
-                return True
+        #         # Establish a connection with the TCP server at server_address
+        #         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates new socket for each attempt of connection
+        #         self.connection.connect(server_address)
+        #         self.connected_to_server = True
+        #         return True
 
-            except ConnectionRefusedError:
-                # If there is no TCP Server at the address, this will run.
-                return False
+        #     except ConnectionRefusedError:
+        #         # If there is no TCP Server at the address, this will run.
+        #         return False
+
+        # HOST = 'daring.cwi.nl'    # The remote host
+        # PORT = 50007              # The same port as used by the server
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self.server_ip, self.server_port))
+            s.sendall(b'Hello, world')
+            data = s.recv(1024)
+        print('Received', repr(data))
             
     
     def parse_requested_data_from_server(data: str) -> tuple[str, str] | None:
