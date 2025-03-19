@@ -151,7 +151,7 @@ class PCCClient:
                 self.connected_to_server = False
 
 
-def main() -> None:
+if __name__ == "__main__":
     def fetch_device_data(device: str, parameter: str) -> Dict[str, Any]:
         # Replace with actual data retrieval logic.
         return {"device": device, "parameter": parameter, "value": 42}
