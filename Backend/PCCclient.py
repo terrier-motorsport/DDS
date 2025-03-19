@@ -49,20 +49,20 @@ class PCCClient:
                 time.sleep(1)
                 self.log.debug("Not Connected, retrying")
                 self.connected_to_server = self.connect_to_server(self.server_ip, self.server_port)
-                return
+                continue
 
             # Get requested device data from server
             requested_device_data = self.get_message_from_server()
             if requested_device_data is None:
                 self.connected_to_server = False
                 self.log.warning(f"Lost connection to server")
-                return
+                continue
             
             # Parse the data 
             request_parsed = self.parse_requested_data_from_server(requested_device_data)
             if not isinstance(request_parsed, tuple):
                 self.log.error(f"Failed to parse requested data: {requested_device_data}")
-                return
+                continue
             requested_device, requested_param = request_parsed
 
             # Fetch device data from DDS_IO
@@ -138,11 +138,14 @@ class PCCClient:
 
         # HOST = 'daring.cwi.nl'    # The remote host
         # PORT = 50007              # The same port as used by the server
+
+        # Establish socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.socket.connect((server_ip, server_port))
         except ConnectionRefusedError:
             return False
+        
         self.socket.sendall('START_COMMUNICATION_DDS'.encode())
         data = self.socket.recv(1024).decode()
         if data == "GOOD_TO_START_COMMUNICATION_PCC":
