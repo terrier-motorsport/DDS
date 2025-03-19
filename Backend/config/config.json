@@ -3,7 +3,7 @@
         "external_storage_path": "/media/butm/USB321FD"
     },
     "network_settings": {
-        "ip": "192.168.0.1",
+        "ip": "192.168.0.211",
         "port": 8765
     }
 }
