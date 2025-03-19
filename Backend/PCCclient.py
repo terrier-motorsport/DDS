@@ -53,7 +53,7 @@ class PCCClient:
 
             # Get requested device data from server
             requested_device_data = self.get_message_from_server()
-            if requested_device_data is None:
+            if requested_device_data is None or requested_device_data == "":
                 self.connected_to_server = False
                 self.log.warning(f"Lost connection to server")
                 continue
