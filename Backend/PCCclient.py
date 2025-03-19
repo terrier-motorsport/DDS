@@ -146,10 +146,13 @@ class PCCClient:
 
         # Establish socket
         try:
+            # Establish socket connection
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(1)
             self.socket.connect((server_ip, server_port))
             self.socket.sendall('START_COMMUNICATION_DDS'.encode())
+
+            # Receive handshake response
             data = self.socket.recv(1024).decode()
             if data == "GOOD_TO_START_COMMUNICATION_PCC":
                 self.log.info(f"Successfully established connection with PCC on {server_ip}:{server_port}")
@@ -157,14 +160,9 @@ class PCCClient:
             else:
                 self.log.warning(f"PCC Failed Handshake - Received: {data}")
                 return False
-        except ConnectionRefusedError as e:
-            self.log.debug(f"Attempt Failed: {e}")
-            return False
-        except ConnectionResetError as e:
-            self.log.debug(f"Attempt Failed: {e}")
-            return False
-        except TimeoutError as e:
-            self.log.debug(f"Attempt Failed: {e}")
+
+        except (ConnectionRefusedError, ConnectionResetError, TimeoutError, OSError) as e:
+            self.log.warning(f"Connection attempt failed: {e}")
             return False
     
     def parse_requested_data_from_server(self, data: str) -> tuple[str, str] | None:
