@@ -13,11 +13,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 # Constants for file paths
 DBC_FILE_PATHS = [
-    # 'Backend/candatabase/Orion_BMS2_CANBUSv7.dbc',
+    'Backend/candatabase/Orion_BMS2_CANBUSv7.dbc',
     'Backend/candatabase/evolve_elcon_uhf_charger.dbc',
     # Add more DBC file paths here
 ]
-INPUT_FILE_PATH = 'Backend/analysis/to_decode/charger_test_2_27_25.txt'
+INPUT_FILE_PATH = 'Backend/analysis/to_decode/2025-03-19-21-12-27.txt'
 OUTPUT_FILE_PREFIX = 'Backend/analysis/output/log_decoded'
 
 # Load CAN database
@@ -129,8 +129,8 @@ def process_file(input_path: str, output_path: str) -> None:
                     output_file.write(f"Skipping invalid line: {raw_can_msg} ({e})\n")
                     # logging.warning(f"Skipping invalid line: {raw_can_msg} ({e})")
                     
-    except FileNotFoundError:
-        logging.error(f"File not found: {input_path}")
+    except FileNotFoundError as e:
+        logging.error(f"File not found: {input_path}: {e}")
     except Exception as e:
         logging.error(f"Unexpected error while processing file: {e}")
 
