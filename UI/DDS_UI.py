@@ -250,7 +250,7 @@ class Battery_Logo(Image):
         self.value_source = value_source
 
         self.size_hint = (None, None)
-        self.source = "battery_icon.png"
+        self.source = "UI/battery_icon.png"
 
         # size of image
         self.size = (200, 200) 
@@ -265,15 +265,15 @@ class Battery_Logo(Image):
     # brackets for what battery level should be visible 
     def update_image(self):
         if 80 <= self.value <= 100:
-            self.source = "battery_icon.png"   # full
+            self.source = "UI/battery_icon.png"   # full
         elif 65 <= self.value < 80:
-            self.source = "battery_icon_75.png"  # 3/4
+            self.source = "UI/battery_icon_75.png"  # 3/4
         elif 35 <= self.value < 65:
-            self.source = "battery_icon_50.png" # 1/2
+            self.source = "UI/battery_icon_50.png" # 1/2
         elif 15 <= self.value < 35:
-            self.source = "battery_icon_25.png" # 1/4
+            self.source = "UI/battery_icon_25.png" # 1/4
         else:
-            self.source = "battery_icon_0.png"  # empty 
+            self.source = "UI/battery_icon_0.png"  # empty 
 
 
 
@@ -385,10 +385,10 @@ class Battery (FloatLayout):
         battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='25sp', pos=(80, (rect_height/2)-300))
 
         # Temperature Logo
-        temp_logo = Image(source='temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
+        temp_logo = Image(source='UI/temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
 
         # Discharge Logo
-        discharge_logo = Image(source='discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
+        discharge_logo = Image(source='UI/discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(battery_label)  
