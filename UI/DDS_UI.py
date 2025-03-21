@@ -391,7 +391,7 @@ class Battery (FloatLayout):
         discharge_logo = Image(source='UI/discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
 
 
-        gook1 = Image(source='UI/gook.jpg', size=(100, 100))
+        gook1 = Image(source='UI/gook.jpg', size=(50, 50))
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(battery_label)  
