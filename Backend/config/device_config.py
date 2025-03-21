@@ -21,7 +21,7 @@ temperature_values = [
     60, 70, 80, 90, 100, 110, 120, 130
 ]
 # Refer to the voltage divider circuit for the NTC_M12s
-supply_voltage = 5
+supply_voltage = 3.3
 fixed_resistor = 1000
 NTC_M12_value_mapper = ExponentialValueMapper(
     resistance_values=resistance_values,
