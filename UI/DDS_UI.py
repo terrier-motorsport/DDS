@@ -398,7 +398,7 @@ class Battery (FloatLayout):
         self.left_rect.add_widget(battery_icon)
         self.left_rect.add_widget(battery_temp)
         self.left_rect.add_widget(battery_discharge)
-        self.left_rect.add_widget(gook1)
+     
         
 
 
