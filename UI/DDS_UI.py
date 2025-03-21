@@ -74,7 +74,7 @@ class OutlineColorChangingLabel_Battery(Label):
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def delayed_update_outline(self, *args):
         self.update_outline()
@@ -126,7 +126,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def delayed_update_outline(self, *args):
         self.update_outline()
@@ -196,7 +196,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def delayed_update_outline(self, *args):
         self.update_outline()
@@ -256,7 +256,7 @@ class Battery_Logo(Image):
         self.size = (200, 200) 
 
         # Updates value 
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def update_value(self, *args):
         self.value = self.value_source()
