@@ -388,7 +388,7 @@ class Battery (FloatLayout):
         temp_logo = Image(source='UI/temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
 
         # Discharge Logo
-        discharge_logo = Image(source='UI/battery_icon.png')
+        discharge_logo = Image(source='UI/discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
 
 
         
@@ -398,6 +398,9 @@ class Battery (FloatLayout):
         self.left_rect.add_widget(battery_icon)
         self.left_rect.add_widget(battery_temp)
         self.left_rect.add_widget(battery_discharge)
+        self.left_rect.add_widget(temp_logo)
+        self.left_rect.add_widget(discharge_logo)
+        
      
         
 
