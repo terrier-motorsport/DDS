@@ -19,6 +19,7 @@ Window.fullscreen = True
 from typing import List
 import kivy
 import random
+import logging
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.label import Label
@@ -29,6 +30,7 @@ from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
 from kivy.uix.button import Button
+from kivy.uix.image import Image
 
 
 from UI.diagnostic_screen import DiagnosticScreen
@@ -73,7 +75,7 @@ class OutlineColorChangingLabel_Battery(Label):
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def delayed_update_outline(self, *args):
         self.update_outline()
@@ -125,7 +127,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def delayed_update_outline(self, *args):
         self.update_outline()
@@ -195,7 +197,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
 
         # Schedule updates for outline and color
         Clock.schedule_once(self.delayed_update_outline)
-        Clock.schedule_interval(self.update_value, 1)
+        Clock.schedule_interval(self.update_value, 0.01)
 
     def delayed_update_outline(self, *args):
         self.update_outline()
@@ -237,6 +239,42 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
             self.color = (1, 1, 0, 1)  # Yellow
         else:
             self.color = (0, 1, 0, 1)  # Green
+
+# Enables battery logo with changing battery levels, yippee! 
+class Battery_Logo(Image):
+    def __init__(self, value_source, position, **kwargs):
+        super(Battery_Logo, self).__init__(**kwargs)
+        # postition on screen
+        self.pos = position
+
+        # source of data
+        self.value_source = value_source
+
+        self.size_hint = (None, None)
+        self.source = "UI/battery_icon.png"
+
+        # size of image
+        self.size = (200, 200) 
+
+        # Updates value 
+        Clock.schedule_interval(self.update_value, 0.01)
+
+    def update_value(self, *args):
+        self.value = self.value_source()
+        self.update_image()
+
+    # brackets for what battery level should be visible 
+    def update_image(self):
+        if 80 <= self.value <= 100:
+            self.source = "UI/battery_icon.png"   # full
+        elif 65 <= self.value < 80:
+            self.source = "UI/battery_icon_75.png"  # 3/4
+        elif 35 <= self.value < 65:
+            self.source = "UI/battery_icon_50.png" # 1/2
+        elif 15 <= self.value < 35:
+            self.source = "UI/battery_icon_25.png" # 1/4
+        else:
+            self.source = "UI/battery_icon_0.png"  # empty 
 
 
 
@@ -338,20 +376,33 @@ class Battery (FloatLayout):
         # Percentage label
         battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='35sp', pos=(20, (rect_height/2)+10))
         
-        # Percentage icon (TO BE CHANGED)
-        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', pos=(20, (rect_height/2)-80))
+        # Percentage icon 
+        battery_icon = Battery_Logo(value_source= temp_source, position =(65, (rect_height/2)+ 30))
         
         # Temperature
         battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='25sp', pos=(100, (rect_height/2)-200))
         
         # Discharge rate 
         battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='25sp', pos=(80, (rect_height/2)-300))
+
+        # Temperature Logo
+        temp_logo = Image(source='UI/temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
+
+        # Discharge Logo
+        discharge_logo = Image(source='UI/discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
+
+
+        
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(battery_label)  
         self.left_rect.add_widget(battery_icon)
         self.left_rect.add_widget(battery_temp)
         self.left_rect.add_widget(battery_discharge)
+        self.left_rect.add_widget(temp_logo)
+        self.left_rect.add_widget(discharge_logo)
+        
+     
         
 
 
@@ -643,11 +694,20 @@ class MyApp(App):
         return self.layout
     
     def update_io(self, dt):
+        # Update io
+        self.io.update()
+
+        self.track_delta_time(dt)
+
+
+    def track_delta_time(self, dt):
+
         # Initialize attributes for tracking elapsed time and dt values
         if not hasattr(self, '_elapsed_time'):
             self._elapsed_time = 0
             self._dt_sum = 0
             self._dt_count = 0
+            self.log = logging.getLogger('DDS_UI')
 
         # Accumulate the elapsed time
         self._elapsed_time += dt
@@ -656,23 +716,19 @@ class MyApp(App):
         self._dt_sum += dt
         self._dt_count += 1
 
-        # Update io
-        self.io.update()
-
         # Every second, calculate and print the average dt
         if self._elapsed_time >= 1.0:
             # Calculate the average delta time
             average_dt = self._dt_sum / self._dt_count if self._dt_count > 0 else 0
 
             # Print the average dt for the past second
-            print(f"Average delta time (dt): {average_dt:.6f} seconds")
-            for warning in self.io.get_warnings():
-                print(f'Warning: {warning}')
+            self.log.info(f"Average delta time (dt): {average_dt:.6f} seconds")
 
             # Reset the counters for the next second
             self._elapsed_time = 0
             self._dt_sum = 0
             self._dt_count = 0
+
 
 
 

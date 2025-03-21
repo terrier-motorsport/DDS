@@ -153,18 +153,24 @@ class Device(ABC):
     def _update_cache(self, new_data: dict):
         '''
         Thread-safe update of the cache.
+        Writes telemetry based on new data
         '''
+        self._log_telemetry(new_data)
         with self.lock:
             self.cached_values.update(new_data)
             self.last_cache_update = time.time()
 
+
+    def _log_telemetry(self, data: dict):
+        for key,value in data.items():
+            self.log.writeTelemetry(self.name,key,value,"")
 
     def _check_cache_timeout(self):
         '''
         Clears the cache if the timeout threshold is exceeded.
         '''
         with self.lock:
-            if time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
+            if self.cached_values and time.time() - self.last_cache_update > self.CACHE_TIMEOUT_THRESHOLD:
                 self.cached_values = {key: None for key in self.cached_values}
                 self._log("Cache cleared due to timeout.", self.log.LogSeverity.WARNING)
 
@@ -242,8 +248,7 @@ class CANDevice(Device):
             self._check_cache_timeout()
             return
 
-        # Decode message
-                # Decoding the message
+        # Decoding the message
         decoded_msg: Dict[str, float]
         try:
             # Decode the CAN message using the database

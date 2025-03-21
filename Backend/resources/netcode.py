@@ -2,72 +2,26 @@ import socket
 import time
 import csv
 import json
+import logging
+# log = logging.getLogger('Netcode')
+"""
+The purpose of this file is to transmit telemetry data from the DDS to a Pit Control Center.
+"""
 
-class TCPClient:
-    # This class enables a TCP Network connection with a TCP Server
+# class TCPClient:
+    
+#     # This class enables a TCP Network connection with a TCP Server
 
-    connection = None               # Socket object
-    server_ip = '192.168.1.2'
-    server_port = 65432
+#     connection: socket.socket              # Socket object
+#     connection_active = False
 
-    connection_active = False
-
-    def __init__(self):
-        # Create a TCP/IP Socket
-        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   # AF_INET = IPv4, SOCK_STREAM = TCP
-
-        # Create CSV file and write header if it doesn't exist
-        self.csv_file = "sensor_data.csv"
-        with open(self.csv_file, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["Data"])
-
-    def connect_to_server(self):
-        while not self.connection_active:
-            try:
-                print(f"Attempting to connect to {self.server_ip}:{self.server_port}...")
-                server_address = (self.server_ip, self.server_port)
-
-                # Establish a connection with the TCP server at server_address
-                self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates new socket for each attempt of connection
-                self.connection.connect(server_address)
-                self.connection_active = True
-                print("Connected successfully!")
+#     def __init__(self, server_ip: str, server_port: int):
 
 
-            except ConnectionRefusedError:
-                # If there is no TCP Server at the address, this will run.
-                print("Connection failed. Retrying in 5 seconds...")
-                time.sleep(5) #Wait 5 seconds before retrying connection
-
-    def send_message(self, message:list):
-        try:
-            # Encode the request
-            message = json.dumps(message).encode()
-
-            # Send the request to the server
-            self.connection.send(message)
 
 
-        except BrokenPipeError:
-            print("Connection lost. Attempting to reconnect...")
-            self.connection_active = False
-            self.connect_to_server()
 
-    def save_to_csv(self, data):
-        try:
-            with open(self.csv_file, mode="a", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerow([data])
-        except Exception as e:
-            print(f"Error saving to CSV: {e}")
 
-    def set_server_address(self, server_ip, server_port):
-        self.server_ip = server_ip
-        self.server_port = server_port
-
-    def close_connection(self):
-        self.connection.close()
 
 class TCPServer:
     # This class enables functionality as a TCP Server

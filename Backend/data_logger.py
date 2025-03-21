@@ -8,10 +8,16 @@ from csv import writer as csvWriter
 from csv import reader as csvReader
 from enum import Enum
 import os
-import logging
 import time
-from typing import Dict, List
-from Backend.resources.netcode2 import TCPClient
+from Backend.config.config_loader import CONFIG
+
+# Config logging
+LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
+import logging
+logging.basicConfig(
+    level=logging.INFO,     # Logs anything with a level above INFO
+    format=LOG_FORMAT
+    )
 
 class DataLogger:
     '''
@@ -26,12 +32,10 @@ class DataLogger:
                 - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    childDirectoryPath: str        # Path of the parent directory
+    childDirectoryPath: str   # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
     FALLBACK_DIR_PATH = './Backend/logs/'
-
-    LOG_FORMAT = '%(asctime)s [%(name)s]: %(levelname)s - %(message)s'
     TIMEOUT_THRESH = 1
 
     
@@ -44,13 +48,16 @@ class DataLogger:
         DEBUG = 10      # Debug Message
 
 
-    def __init__(self, directoryName: str, tcpClient: TCPClient, baseDirectoryPath = './Backend/logs/'):
+    def __init__(self, directoryName: str, baseDirectoryPath = './Backend/logs/'):
         """
         Initialize the Data Logger with paths, handlers, and settings.
         """
 
+        # Init logger
+        self.log = logging.getLogger('DataLogger')
+
+
         # Initialize variables
-        self.tcpClient = tcpClient
         self.__validateFileName(directoryName)
         self.parentDirectoryPath = baseDirectoryPath
 
@@ -59,15 +66,18 @@ class DataLogger:
             self.childDirectoryPath = self.__make_directory(directoryName)
         except OSError as e:
             # Warn user of failure
-            print(f'&&&&&&&&&&& ~~~WARNING~~~ Data logger package failed to create log directory. ~~~WARNING~~~ &&&&&&&&&&&')
-            print(f'\n Writing logs to {directoryName} will be disabled.')
-            print(f'Logs will be written to {self.FALLBACK_DIR_PATH}.')
-            print('Waiting 3 seconds.')
-            time.sleep(3)
+            self.log.error(f'Data logger package failed to create log directory at {os.path.join(self.parentDirectoryPath, f"{directoryName}")}')
+            self.log.error(f'{e}')
+            self.log.error(f'Writing logs to {directoryName} will be disabled.')
 
             # Set new path to local directory
             self.parentDirectoryPath = self.FALLBACK_DIR_PATH
             self.childDirectoryPath = self.__make_directory(directoryName)
+
+            self.log.error(f'Logs will be written to {self.childDirectoryPath}.')
+            self.log.error('Waiting 1 second.')
+            time.sleep(1)
+
 
         # Paths for telemetry and system logs
         self.telemetryPath = os.path.join(self.childDirectoryPath, "Telemetry.csv")
@@ -103,12 +113,19 @@ class DataLogger:
 
 
     def writeTelemetry(self, device_name: str, param_name: str, value, units: str):
-        '''Writes to the telemetry data with the specified parameters'''
+        '''
+        This function is called by different DDS Devices when new data is read.
+        It logs the telemetry data to a csv file using the following data parameters:
+
+        Params:
+            device_name (str): The name of the device which is logging telemetry.
+            param_name (str): The name of the parameter which is being logged.
+            value (any): The value of the parameter.
+            units (str): The unit of the value given.
+        '''
 
         # Generate a timestamp for the entry
         time = currentTime()
-
-        self.sendTelemetry(time, device_name, param_name, value, units)
 
         # Open the file in append ('a') mode
         with open(self.telemetryPath, "a", newline='') as file:
@@ -118,11 +135,6 @@ class DataLogger:
 
             # Write the data
             writer.writerow([time, device_name, param_name, value, units])
-
-
-    def sendTelemetry(self, time, device_name, param_name, value, units):
-        """ Sends telemetry data on network"""
-        self.tcpClient.send_message([time, device_name, param_name, value, units])
 
 
     def getTelemetry(self) -> list[list]:
@@ -203,7 +215,7 @@ class DataLogger:
         # Write to the logging config
         logging.basicConfig(
             level=logging.INFO,     # Logs anything with a level above INFO
-            format=self.LOG_FORMAT, 
+            format=LOG_FORMAT, 
             handlers=[
                 systemLogFileHandler,
                 debugLogFileHandler,
@@ -277,7 +289,7 @@ class DataLogger:
         directoryPath = os.path.join(self.parentDirectoryPath, f"{current_time}-{directoryName}")
 
         # Make the directory (if it doesn't already exist)
-        print(f'making dir {directoryPath}')
+        self.log.info(f'Making directory {directoryPath}')
         if not os.path.exists(directoryPath):
             os.makedirs(directoryPath)
 
@@ -290,10 +302,8 @@ class DataLogger:
 # Example Usage of DataLogger
 if __name__ == '__main__':
 
-    # Initialize the DataLogger with a valid file name
-    tcp = TCPClient()
 
-    data_logger = DataLogger("example_log", tcp)
+    data_logger = DataLogger("example_log")
 
 
     print(data_logger.telemetryPath)

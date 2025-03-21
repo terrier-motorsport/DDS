@@ -1,6 +1,9 @@
 # Value Monitor for Terrier Motorsport's DDS
     # Code & Design by Jackson Justus (jackjust@bu.edu)
 
+import logging
+log = logging.getLogger('DiagnosticScreen')
+
 from Backend.DDS_IO import DDS_IO
 from typing import Callable, List, Optional, Union
 from kivy.uix.floatlayout import FloatLayout
@@ -16,7 +19,8 @@ import matplotlib.pyplot as plt
 try:
     from kivy_garden.matplotlib import FigureCanvasKivyAgg
 except Exception as e:
-    print(f'Diagnostic Screen failed to load: {e}.')
+    log.error(f'Diagnostic Screen failed to load: {e}.')
+    log.error(f'Make sure you are on python version 3.12.6')
 import matplotlib.pyplot as plt
 
 
