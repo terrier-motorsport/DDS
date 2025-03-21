@@ -29,6 +29,7 @@ from kivy.graphics import RoundedRectangle
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
 from kivy.uix.button import Button
+from kivy.uix.image import Image
 
 
 from UI.diagnostic_screen import DiagnosticScreen
