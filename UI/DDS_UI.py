@@ -323,16 +323,6 @@ class Battery (FloatLayout):
             RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos, radius=[corner_radius], color=rect_color)
         self.add_widget(self.left_rect)
 
-        # TODO: FIX THIS. CURRENTLY UNDEFINED.
-            # Bind the drawing function to the size and position changes
-            # self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
-
-            # Initially call the draw function
-            # draw_white_rectangle()
-
-            # Add the widget to the parent
-            # self.add_widget(self.left_rect)
-
         # Dummy values:
         def temp_source():
             return random.randint(0,100)
