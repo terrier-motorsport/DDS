@@ -61,7 +61,7 @@ class DDS_IO:
         self.log = DataLogger('DDS_Log', baseDirectoryPath=CONFIG["log_settings"]["external_storage_path"])
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
         self.pcc = PCCClient(get_data_callable=lambda device, param: self.get_device_data(device, param, caller="PCC Client"))
-        self.pcc.run()
+        self.pcc.start()
         
         # Set up not fancy things
         self.debug = debug
