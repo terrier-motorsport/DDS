@@ -120,22 +120,25 @@ class PCCClient:
 
     def _parse_request(self, data: str) -> Optional[Tuple[str, str]]:
         """
-        Parses the incoming request string into a tuple of (device, parameter).
-        Expected format: "device|parameter".
-        Returns a tuple if successful, or None if parsing fails.
+        Parses a JSON-formatted request.
+        Expected format:
+        {
+            "action": "<command>",
+            "params": { ... optional parameters ... }
+        }
         Returns the parsed request as a dictionary if successful, or None if parsing fails.
         """
         try:
             data = data.strip()
-            if '|' not in data:
-                raise ValueError("Missing '|' separator in request")
-            parts = data.split('|')
-            if len(parts) != 2:
-                raise ValueError("Expected exactly one '|' separator")
-            device, parameter = parts[0].strip(), parts[1].strip()
-            if not device or not parameter:
-                raise ValueError("Device or parameter is empty")
-            return device, parameter
+            request_obj = json.loads(data)
+            if not isinstance(request_obj, dict):
+                raise ValueError("Request is not a valid JSON object")
+            if "action" not in request_obj:
+                raise ValueError("Missing 'action' field in request")
+            return request_obj
+        except json.JSONDecodeError as e:
+            self.log.error(f"JSON decoding error: {e}")
+            return None
         except Exception as e:
             self.log.error(f"Error parsing request: {e}")
             return None
