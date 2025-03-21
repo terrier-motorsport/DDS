@@ -388,7 +388,7 @@ class Battery (FloatLayout):
         temp_logo = Image(source='UI/temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
 
         # Discharge Logo
-        discharge_logo = Image(source='UI/discharge_logo.png', size=(100, 100), size_hint=(None, None))
+        discharge_logo = Image(source='UI/discharge_logo2.png', size=(100, 100), size_hint=(None, None))
 
 
         
