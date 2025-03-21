@@ -1,4 +1,4 @@
-x# Draft DDS Display for Terrier Motorsport
+# Draft DDS Display for Terrier Motorsport
     # Anna LaPrade (alaprade@bu.edu)
     # UI/UX Design by Anna LaPrade (alaprade@bu.edu)     
 
