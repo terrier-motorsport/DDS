@@ -19,6 +19,7 @@ Window.fullscreen = True
 from typing import List
 import kivy
 import random
+import logging
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.label import Label
@@ -653,11 +654,20 @@ class MyApp(App):
         return self.layout
     
     def update_io(self, dt):
+        # Update io
+        self.io.update()
+
+        self.track_delta_time(dt)
+
+
+    def track_delta_time(self, dt):
+
         # Initialize attributes for tracking elapsed time and dt values
         if not hasattr(self, '_elapsed_time'):
             self._elapsed_time = 0
             self._dt_sum = 0
             self._dt_count = 0
+            self.log = logging.getLogger('DDS_UI')
 
         # Accumulate the elapsed time
         self._elapsed_time += dt
@@ -666,23 +676,19 @@ class MyApp(App):
         self._dt_sum += dt
         self._dt_count += 1
 
-        # Update io
-        self.io.update()
-
         # Every second, calculate and print the average dt
         if self._elapsed_time >= 1.0:
             # Calculate the average delta time
             average_dt = self._dt_sum / self._dt_count if self._dt_count > 0 else 0
 
             # Print the average dt for the past second
-            print(f"Average delta time (dt): {average_dt:.6f} seconds")
-            for warning in self.io.get_warnings():
-                print(f'Warning: {warning}')
+            self.log.info(f"Average delta time (dt): {average_dt:.6f} seconds")
 
             # Reset the counters for the next second
             self._elapsed_time = 0
             self._dt_sum = 0
             self._dt_count = 0
+
 
 
 
