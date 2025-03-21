@@ -48,24 +48,14 @@ class DDS_IO:
     
 
     # ===== Methods =====
-    def __init__(self, debug=False, demo_mode=False):
+    def __init__(self):
         '''
         Starts the Backend of the DDS.
-
-        Parameters:
-            debug (bool): Puts the DataLogger into debug mode
-            demo_mode (bool): If a parameter is requested which isn't avaliable, a random value is returned instead.
-
         '''
-        # Set up fancy things
         self.log = DataLogger('DDS_Log', baseDirectoryPath=CONFIG["log_settings"]["external_storage_path"])
         self.parameter_monitor = ParameterMonitor('Backend/config/valuelimits.json5', self.log)
         self.pcc = PCCClient(get_data_callable=lambda device, param: self.get_device_data(device, param, caller="PCC Client"))
         self.pcc.start()
-        
-        # Set up not fancy things
-        self.debug = debug
-        self.demo_mode = demo_mode
         self.interfaces = {}
 
         self.__log('Starting Dash Display System Backend...')
@@ -108,10 +98,6 @@ class DDS_IO:
             param_key `(str)`: The key of the parameter that you are requesting
             caller `(str)`: The name of the entity calling this function. Used for logging purposes.
         '''
-
-        # Return a random value if we are in demo mode.
-        if self.demo_mode:
-            return random.random() * 100
         
         # 1) Get the device at the specified key by checking each interface for it.
         device: Device = None
@@ -156,17 +142,7 @@ class DDS_IO:
     def get_warnings(self) -> List[str]:
         '''Returns a list of active warnings''' 
         warnings = self.parameter_monitor.get_warnings_as_str()
-        # print(f'{warnings}, {self.demo_mode}')
-
-        if not self.demo_mode:
-            return warnings
-        else:
-            warnings = [
-                ParameterWarning('RPM', 9324, 'RPM is out of range').getMsg(),
-                ParameterWarning('Mike', 1, 'THIS IS A SUPER DUPER LOOPER LONG MESSAGE').getMsg(),
-                ParameterWarning('Anna', 2398, 'Anna is out of range').getMsg(),
-            ]
-            return warnings
+        return warnings
 
 
     def get_device_names(self) -> List[str]:
@@ -174,9 +150,6 @@ class DDS_IO:
         Returns a list of devices.
         If there are no devices, returns a single string with an error message.
         '''
-
-        # if len(self.devices) == 0:
-        #     return ['There are no available devices']
         device_names = []
         for interface_name, interface in self.interfaces.items():
             for device_name, device in interface.devices.items():
@@ -212,7 +185,9 @@ class DDS_IO:
 
 
         # ===== Init CAN =====
-        if self.CAN_ENABLED:
+        if not self.CAN_ENABLED:
+            self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
+        else:
             self.__log(f"Starting CANInterface on {self.CAN_BUS}")
             canInterface = CANInterface(
                 name='CANInterface',
@@ -227,60 +202,33 @@ class DDS_IO:
             )
             self.__safe_initialize_interface(canInterface)
             self.__log("Finished initializing all CAN devices!")
-        else:
-            # CAN Disabled
-            self.__log('CAN Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
-
 
         # ===== Init i2c ===== 
-        if self.I2C_ENABLED:
+        if not self.I2C_ENABLED:
+            self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
+        else:
             self.__log(f'Starting I2CInterface bus on {self.I2C_BUS}')
             i2cInterface = I2CInterface(
                 'I2CInterface',
                 i2c_channel=self.I2C_BUS,
                 devices=[
-                    # See the referenced package for details about devices.
+                    # See Backend.config.device_config for details about devices.
                     Backend.config.device_config.define_ADC1(self.log),
                     Backend.config.device_config.define_ADC2(self.log),
-                    # TODO: Implement
                     Backend.config.device_config.define_MPU_6050(self.log),
-                    # Backend.config.device_config.define_top_MPU_6050(self.log),
-                    # Backend.config.device_config.define_wheel_MPU_6050(self.log),
                 ],
                 logger=self.log,
                 parameter_monitor=self.parameter_monitor
             )
             self.__safe_initialize_interface(i2cInterface)
             self.__log('Finished initializing all i2c devices!')
-        else:
-            # i2c Disabled
-            self.__log('i2c Disabled: Skipping initialization.', DataLogger.LogSeverity.WARNING)
 
-        # ===== FIN INIT =====
-        # Update the IO one time to wake all interface
-        self.update()
-
-        # Add dummy devices if we are in demo mode.
-        if self.demo_mode:
-            # THIS IS ALL GARBO. NEED TO FIX
-            pass
-            # self.interfaces = {
-            #     "Mike": Interface('Mike', InterfaceProtocol.I2C, self.log, self.parameter_monitor),
-            #     "Anna": Interface('Anna', InterfaceProtocol.CAN, self.log)
-            # }
-            # for device_name, device in self.interfaces.items():
-            #     if device_name == "Mike":
-            #         device.cached_values["sample_data One (1)"] = 203949.1324
-            #         device.cached_values["Two"] = "i like chocolate chip cookies"
-            #         device.cached_values["thre three threee"] = "i HATE chocolate chip cookies which dont have chocolate chips"
-            #     if device_name == "Anna":
-            #         device.cached_values["other signal"] = "yum i love chocolate chip cookies"
-            #     device.change_status(Interface.InterfaceStatus.ACTIVE)
-
-
-        # Log that initialization has finished
+        self.update() # Wake all interfaces
         self.__log('All devices have been initialized. Listing devices.')
-        
+        self.log_devices()
+
+ 
+    def log_devices(self):
         for interface_name, interface_object in self.interfaces.items():
             self.__log(f'{interface_name}: {interface_object.status.name}')
             for device_name, device_object in interface_object.devices.items():

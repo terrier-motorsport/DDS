@@ -32,7 +32,7 @@ class DataLogger:
                 - There is also a debug.log file, which contains everything in System.log plus debug level logs
     '''
 
-    childDirectoryPath: str        # Path of the parent directory
+    childDirectoryPath: str   # Path of the parent directory
     telemetryPath: str        # Path of the telemetry data 
     systemLogPath: str        # Path of the system logs
     FALLBACK_DIR_PATH = './Backend/logs/'
