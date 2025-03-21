@@ -238,6 +238,42 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
         else:
             self.color = (0, 1, 0, 1)  # Green
 
+# Enables battery logo with changing battery levels, yippee! 
+class Battery_Logo(Image):
+    def __init__(self, value_source, position, **kwargs):
+        super(Battery_Logo, self).__init__(**kwargs)
+        # postition on screen
+        self.pos = position
+
+        # source of data
+        self.value_source = value_source
+
+        self.size_hint = (None, None)
+        self.source = "battery_icon.png"
+
+        # size of image
+        self.size = (200, 200) 
+
+        # Updates value 
+        Clock.schedule_interval(self.update_value, 1)
+
+    def update_value(self, *args):
+        self.value = self.value_source()
+        self.update_image()
+
+    # brackets for what battery level should be visible 
+    def update_image(self):
+        if 80 <= self.value <= 100:
+            self.source = "battery_icon.png"   # full
+        elif 65 <= self.value < 80:
+            self.source = "battery_icon_75.png"  # 3/4
+        elif 35 <= self.value < 65:
+            self.source = "battery_icon_50.png" # 1/2
+        elif 15 <= self.value < 35:
+            self.source = "battery_icon_25.png" # 1/4
+        else:
+            self.source = "battery_icon_0.png"  # empty 
+
 
 
 
@@ -348,8 +384,8 @@ class Battery (FloatLayout):
         # Percentage label
         battery_label = OutlineColorChangingLabel_Battery(value_source=temp_source, text=f"{temp_source()}%", font_size='35sp', pos=(20, (rect_height/2)+10))
         
-        # Percentage icon (TO BE CHANGED)
-        battery_icon = OutlineColorChangingLabel_Battery(value_source=temp_source, text="*ICON*", font_size='35sp', pos=(20, (rect_height/2)-80))
+        # Percentage icon 
+        battery_icon = Battery_Logo(value_source= temp_source, position =(65, (rect_height/2)+ 30))
         
         # Temperature
         battery_temp = OutlineColorChangingLabel_BatteryTemp(value_source=temp_source2, text=f"{temp_source2()} ºF", font_size='25sp', pos=(100, (rect_height/2)-200))
