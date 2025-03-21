@@ -359,16 +359,6 @@ class Battery (FloatLayout):
             RoundedRectangle(size=self.left_rect.size, pos=self.left_rect.pos, radius=[corner_radius], color=rect_color)
         self.add_widget(self.left_rect)
 
-        # TODO: FIX THIS. CURRENTLY UNDEFINED.
-            # Bind the drawing function to the size and position changes
-            # self.left_rect.bind(size=draw_white_rectangle, pos=draw_white_rectangle)
-
-            # Initially call the draw function
-            # draw_white_rectangle()
-
-            # Add the widget to the parent
-            # self.add_widget(self.left_rect)
-
         # Dummy values:
         def temp_source():
             return random.randint(0,100)
@@ -392,6 +382,12 @@ class Battery (FloatLayout):
         
         # Discharge rate 
         battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='25sp', pos=(80, (rect_height/2)-300))
+
+        # Temperature Logo
+        temp_logo = Image(source='temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
+
+        # Discharge Logo
+        discharge_logo = Image(source='discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
         
         # Adds widgets to the battery rectangle 
         self.left_rect.add_widget(battery_label)  
