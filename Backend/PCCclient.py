@@ -123,6 +123,7 @@ class PCCClient:
         Parses the incoming request string into a tuple of (device, parameter).
         Expected format: "device|parameter".
         Returns a tuple if successful, or None if parsing fails.
+        Returns the parsed request as a dictionary if successful, or None if parsing fails.
         """
         try:
             data = data.strip()
