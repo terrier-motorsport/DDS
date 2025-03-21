@@ -89,7 +89,7 @@ class PCCClient:
                 self.close_connection()
                 return False
         except (ConnectionRefusedError, ConnectionResetError, TimeoutError, OSError) as e:
-            self.log.warning(f"Connection attempt failed: {e}")
+            self.log.debug(f"Connection attempt failed: {e}")
             self.close_connection()
             return False
 
