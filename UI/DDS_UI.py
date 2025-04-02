@@ -31,6 +31,7 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, Line
 from kivy.uix.button import Button
 from kivy.uix.image import Image
+from kivy.loader import Loader
 
 
 from UI.diagnostic_screen import DiagnosticScreen
@@ -47,6 +48,17 @@ yellow = (1, 1, 0, 1)
 green = (0, 1, 0, 1)
 widget_white = (237 / 255, 243 / 255, 251 / 255, 1)
 background_blue = (33/255, 33/255, 48/255, 1)
+
+# Image Preloading 
+preloaded_images = {
+    "discharge_logo": Loader.image("UI/discharge_logo.png"),
+    "temp_logo": Loader.image("UI/temp_logo.png"),
+    "battery_icon": Loader.image("UI/battery_icon.png"),
+    "battery_icon_50": Loader.image("UI/battery_icon_50.png"),
+    "battery_icon_25": Loader.image("UI/battery_icon_25.png"),
+    "battery_icon_0": Loader.image("UI/battery_icon_0.png"),
+}
+
 
 #################################
 #                               #
@@ -258,7 +270,7 @@ class Battery_Logo(Image):
         self.value_source = value_source
 
         self.size_hint = (None, None)
-        self.source = "UI/battery_icon.png"
+        self.source = preloaded_images["battery_icon"].filename
 
         # size of image
         self.size = (200, 200) 
@@ -273,15 +285,15 @@ class Battery_Logo(Image):
     # brackets for what battery level should be visible 
     def update_image(self):
         if 80 <= self.value <= 100:
-            self.source = "UI/battery_icon.png"   # full
+            self.source = preloaded_images["battery_icon"].filename   # full
         elif 65 <= self.value < 80:
-            self.source = "UI/battery_icon_75.png"  # 3/4
+            self.source = preloaded_images["battery_icon_75"].filename  # 3/4
         elif 35 <= self.value < 65:
-            self.source = "UI/battery_icon_50.png" # 1/2
+            self.source = preloaded_images["battery_icon_50"].filename # 1/2
         elif 15 <= self.value < 35:
-            self.source = "UI/battery_icon_25.png" # 1/4
+            self.source = preloaded_images["battery_icon_25"].filename # 1/4
         else:
-            self.source = "UI/battery_icon_0.png"  # empty 
+            self.source = preloaded_images["battery_icon_0"].filename  # empty 
 
 
 
@@ -393,10 +405,10 @@ class Battery (FloatLayout):
         battery_discharge = OutlineColorChangingLabel_BatteryDischarge(value_source=temp_source3, text=f"{temp_source2()} Units", font_size='25sp', pos=(80, (rect_height/2)-300))
 
         # Temperature Logo
-        temp_logo = Image(source='UI/temp_logo.png', size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
+        temp_logo = Image(source = preloaded_images["temp_logo"].filename, size=(125, 125), size_hint=(None, None), pos=(50, (rect_height/2-40)))
 
         # Discharge Logo
-        discharge_logo = Image(source='UI/discharge_logo.png', size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
+        discharge_logo = Image(source = preloaded_images["discharge_logo"].filename, size=(100, 100), size_hint=(None, None), pos=(40, (rect_height/2-120)))
 
 
         
