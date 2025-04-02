@@ -40,6 +40,13 @@ from Backend.DDS_IO import DDS_IO
 # Anna LaPrade's version as of 11/14/24
 kivy.require('2.3.0')
 
+# Colors used in UI
+custom_red = (1, (73/255), (60/255), 1) 
+error_red = (1, 0, 0, 1)
+yellow = (1, 1, 0, 1)
+green = (0, 1, 0, 1)
+widget_white = (237 / 255, 243 / 255, 251 / 255, 1)
+background_blue = (33/255, 33/255, 48/255, 1)
 
 #################################
 #                               #
@@ -94,11 +101,11 @@ class OutlineColorChangingLabel_Battery(Label):
 
     def update_color(self):
         if 75 <= self.value <= 100:
-            self.color = (0, 1, 0, 1)  # Green
+            self.color = green  # Green
         elif 25 <= self.value < 75:
-            self.color = (1, 1, 0, 1)  # Yellow
+            self.color = yellow  # Yellow
         else:
-            self.color = (1, 0, 0, 1)  # Red
+            self.color = custom_red  # Red
 
 
 # Enables color changing text for battery temperature 
@@ -148,7 +155,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
         # Check if value is a string (indicating an error)
         if isinstance(self.value, str):
             self.text = self.value
-            self.color = (1, 0, 0, 1)  # Red for errors
+            self.color = error_red  # Red for errors
             return
 
         # If value is valid, display it
@@ -158,16 +165,16 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
             self.update_color()
         except (ValueError, TypeError):
             self.text = "N/A"
-            self.color = (1, 0, 0, 1)  # Red for invalid values
+            self.color = error_red  # Red for invalid values
             return
 
     def update_color(self):
         if 50 <= self.value <= 120:
-            self.color = (0, 1, 0, 1)  # Green
+            self.color = green  # Green
         elif 20 <= self.value < 50 or 120 < self.value <= 180:
-            self.color = (1, 1, 0, 1)  # Yellow
+            self.color = yellow  # Yellow
         else:
-            self.color = (1, 0, 0, 1)  # Red
+            self.color = custom_red  # Red
 
 
 
@@ -192,7 +199,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
         # Outline width 
         self.outline_width = 4
 
-        # Update color as data is red 
+        # Update color as data is read 
         # self.update_color()
 
         # Schedule updates for outline and color
@@ -218,7 +225,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
         # Check if value is a string (indicating an error)
         if isinstance(self.value, str):
             self.text = self.value
-            self.color = (1, 0, 0, 1)  # Red for errors
+            self.color = error_red  # Red for errors
             return
 
         # If value is valid, display it
@@ -228,17 +235,17 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
             self.update_color()
         except (ValueError, TypeError):
             self.text = "N/A"
-            self.color = (1, 0, 0, 1)  # Red for invalid values
+            self.color = error_red  # Red for invalid values
             return
 
     def update_color(self):
         if 7 <= self.value:
-            self.color = (1, 0, 0, 1)  # Red
+            self.color = custom_red)  # Red
             
         elif 2 <= self.value < 7:
-            self.color = (1, 1, 0, 1)  # Yellow
+            self.color = yellow  # Yellow
         else:
-            self.color = (0, 1, 0, 1)  # Green
+            self.color = green  # Green
 
 # Enables battery logo with changing battery levels, yippee! 
 class Battery_Logo(Image):
@@ -299,7 +306,7 @@ class Battery (FloatLayout):
         rect_width = 285  
     
         # Rectangle color (light blue)
-        rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
+        rect_color = widget_white
 
         # How rounded corners are
         corner_radius = 20
@@ -431,7 +438,7 @@ class Warnings(FloatLayout):
         rect_width = 285
 
         # Rectangle color
-        rect_color = (237 / 255, 243 / 255, 251 / 255, 1)
+        rect_color = widget_white
 
         # Rounded corners
         corner_radius = 20
@@ -681,7 +688,7 @@ class MyApp(App):
         Window.size = (1024, 600)
 
         # Set background color 
-        Window.clearcolor = (33/255, 33/255, 48/255, 1)  # dark blue 
+        Window.clearcolor = background_blue  # dark blue 
 
         # Set update intervals
         IO_UPDATE_INTERVAL = 0.0001
