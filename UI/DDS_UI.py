@@ -47,6 +47,7 @@ yellow = (1, 1, 0, 1)
 green = (0, 1, 0, 1)
 widget_white = (237 / 255, 243 / 255, 251 / 255, 1)
 background_blue = (33/255, 33/255, 48/255, 1)
+black = [0, 0, 0, 1] 
 
 #################################
 #                               #
@@ -72,10 +73,10 @@ class OutlineColorChangingLabel_Battery(Label):
         self.value = self.value_source()
 
         # Black outline, for legibility
-        self.outline_color = [0, 0, 0, 1]
+        self.outline_color = black
 
         # Outline width
-        self.outline_width = 4
+        self.outline_width = 3
 
         # Update color as data is read
         self.update_color()
@@ -124,10 +125,10 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
         self.value = self.value_source()
 
         # Black outline, for legibility
-        self.outline_color = [0, 0, 0, 1] 
+        self.outline_color = black
 
         # Outline width 
-        self.outline_width = 4
+        self.outline_width = 3
 
         # Update color as data is read 
         # self.update_color()
@@ -194,10 +195,10 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
         self.value = self.value_source()
 
         # Black outline, for legibility
-        self.outline_color = [0, 0, 0, 1] 
+        self.outline_color = black 
 
         # Outline width 
-        self.outline_width = 4
+        self.outline_width = 3
 
         # Update color as data is read 
         # self.update_color()
