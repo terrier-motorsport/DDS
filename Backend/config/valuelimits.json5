@@ -247,8 +247,8 @@
     "Pack_DCL": { /* Discharge current limit [Amps] */
         "prefix": "AMS",
         "type": "numeric",
-        "min": 200,
-        "max": 200
+        "min": 100,
+        "max": 100
     },
     "Pack_CCL": { /* Charge current limit [Amps] */
         "prefix": "AMS",
@@ -260,12 +260,12 @@
         "prefix": "AMS",
         "type": "numeric",
         "min": 0,
-        "max": 60  // Adjust based on pack specifications
+        "max": 75  // Adjust based on pack specifications
     },
     "Low_Temperature": { /* Lowest temperature of the pack [Celsius] */
         "prefix": "AMS",
         "type": "numeric",
-        "min": -40,
+        "min": -20,
         "max": 60
     },
     // I'M PRETTY SURE I DID THESE SIGNALS WRONG, SO THEY ARE COMMENTED FOR NOW
