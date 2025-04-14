@@ -99,6 +99,7 @@ class ADS_1015(I2CDevice):
 
                     # Add it to list of outputs
                     outputs[input_obj.name] = output
+                    print(outputs)
 
                 # Update the cache
                 self._update_cache(outputs)
