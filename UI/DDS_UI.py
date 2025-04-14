@@ -14,7 +14,7 @@ os.environ["KIVY_LOG_MODE"] = "PYTHON"
 
 # Run in fullscreen
 from kivy.core.window import Window
-Window.fullscreen = True
+
 
 from typing import List
 import kivy
