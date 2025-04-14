@@ -161,7 +161,7 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
 
         # If value is valid, display it
         try:
-            self.value = float(self.value)
+            self.value = (float(self.value)* 9/5) + 32
             self.text = f"{self.value:.2f}°F"
             self.update_color()
         except (ValueError, TypeError):
@@ -170,9 +170,9 @@ class OutlineColorChangingLabel_BatteryTemp(Label):
             return
 
     def update_color(self):
-        if 50 <= self.value <= 120:
+        if 86 <= self.value <= 122:
             self.color = green  # Green
-        elif 20 <= self.value < 50 or 120 < self.value <= 180:
+        elif 68 < self.value < 140:
             self.color = yellow  # Yellow
         else:
             self.color = custom_red  # Red
@@ -240,10 +240,10 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
             return
 
     def update_color(self):
-        if 7 <= self.value:
+        if 80 <= self.value:
             self.color = custom_red)  # Red
             
-        elif 2 <= self.value < 7:
+        elif 60 <= self.value < 80:
             self.color = yellow  # Yellow
         else:
             self.color = green  # Green
