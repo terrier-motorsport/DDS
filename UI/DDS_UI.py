@@ -54,7 +54,7 @@ preloaded_images = {
     "discharge_logo": Loader.image("UI/discharge_logo.png"),
     "temp_logo": Loader.image("UI/temp_logo.png"),
     "battery_icon": Loader.image("UI/battery_icon.png"),
-    "battery_icon_25": Loader.image("UI/battery_icon_75.png"),
+    "battery_icon_75": Loader.image("UI/battery_icon_75.png"),
     "battery_icon_50": Loader.image("UI/battery_icon_50.png"),
     "battery_icon_25": Loader.image("UI/battery_icon_25.png"),
     "battery_icon_0": Loader.image("UI/battery_icon_0.png"),
