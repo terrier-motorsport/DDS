@@ -698,6 +698,7 @@ class MyApp(App):
         
     def build(self):
         # Set the window size to 1024x600
+        Window.fullscreen = True
         Window.size = (1024, 600)
 
         # Set background color 
