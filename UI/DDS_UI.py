@@ -241,7 +241,7 @@ class OutlineColorChangingLabel_BatteryDischarge(Label):
 
     def update_color(self):
         if 80 <= self.value:
-            self.color = custom_red)  # Red
+            self.color = custom_red  # Red
             
         elif 60 <= self.value < 80:
             self.color = yellow  # Yellow
