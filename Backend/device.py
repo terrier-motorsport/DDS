@@ -161,9 +161,9 @@ class Device(ABC):
             self.last_cache_update = time.time()
 
 
-    def _log_telemetry(self, data: dict):
-        for key,value in data.items():
-            self.log.writeTelemetry(self.name,key,value,"")
+    # def _log_telemetry(self, data: dict):
+    #     for key,value in data.items():
+    #         self.log.writeTelemetry(self.name,key,value,"")
 
     def _check_cache_timeout(self):
         '''
