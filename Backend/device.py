@@ -155,7 +155,7 @@ class Device(ABC):
         Thread-safe update of the cache.
         Writes telemetry based on new data
         '''
-        self._log_telemetry(new_data)
+        # self._log_telemetry(new_data)
         with self.lock:
             self.cached_values.update(new_data)
             self.last_cache_update = time.time()
