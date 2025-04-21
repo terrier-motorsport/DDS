@@ -95,7 +95,7 @@ class ADS_1015(I2CDevice):
                     output = input_obj.voltage_to_output(voltage)
 
                     # Log it
-                    self._log_telemetry(input_obj.name, output, input_obj.units)
+                    self._log_telemetry(param_name=input_obj.name, value=output, units=input_obj.units)
 
                     # Add it to list of outputs
                     outputs[input_obj.name] = output
