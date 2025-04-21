@@ -185,7 +185,6 @@ class Device(ABC):
             value (Any): The value of the parameter.
             units (str): The units of the parameter's value.
         """
-        print(f"name {param_name}, value {value}, units {units}")
         self.log.writeTelemetry(
             device_name=self.name, 
             param_name=param_name,
