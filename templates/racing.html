@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Race Car Dashboard</title>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        /* --- DASHBOARD WRAPPER --- */
+        body {
+            margin: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* container to separate menu from centered blocks */
+        .screen-container {
+            position: relative;
+            width: 1024px;
+            height: 600px;
+            background: #3b332e;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- THE TOP MENU --- */
+        .menu-container {
+            width: 100%;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative; 
+        }
+
+        .menu-bar {
+            width: 100%;
+            background: rgba(15, 15, 15, 0.98);
+            border-bottom: 4px solid #00ff00;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 35px 0;
+            position: absolute; 
+            top: 0;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .menu-bar.hidden {
+            transform: translateY(-100%);
+        }
+
+        .menu-link {
+            background: #222;
+            color: #f7f3f0;
+            text-decoration: none;
+            padding: 20px 50px;
+            border-radius: 10px;
+            font-weight: bold;
+            border: 2px solid #555;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+        }
+
+        
+        .menu-trigger {
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 2px solid #444;
+            border-top: none;
+            padding: 15px 100px; 
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 0 0 20px 20px;
+            cursor: pointer;
+            z-index: 10000;
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+            transition: all 0.2s;
+        }
+
+        .menu-trigger:active {
+            transform: scale(0.98);
+            background: #333;
+        }
+
+        /* --- TELEMETRY AREA --- */
+        .telemetry-layout {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* STALE LABELS */
+        .stale-label { color: #666666 !important; opacity: 0.5; }
+        img.stale-label, canvas.stale-label { filter: grayscale(100%); }
+    </style>
+</head>
+
+<body>
+    <div class="screen-container">
+        
+        <div class="menu-container">
+            <div id="quickMenu" class="menu-bar hidden">
+                <a href="/test/motor" class="menu-link">Motor</a>
+                <a href="/test/battery" class="menu-link">Battery</a>
+                <a href="/test/accel" class="menu-link">Accel</a>
+                <button onclick="toggleMenu()" class="menu-link" style="background:#600; border-color: #f00;">CLOSE</button>
+            </div>
+            <button id="menuBtn" class="menu-trigger" onclick="toggleMenu()">System Menu</button>
+        </div>
+
+        <div class="telemetry-layout">
+            <div class="left-block">
+                <img id="batteryIcon" src="static/media/battery-100.png" alt="Battery Icon">
+                <div class="battery-label" id="batteryLabel">--%</div>
+                <div class="battery-discharge-label" id="batteryDischargeLabel">D: 0.0</div>
+                <div class="battery-temp-label" id="batteryTempLabel">T: 0.0 °F</div>
+            </div>
+
+            <div class="center-block">
+                <div class="speed-label" id="speedLabel">0</div>
+                <div class="mph-label">MPH</div>
+                <div class="rpm-label" id="rpmLabel">0 RPM</div>
+            </div>
+
+            <div class="right-block">
+                <div class="right-block-top">
+                    <div class="battery-warning-label" id="batteryWarningLabel"></div>
+                </div>
+                <div class="right-block-bottom">
+                    <div class="gforce-container">
+                        <canvas id="gcanvas" width="200" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('quickMenu');
+            const btn = document.getElementById('menuBtn');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                btn.style.opacity = "0";
+            } else {
+                menu.classList.add('hidden');
+                btn.style.opacity = "1";
+            }
+        }
+
+        // --- G-FORCE CANVAS ---
+        const canvas = document.getElementById('gcanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, R = W/2-10, scale = 80;
+        let gX = 0, gY = 0;
+
+        // draw on the chart to show all the lines
+        function drawGForce() {
+            ctx.clearRect(0, 0, W, H);
+            ctx.strokeStyle = "#444"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx-R, cy); ctx.lineTo(cx+R, cy);
+            ctx.moveTo(cx, cy-R); ctx.lineTo(cx, cy+R); ctx.stroke();
+            ctx.fillStyle = "red"; ctx.beginPath();
+            ctx.arc(cx + gX * scale, cy - gY * scale, 8, 0, Math.PI*2); ctx.fill();
+            requestAnimationFrame(drawGForce);
+        }
+        drawGForce();
+
+        // fetch the data 
+        async function fetchData() {
+            try {
+                const res = await fetch("/data");
+                const response = await res.json();
+                const data = response.telemetry;
+                
+                document.getElementById('speedLabel').textContent = data.engine.speed.toFixed(1);
+                document.getElementById('rpmLabel').textContent = Math.round(data.engine.rpm) + " RPM";
+                
+                const bLabel = document.getElementById('batteryLabel');
+                bLabel.textContent = data.battery.level.toFixed(1) + "%";
+                document.getElementById('batteryTempLabel').textContent = "T: " + data.battery.temp.toFixed(1) + " °F";
+                document.getElementById('batteryDischargeLabel').textContent = "D: " + data.battery.discharge.toFixed(1);
+
+                gX = data.accel.x;
+                gY = data.accel.y;
+            } catch (err) { console.error(err); }
+        }
+        setInterval(fetchData, 300);
+    </script>
+</body>
+</html>

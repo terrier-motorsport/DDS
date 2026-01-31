@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+
+        .dashboard {
+            position: relative; 
+            width: 1024px; 
+            height: 600px; 
+            background: #3b332e;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: flex-start;
+            padding: 40px; 
+            box-sizing: border-box; 
+            font-family: sans-serif;
+        }
+
+        .header { 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+        }
+
+        .back-btn { 
+            background: #1a1a1a; 
+            color: #fff; 
+            border: 2px solid #555; 
+            padding: 15px 30px; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            width: 100%; 
+        }
+
+        .test-card { 
+            background: #f7f3f0; 
+            border-radius: 20px; 
+            padding: 30px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.3); 
+        }
+
+        .label {
+            color: #3b332e; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-bottom: 10px; 
+        }
+
+        .value { 
+            color: #258a1c; 
+            font-size: 5rem; 
+            font-family: Consolas, monospace; 
+            font-weight: bold; 
+        }
+
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1 style="color: white; margin: 0;">AMS DIAGNOSTICS</h1>
+            <button class="back-btn" onclick="window.location.href='/'">Return to Dash</button>
+        </div>
+        <div class="grid">
+            <div class="test-card">
+                <div class="label">Battery Level</div>
+                <div class="value" id="val-level">--%</div>
+            </div>
+            <div class="test-card">
+                <div class="label">Discharge Amps</div>
+                <div class="value" id="val-disc" style="color: #3b332e;">0.0</div>
+            </div>
+            <div class="test-card">
+                <div class="label">Pack Temp</div>
+                <div class="value" id="val-temp" style="color: #3b332e;">0.0°F</div>
+            </div>
+            <div class="test-card">
+                <div class="label">Link Status</div>
+                <div class="value" id="val-status" style="font-size: 3rem; color: #3b332e;">MOCK</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        setInterval(async () => {
+            // get the data! 
+            const res = await fetch('/data');
+            const data = await res.json();
+            document.getElementById('val-level').innerText = data.telemetry.battery.level.toFixed(1) + "%";
+            document.getElementById('val-disc').innerText = data.telemetry.battery.discharge.toFixed(1);
+            document.getElementById('val-temp').innerText = data.telemetry.battery.temp.toFixed(1) + "°F";
+            document.getElementById('val-status').innerText = data.status.battery.toUpperCase();
+        }, 300);
+    </script>
+</body>
+</html>

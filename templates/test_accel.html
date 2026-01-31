@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+
+        .dashboard {
+            position: relative; 
+            width: 1024px; 
+            height: 600px; 
+            background: #3b332e;
+            display: flex; 
+            flex-direction: column;
+            justify-content: space-evenly; 
+            align-items: center; 
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* the g-plot gircle */
+        .g-wrap { 
+            background: #f7f3f0; 
+            padding: 15px; 
+            border-radius: 50%; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas { 
+            background: #111; 
+            border-radius: 50%; 
+            display: block; 
+            border: 4px solid #444;
+        }
+
+        /* bottom row style */
+        .bottom-row { 
+            display: flex; 
+            width: 90%; 
+            gap: 20px; 
+        }
+
+        .small-card { 
+            flex: 1; 
+            background: #f7f3f0; 
+            border-radius: 20px; 
+            padding: 15px; 
+            text-align: center; 
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .card-label { color: #3b332e; font-weight: bold; font-size: 1rem; text-transform: uppercase; margin-bottom: 5px; }
+        .card-value { font-size: 2.2rem; font-family: Consolas, monospace; color: #3b332e; font-weight: bold; }
+
+        .back-btn { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+            border: 2px solid #555; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer;
+            text-transform: uppercase;
+            z-index: 100;
+        }
+        
+        .back-btn:hover { border-color: #00ff00; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <button class="back-btn" onclick="window.location.href='/'">Return to Dash</button>
+        
+        <div class="g-wrap">
+            <canvas id="largeG" width="380" height="380"></canvas>
+        </div>
+
+        <div class="bottom-row">
+            <div class="small-card">
+                <div class="card-label">Lateral G (X)</div>
+                <div id="val-x" class="card-value">0.00</div>
+            </div>
+            <div class="small-card">
+                <div class="card-label">Longitudinal G (Y)</div>
+                <div id="val-y" class="card-value">0.00</div>
+            </div>
+            <div class="small-card">
+                <div class="card-label">Sensor Source</div>
+                <div id="val-status" class="card-value" style="color: #258a1c;">CHECKING</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('largeG');
+        const ctx = canvas.getContext('2d');
+        const center = 190;
+        let gx = 0, gy = 0;
+
+        function draw() {
+            ctx.clearRect(0,0,380,380);
+            ctx.strokeStyle = "#333"; 
+            ctx.lineWidth = 2;
+
+            // concentric Rings
+            [63, 126, 190].forEach(r => { 
+                ctx.beginPath(); 
+                ctx.arc(center, center, r, 0, Math.PI*2); 
+                ctx.stroke(); 
+            });
+
+            // crosshairs
+            ctx.beginPath(); 
+            ctx.moveTo(center, 0); ctx.lineTo(center, 380); 
+            ctx.moveTo(0, center); ctx.lineTo(380, center); 
+            ctx.stroke();
+
+            // red g-ball
+            ctx.fillStyle = "#ff0000"; 
+            ctx.shadowBlur = 15; 
+            ctx.shadowColor = "red";
+            ctx.beginPath(); 
+            // scaled for the 190px radius
+            ctx.arc(center + (gx * 140), center - (gy * 140), 15, 0, Math.PI*2); 
+            ctx.fill();
+
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        // fetch the accelerometer data 
+        async function fetchAccelData() {
+            try {
+                const res = await fetch('/data');
+                const data = await res.json();
+                
+                gx = data.telemetry.accel.x; 
+                gy = data.telemetry.accel.y;
+                document.getElementById('val-x').innerText = gx.toFixed(2);
+                document.getElementById('val-y').innerText = gy.toFixed(2);
+
+                const statusEl = document.getElementById('val-status');
+                const source = data.status.accel.toUpperCase();
+                statusEl.innerText = source;
+                
+                // color coding the status
+                statusEl.style.color = (source === "LIVE") ? "#258a1c" : "#d4a017"; 
+            } catch (err) { console.error(err); }
+        }
+
+        setInterval(fetchAccelData, 100);
+    </script>
+</body>
+</html>

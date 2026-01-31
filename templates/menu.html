@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Systems Menu</title>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            /* prevents scrolling on the pi */
+            overflow: hidden;
+        }
+        .menu-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr 100px;
+            gap: 20px;
+            padding: 30px;
+            height: 100vh;
+            background: #0a0a0a;
+            box-sizing: border-box;
+        }
+        .menu-item {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        /* hover/touch effects */
+        .menu-item:hover { 
+            border-color: #00ff00; 
+            background: #222; 
+            transform: translateY(-2px);
+        }
+
+        .menu-item:active {
+            transform: scale(0.98);
+        }
+
+        /* specific styles for different buttons */
+        .motor-btn { border-left: 8px solid #00ff00; }
+        .battery-btn { border-left: 8px solid #ffcc00; }
+        .accel-btn { border-left: 8px solid #ff3300; }
+
+        .back-btn { 
+            grid-column: span 2; 
+            background: #2a0a0a; 
+            border: 2px solid #500;
+            font-size: 1.5rem;
+        }
+        .back-btn:hover {
+            background: #3a0a0a;
+            border-color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <a href="/test/motor" class="menu-item motor-btn">MOTOR CONTROLLER</a>
+        
+        <a href="/test/battery" class="menu-item battery-btn">AMS (BATTERY)</a>
+        
+        <a href="/test/accel" class="menu-item accel-btn">ACCELEROMETER</a>
+        
+        <div class="menu-item" style="opacity: 0.3; cursor: default;">SYSTEM LOGS (TBD)</div>
+        
+        <a href="/" class="menu-item back-btn">RETURN TO DASHBOARD</a>
+    </div>
+</body>
+</html>

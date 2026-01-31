@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* force the app to the exact Pi screen dimensions */
+        body { 
+            margin: 0; 
+            background: #000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+
+        .dashboard {
+            position: relative; 
+            width: 1024px; 
+            height: 600px; 
+            background: #3b332e;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            padding: 20px; 
+            box-sizing: border-box; 
+            font-family: sans-serif;
+        }
+
+        /* the main content container to keep things grouped */
+        .content-wrapper {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .motor-hero { 
+            background: #f7f3f0; 
+            width: 100%; 
+            border-radius: 20px; 
+            padding: 30px;
+            text-align: center; 
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.3); 
+            box-sizing: border-box;
+        }
+
+        .hero-label { font-size: 1.5rem; color: #3b332e; font-weight: bold; text-transform: uppercase; }
+        
+        .hero-value { 
+            font-size: 8rem;
+            font-family: Consolas, monospace; 
+            color: #3b332e; 
+            font-weight: bold; 
+            line-height: 1; 
+            margin: 10px 0;
+        }
+
+        .bottom-row { 
+            display: flex; 
+            width: 100%; 
+            gap: 15px; 
+        }
+
+        .small-card { 
+            flex: 1; 
+            background: #f7f3f0; 
+            border-radius: 20px; 
+            padding: 15px; 
+            text-align: center; 
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .card-label { 
+            color: #3b332e; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            margin-bottom: 5px; 
+        }
+
+        .card-value { 
+            font-size: 2.5rem; 
+            font-family: Consolas, monospace; 
+            color: #3b332e; 
+        }
+
+        /* synchronized button */
+        .back-btn { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+            border: 2px solid #555; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+        
+        .back-btn:hover { border-color: #00ff00; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <button class="back-btn" onclick="window.location.href='/'">Return to Dash</button>
+        
+        <div class="content-wrapper">
+            <div class="motor-hero">
+                <div class="hero-label">Engine Speed</div>
+                <div class="hero-value" id="val-rpm">0</div>
+                <div style="color: #3b332e; font-weight: bold; font-size: 1.2rem;">RPM</div>
+            </div>
+
+            <div class="bottom-row">
+                <div class="small-card">
+                    <div class="card-label">Ground Speed</div>
+                    <div id="val-speed" class="card-value">0.0</div>
+                    <div style="color: #3b332e; font-size: 0.8rem; font-weight: bold;">MPH</div>
+                </div>
+                <div class="small-card">
+                    <div class="card-label">Controller Status</div>
+                    <div id="val-status" class="card-value" style="color: #258a1c;">LIVE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateMotorData() {
+            try {
+                // get the data! 
+                const res = await fetch('/data');
+                const data = await res.json();
+                
+                document.getElementById('val-rpm').innerText = Math.round(data.telemetry.engine.rpm);
+                document.getElementById('val-speed').innerText = data.telemetry.engine.speed.toFixed(1);
+                
+                const statusEl = document.getElementById('val-status');
+                const status = data.status.engine.toUpperCase();
+                statusEl.innerText = status;
+                statusEl.style.color = (status === "LIVE") ? "#258a1c" : "#666";
+            } catch (err) { console.error("Update error:", err); }
+        }
+
+        setInterval(updateMotorData, 300);
+    </script>
+</body>
+</html>
